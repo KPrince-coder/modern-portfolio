@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import Container from '../components/layout/Container';
 
 const BlogPage = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  
+
   // Filter blog posts based on selected category
-  const filteredPosts = blogPosts.filter(post => 
+  const filteredPosts = blogPosts.filter(post =>
     selectedCategory === 'all' || post.category === selectedCategory
   );
 
@@ -13,7 +14,8 @@ const BlogPage = () => {
   const categories = ['all', ...new Set(blogPosts.map(post => post.category))];
 
   return (
-    <div className="py-16">
+    <Container>
+      <div className="py-16">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -27,11 +29,12 @@ const BlogPage = () => {
           Thoughts, ideas, and insights on technology, design, and development.
         </p>
       </motion.div>
-      
+
       {/* Category filters */}
       <div className="flex flex-wrap justify-center gap-4 mb-12">
         {categories.map(category => (
           <button
+            type="button"
             key={category}
             className={`px-4 py-2 rounded-lg transition-colors ${
               selectedCategory === category
@@ -44,14 +47,14 @@ const BlogPage = () => {
           </button>
         ))}
       </div>
-      
+
       {/* Blog posts grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {filteredPosts.map((post, index) => (
           <BlogPostCard key={post.id} post={post} index={index} />
         ))}
       </div>
-      
+
       {/* Empty state */}
       {filteredPosts.length === 0 && (
         <div className="text-center py-16">
@@ -61,6 +64,7 @@ const BlogPage = () => {
         </div>
       )}
     </div>
+    </Container>
   );
 };
 
@@ -79,7 +83,7 @@ const BlogPostCard = ({ post, index }: { post: BlogPost; index: number }) => (
           <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
         </svg>
       </div>
-      
+
       {/* Category badge */}
       <div className="absolute top-4 right-4">
         <span className="px-3 py-1 bg-indigo-600/80 text-white text-sm rounded-full backdrop-blur-sm">
@@ -87,22 +91,22 @@ const BlogPostCard = ({ post, index }: { post: BlogPost; index: number }) => (
         </span>
       </div>
     </div>
-    
+
     <div className="p-6">
       <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm mb-3">
         <span>{formatDate(post.date)}</span>
         <span>•</span>
         <span>{post.readTime} min read</span>
       </div>
-      
+
       <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-3">
         {post.title}
       </h2>
-      
+
       <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-3">
         {post.excerpt}
       </p>
-      
+
       <div className="flex items-center gap-3 mt-4">
         <div className="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 overflow-hidden flex items-center justify-center text-gray-500 dark:text-gray-400">
           {/* Placeholder for author avatar */}
@@ -114,10 +118,10 @@ const BlogPostCard = ({ post, index }: { post: BlogPost; index: number }) => (
           <p className="font-medium text-gray-800 dark:text-white">{post.author}</p>
         </div>
       </div>
-      
+
       <div className="mt-6">
-        <a 
-          href={`/blog/${post.slug}`} 
+        <a
+          href={`/blog/${post.slug}`}
           className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline"
         >
           Read More →

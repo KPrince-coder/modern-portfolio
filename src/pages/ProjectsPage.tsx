@@ -1,16 +1,18 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import Container from '../components/layout/Container';
 
 const ProjectsPage = () => {
   const [filter, setFilter] = useState<string>('all');
-  
+
   // Filter projects based on selected category
-  const filteredProjects = projects.filter(project => 
+  const filteredProjects = projects.filter(project =>
     filter === 'all' || project.category === filter
   );
 
   return (
-    <div className="py-16">
+    <Container>
+      <div className="py-16">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -24,48 +26,48 @@ const ProjectsPage = () => {
           A collection of my work across various domains and technologies.
         </p>
       </motion.div>
-      
+
       {/* Filter buttons */}
       <div className="flex flex-wrap justify-center gap-4 mb-12">
-        <FilterButton 
-          active={filter === 'all'} 
+        <FilterButton
+          active={filter === 'all'}
           onClick={() => setFilter('all')}
         >
           All Projects
         </FilterButton>
-        <FilterButton 
-          active={filter === 'web'} 
+        <FilterButton
+          active={filter === 'web'}
           onClick={() => setFilter('web')}
         >
           Web Development
         </FilterButton>
-        <FilterButton 
-          active={filter === 'mobile'} 
+        <FilterButton
+          active={filter === 'mobile'}
           onClick={() => setFilter('mobile')}
         >
           Mobile Apps
         </FilterButton>
-        <FilterButton 
-          active={filter === 'ai'} 
+        <FilterButton
+          active={filter === 'ai'}
           onClick={() => setFilter('ai')}
         >
           AI Projects
         </FilterButton>
-        <FilterButton 
-          active={filter === 'design'} 
+        <FilterButton
+          active={filter === 'design'}
           onClick={() => setFilter('design')}
         >
           UI/UX Design
         </FilterButton>
       </div>
-      
+
       {/* Projects grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {filteredProjects.map((project, index) => (
           <ProjectCard key={project.id} project={project} index={index} />
         ))}
       </div>
-      
+
       {/* Empty state */}
       {filteredProjects.length === 0 && (
         <div className="text-center py-16">
@@ -75,23 +77,25 @@ const ProjectsPage = () => {
         </div>
       )}
     </div>
+    </Container>
   );
 };
 
 // Helper components
-const FilterButton = ({ 
-  children, 
-  active, 
-  onClick 
-}: { 
-  children: React.ReactNode; 
-  active: boolean; 
+const FilterButton = ({
+  children,
+  active,
+  onClick
+}: {
+  children: React.ReactNode;
+  active: boolean;
   onClick: () => void;
 }) => (
   <button
+    type="button"
     className={`px-4 py-2 rounded-lg transition-colors ${
-      active 
-        ? 'bg-indigo-600 text-white' 
+      active
+        ? 'bg-indigo-600 text-white'
         : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
     }`}
     onClick={onClick}
@@ -114,7 +118,7 @@ const ProjectCard = ({ project, index }: { project: Project; index: number }) =>
           <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
         </svg>
       </div>
-      
+
       {/* Category badge */}
       <div className="absolute top-4 right-4">
         <span className="px-3 py-1 bg-indigo-600/80 text-white text-sm rounded-full backdrop-blur-sm">
@@ -122,7 +126,7 @@ const ProjectCard = ({ project, index }: { project: Project; index: number }) =>
         </span>
       </div>
     </div>
-    
+
     <div className="p-6">
       <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-2">
         {project.title}
@@ -130,25 +134,25 @@ const ProjectCard = ({ project, index }: { project: Project; index: number }) =>
       <p className="text-gray-600 dark:text-gray-300 mb-4">
         {project.description}
       </p>
-      
+
       {/* Technologies */}
       <div className="flex flex-wrap gap-2 mb-4">
         {project.technologies.map((tech) => (
-          <span 
-            key={tech} 
+          <span
+            key={tech}
             className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md text-sm"
           >
             {tech}
           </span>
         ))}
       </div>
-      
+
       {/* Links */}
       <div className="flex gap-4 mt-4">
         {project.demoUrl && (
-          <a 
-            href={project.demoUrl} 
-            target="_blank" 
+          <a
+            href={project.demoUrl}
+            target="_blank"
             rel="noopener noreferrer"
             className="text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
           >
@@ -156,9 +160,9 @@ const ProjectCard = ({ project, index }: { project: Project; index: number }) =>
           </a>
         )}
         {project.codeUrl && (
-          <a 
-            href={project.codeUrl} 
-            target="_blank" 
+          <a
+            href={project.codeUrl}
+            target="_blank"
             rel="noopener noreferrer"
             className="text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
           >
@@ -166,9 +170,9 @@ const ProjectCard = ({ project, index }: { project: Project; index: number }) =>
           </a>
         )}
         {project.caseStudyUrl && (
-          <a 
-            href={project.caseStudyUrl} 
-            target="_blank" 
+          <a
+            href={project.caseStudyUrl}
+            target="_blank"
             rel="noopener noreferrer"
             className="text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
           >

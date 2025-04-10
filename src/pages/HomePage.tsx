@@ -1,8 +1,10 @@
 import { motion } from 'framer-motion';
+import Container from '../components/layout/Container';
 
 const HomePage = () => {
   return (
-    <div className="py-16">
+    <Container>
+      <div className="py-16">
       {/* Hero Section */}
       <section className="mb-24">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -18,21 +20,21 @@ const HomePage = () => {
               I build exceptional digital experiences that are fast, accessible, and visually appealing.
             </p>
             <div className="flex flex-wrap gap-4">
-              <a 
-                href="#projects" 
+              <a
+                href="#projects"
                 className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
               >
                 View My Work
               </a>
-              <a 
-                href="#contact" 
+              <a
+                href="#contact"
                 className="px-6 py-3 border border-indigo-600 text-indigo-600 dark:text-indigo-400 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors"
               >
                 Contact Me
               </a>
             </div>
           </motion.div>
-          
+
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -49,13 +51,13 @@ const HomePage = () => {
                 </div>
               </div>
             </div>
-            
+
             {/* Decorative elements */}
             <div className="absolute -z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] rounded-full border-2 border-dashed border-indigo-200 dark:border-indigo-900 animate-spin-slow"></div>
           </motion.div>
         </div>
       </section>
-      
+
       {/* Skills Section */}
       <section className="mb-24" id="skills">
         <motion.div
@@ -70,7 +72,7 @@ const HomePage = () => {
             I've worked with a variety of technologies to create exceptional digital experiences.
           </p>
         </motion.div>
-        
+
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {skills.map((skill, index) => (
             <motion.div
@@ -90,7 +92,7 @@ const HomePage = () => {
           ))}
         </div>
       </section>
-      
+
       {/* Featured Projects Section */}
       <section className="mb-24" id="projects">
         <motion.div
@@ -105,7 +107,7 @@ const HomePage = () => {
             Here are some of my recent projects. Check out the Projects page for more.
           </p>
         </motion.div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {featuredProjects.map((project, index) => (
             <motion.div
@@ -132,10 +134,10 @@ const HomePage = () => {
                     </span>
                   ))}
                 </div>
-                <a 
-                  href={project.link} 
+                <a
+                  href={project.link}
                   className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline"
-                  target="_blank" 
+                  target="_blank"
                   rel="noopener noreferrer"
                 >
                   View Project →
@@ -144,17 +146,17 @@ const HomePage = () => {
             </motion.div>
           ))}
         </div>
-        
+
         <div className="text-center mt-12">
-          <a 
-            href="/projects" 
+          <a
+            href="/projects"
             className="px-6 py-3 border border-indigo-600 text-indigo-600 dark:text-indigo-400 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors"
           >
             View All Projects
           </a>
         </div>
       </section>
-      
+
       {/* Contact CTA Section */}
       <section id="contact" className="bg-indigo-50 dark:bg-indigo-900/20 rounded-2xl p-8 md:p-12">
         <div className="text-center">
@@ -182,8 +184,8 @@ const HomePage = () => {
             transition={{ duration: 0.6, delay: 0.2 }}
             viewport={{ once: true }}
           >
-            <a 
-              href="/contact" 
+            <a
+              href="/contact"
               className="px-8 py-4 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors inline-block"
             >
               Get in Touch
@@ -192,6 +194,7 @@ const HomePage = () => {
         </div>
       </section>
     </div>
+    </Container>
   );
 };
 
