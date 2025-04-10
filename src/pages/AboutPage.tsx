@@ -18,28 +18,24 @@ const AboutPage = () => {
   const isLoading = isLoadingPersonal || isLoadingSkills || isLoadingWork || isLoadingEducation || isLoadingInterests;
   const error = personalError;
 
-  if (isLoading) {
-    return <LoadingSpinner size="lg" text="Loading about information..." />;
-  }
-
-  if (error || !personalData) {
-    return (
-      <Container>
-        <div className="py-16 text-center">
-          <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-6">
-            Error Loading Data
-          </h1>
-          <p className="text-xl text-gray-600 dark:text-gray-300 mb-8">
-            There was an error loading the personal information. Please try again later.
-          </p>
-        </div>
-      </Container>
-    );
-  }
+  // Always render the component, but use sample data if the real data is not available
+  // This ensures the component doesn't crash if Supabase is not set up
+  const personalInfo = personalData || {
+    name: 'John Doe',
+    title: 'Creative Developer & Designer',
+    bio: 'I build exceptional digital experiences that are fast, accessible, and visually appealing.',
+    profile_image_url: '',
+    resume_url: '#',
+  };
 
   return (
     <Container>
-      <div className="py-16">
+      {isLoading && (
+        <div className="flex justify-center items-center py-16">
+          <LoadingSpinner size="lg" text="Loading about information..." />
+        </div>
+      )}
+      <div className={`py-16 ${isLoading ? 'hidden' : ''}`}>
         {/* Hero Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -53,11 +49,11 @@ const AboutPage = () => {
                 About Me
               </h1>
               <p className="text-xl text-gray-600 dark:text-gray-300 mb-8">
-                {personalData.bio}
+                {personalInfo.bio}
               </p>
               <div className="flex flex-wrap gap-4">
                 <Button
-                  href={personalData.resume_url}
+                  href={personalInfo.resume_url}
                   variant="primary"
                   isExternal
                   rightIcon={
@@ -79,10 +75,10 @@ const AboutPage = () => {
             <div className="relative">
               <div className="aspect-square rounded-full bg-gradient-to-br from-indigo-400 to-purple-600 p-1">
                 <div className="w-full h-full rounded-full bg-white dark:bg-gray-900 flex items-center justify-center overflow-hidden">
-                  {personalData.profile_image_url ? (
+                  {personalInfo.profile_image_url ? (
                     <img
-                      src={personalData.profile_image_url}
-                      alt={personalData.name}
+                      src={personalInfo.profile_image_url}
+                      alt={personalInfo.name}
                       className="w-full h-full object-cover"
                     />
                   ) : (

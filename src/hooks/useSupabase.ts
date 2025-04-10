@@ -1,5 +1,5 @@
 import { useQuery, useMutation, QueryClient } from '@tanstack/react-query';
-import { api, ContactMessage } from '../lib/supabase';
+import { api, Project, BlogPost, ContactMessage, SocialLink, PersonalData, Skill, WorkExperience, Education, Interest } from '../lib/supabase';
 
 // Create a client
 export const queryClient = new QueryClient();
