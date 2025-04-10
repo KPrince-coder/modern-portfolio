@@ -10,6 +10,95 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+// Helper function to handle Supabase errors
+export const handleSupabaseError = (error: any) => {
+  console.error('Supabase error:', error);
+  return {
+    error: {
+      message: error.message || 'An unexpected error occurred',
+      status: error.status || 500,
+    },
+  };
+};
+
+// Helper function to format data from Supabase
+export const formatSupabaseData = <T>(data: T) => {
+  return {
+    data,
+    error: null,
+  };
+};
+
+// Helper function to check if user has a specific role
+export const checkUserRole = async (userId: string, role: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('portfolio.user_roles')
+      .select(`
+        role_id,
+        roles:role_id(name)
+      `)
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error('Error checking user role:', error);
+      return false;
+    }
+
+    return data.some((item: any) => item.roles.name === role);
+  } catch (error) {
+    console.error('Error in checkUserRole:', error);
+    return false;
+  }
+};
+
+// Helper function to get current user
+export const getCurrentUser = async () => {
+  try {
+    const { data: { user }, error } = await supabase.auth.getUser();
+
+    if (error) {
+      console.error('Error getting current user:', error);
+      return null;
+    }
+
+    return user;
+  } catch (error) {
+    console.error('Error in getCurrentUser:', error);
+    return null;
+  }
+};
+
+// Helper function to log an audit event
+export const logAuditEvent = async (
+  action: string,
+  entityType: string,
+  entityId: string,
+  oldValues?: any,
+  newValues?: any
+) => {
+  try {
+    const user = await getCurrentUser();
+
+    const { error } = await supabase
+      .from('portfolio.audit_logs')
+      .insert({
+        user_id: user?.id,
+        action,
+        entity_type: entityType,
+        entity_id: entityId,
+        old_values: oldValues,
+        new_values: newValues,
+      });
+
+    if (error) {
+      console.error('Error logging audit event:', error);
+    }
+  } catch (error) {
+    console.error('Error in logAuditEvent:', error);
+  }
+};
+
 // Types for our database tables
 export interface Project {
   id: number;

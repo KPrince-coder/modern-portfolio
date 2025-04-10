@@ -76,30 +76,72 @@ The built files will be in the `dist` directory.
 ## Supabase Setup
 
 1. Create a new Supabase project
-2. Create the following tables:
-   - `personal_data`: Basic information about you
-   - `projects`: Your portfolio projects
-   - `blog_posts`: Blog articles
-   - `skills`: Your professional skills
-   - `work_experience`: Your work history
-   - `education`: Your educational background
-   - `interests`: Your personal interests
-   - `social_links`: Links to your social media profiles
-   - `contact_messages`: Messages from the contact form
+2. Apply the database migrations:
 
-Detailed schema information can be found in the `docs/supabase-schema.md` file.
+   ```bash
+   # Using Supabase CLI
+   supabase link --project-ref your-project-ref
+   supabase db push
+   ```
+
+   Alternatively, you can run the SQL files in the `supabase/migrations` directory manually through the Supabase dashboard.
+
+3. Seed the database with initial data:
+
+   ```bash
+   # Using psql
+   psql postgresql://postgres:password@db.your-project-ref.supabase.co:5432/postgres -f supabase/seed.sql
+   ```
+
+The database schema includes the following tables:
+
+- `personal_data`: Basic information about you
+- `projects`: Your portfolio projects
+- `blog_posts`: Blog articles
+- `skills`: Your professional skills
+- `work_experience`: Your work history
+- `education`: Your educational background
+- `interests`: Your personal interests
+- `social_links`: Links to your social media profiles
+- `contact_messages`: Messages from the contact form
+- And many more for analytics, SEO, and CMS functionality
+
+Detailed schema information can be found in the `supabase/README.md` file.
+
+## Content Management System (CMS)
+
+The portfolio includes a custom CMS for managing all content. The CMS is accessible at `/admin` and requires authentication.
+
+### Features
+
+- Dashboard with analytics and recent activity
+- Content management for all portfolio sections
+- Media library for images and files
+- SEO optimization tools
+- Theme and settings configuration
+- User management and permissions
+- AI content generation integration
+
+### Accessing the CMS
+
+1. Navigate to `/admin` in your browser
+2. Log in with the credentials created during setup
 
 ## Customization
 
 ### Changing the Theme
 
-You can customize the theme colors by editing the theme settings in the Vite configuration.
+You can customize the theme colors by:
+
+1. Editing the theme settings in the Tailwind configuration
+2. Using the CMS theme editor (accessible via `/admin/settings`)
 
 ### Adding New Pages
 
 1. Create a new page component in the `src/pages` directory
 2. Add the route to the page in `src/routes/index.ts`
 3. Update the navigation links in the same file if needed
+4. Add SEO settings for the page in the CMS
 
 ## License
 
