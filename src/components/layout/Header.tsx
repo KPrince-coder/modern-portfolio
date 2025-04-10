@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import Container from './Container';
 import ThemeToggler from '../ui/ThemeToggler';
 import Button from '../ui/Button';
-import MobileMenu from './MobileMenu';
+import BasicMobileMenu from './BasicMobileMenu';
 import { usePersonalData } from '../../hooks/useSupabase';
 import { navLinks } from '../../routes';
 
@@ -13,6 +13,9 @@ const Header = () => {
 
   // Fallback resume URL if data is not available
   const resumeUrl = personalData?.resume_url ?? '#';
+
+  // Debug log for menu state
+  console.log('Menu state:', isMenuOpen);
 
   return (
     <header className="py-6 sticky top-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm z-40 shadow-sm">
@@ -55,8 +58,11 @@ const Header = () => {
             {/* Mobile menu button */}
             <button
               type="button"
-              className="md:hidden p-2 rounded-md text-gray-700 dark:text-gray-200"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="md:hidden p-2 rounded-md bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
+              onClick={() => {
+                console.log('Toggle button clicked, current state:', isMenuOpen);
+                setIsMenuOpen(!isMenuOpen);
+              }}
               aria-label="Toggle menu"
             >
               <svg
@@ -78,14 +84,7 @@ const Header = () => {
       </Container>
 
       {/* Mobile menu */}
-      <MobileMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
-
-      {/* Debug indicator - remove in production */}
-      {isMenuOpen && (
-        <div className="fixed bottom-4 right-4 bg-red-500 text-white px-4 py-2 rounded-full z-50 md:hidden">
-          Menu Open
-        </div>
-      )}
+      <BasicMobileMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
     </header>
   );
 };
