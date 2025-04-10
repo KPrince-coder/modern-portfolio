@@ -3,6 +3,7 @@ import { usePersonalData, useSkills, useWorkExperience, useEducation, useInteres
 import Container from '../components/layout/Container';
 import Button from '../components/ui/Button';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
+import SectionDivider from '../components/ui/SectionDivider';
 import SkillCard from '../components/about/SkillCard';
 import ExperienceItem from '../components/about/ExperienceItem';
 import EducationItem from '../components/about/EducationItem';
@@ -35,13 +36,13 @@ const AboutPage = () => {
           <LoadingSpinner size="lg" text="Loading about information..." />
         </div>
       )}
-      <div className={`py-16 ${isLoading ? 'hidden' : ''}`}>
+      <div className={`py-20 ${isLoading ? 'hidden' : ''}`}>
         {/* Hero Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="mb-16"
+          className="mb-24"
         >
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
@@ -111,13 +112,15 @@ const AboutPage = () => {
           </div>
         </motion.div>
 
+        <SectionDivider />
+
         {/* Skills Section */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
-          className="mb-16"
+          className="mb-24 pt-8"
         >
           <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-8">
             Skills
@@ -135,13 +138,15 @@ const AboutPage = () => {
           </div>
         </motion.section>
 
+        <SectionDivider />
+
         {/* Experience Section */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
-          className="mb-16"
+          className="mb-24 pt-8"
         >
           <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-8">
             Work Experience
@@ -164,13 +169,15 @@ const AboutPage = () => {
           </div>
         </motion.section>
 
+        <SectionDivider />
+
         {/* Education Section */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
-          className="mb-16"
+          className="mb-24 pt-8"
         >
           <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-8">
             Education
@@ -192,12 +199,15 @@ const AboutPage = () => {
           </div>
         </motion.section>
 
+        <SectionDivider />
+
         {/* Interests Section */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
+          className="pt-8"
         >
           <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-8">
             Interests

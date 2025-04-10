@@ -1,12 +1,13 @@
 import { motion } from 'framer-motion';
 import Container from '../components/layout/Container';
+import SectionDivider from '../components/ui/SectionDivider';
 
 const HomePage = () => {
   return (
     <Container>
-      <div className="py-16">
+      <div className="py-20">
       {/* Hero Section */}
-      <section className="mb-24">
+      <section className="mb-32">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -67,8 +68,10 @@ const HomePage = () => {
         </div>
       </section>
 
+      <SectionDivider />
+
       {/* Skills Section */}
-      <section className="mb-24" id="skills">
+      <section className="mb-32 pt-8" id="skills">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -102,8 +105,10 @@ const HomePage = () => {
         </div>
       </section>
 
+      <SectionDivider />
+
       {/* Featured Projects Section */}
-      <section className="mb-24" id="projects">
+      <section className="mb-32 pt-8" id="projects">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -166,8 +171,10 @@ const HomePage = () => {
         </div>
       </section>
 
+      <SectionDivider />
+
       {/* Contact CTA Section */}
-      <section id="contact" className="bg-indigo-50 dark:bg-indigo-900/20 rounded-2xl p-8 md:p-12">
+      <section id="contact" className="bg-indigo-50 dark:bg-indigo-900/20 rounded-2xl p-8 md:p-12 mt-16">
         <div className="text-center">
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
