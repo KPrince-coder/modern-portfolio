@@ -1,7 +1,9 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
 import CustomCursor from '../ui/CustomCursor';
 import LoadingSpinner from '../ui/LoadingSpinner';
+import PageTransition from './PageTransition';
 
 interface LayoutProps {
   children: ReactNode;
@@ -28,9 +30,11 @@ const Layout = ({ children }: LayoutProps) => {
         <LoadingSpinner fullPage size="lg" />
       ) : (
         <main className="min-h-[calc(100vh-200px)]">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl py-8">
-            {children}
-          </div>
+          <AnimatePresence mode="wait">
+            <PageTransition key={location.pathname}>
+              {children}
+            </PageTransition>
+          </AnimatePresence>
         </main>
       )}
     </div>
