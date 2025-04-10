@@ -2,6 +2,7 @@ import { lazy } from 'react';
 
 // Lazy-loaded page components
 const HomePage = lazy(() => import('../pages/HomePage'));
+const AboutPage = lazy(() => import('../pages/AboutPage'));
 const ProjectsPage = lazy(() => import('../pages/ProjectsPage'));
 const ProjectDetailPage = lazy(() => import('../pages/ProjectDetailPage'));
 const BlogPage = lazy(() => import('../pages/BlogPage'));
@@ -20,6 +21,10 @@ export const routes: RouteConfig[] = [
   {
     path: '/',
     element: HomePage,
+  },
+  {
+    path: '/about',
+    element: AboutPage,
   },
   {
     path: '/projects',
@@ -50,6 +55,7 @@ export const routes: RouteConfig[] = [
 // Navigation links for header
 export const navLinks = [
   { path: '/', label: 'Home' },
+  { path: '/about', label: 'About' },
   { path: '/projects', label: 'Projects' },
   { path: '/blog', label: 'Blog' },
   { path: '/contact', label: 'Contact' },
