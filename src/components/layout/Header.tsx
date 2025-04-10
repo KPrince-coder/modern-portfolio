@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import Container from './Container';
 import ThemeToggler from '../ui/ThemeToggler';
 import Button from '../ui/Button';
+import MobileMenu from './MobileMenu';
 import { usePersonalData } from '../../hooks/useSupabase';
 import { navLinks } from '../../routes';
 
@@ -76,35 +77,8 @@ const Header = () => {
         </div>
       </Container>
 
-      {/* Mobile navigation */}
-      {isMenuOpen && (
-        <Container>
-          <nav className="md:hidden py-4 flex flex-col space-y-4 bg-white dark:bg-gray-800 rounded-lg mt-2 shadow-lg">
-            {navLinks.map((link) => (
-              <NavLink
-                key={link.path}
-                to={link.path}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {link.label}
-              </NavLink>
-            ))}
-            {/* CV Download in mobile menu */}
-            <a
-              href={resumeUrl}
-              className="text-gray-700 dark:text-gray-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-200 flex items-center"
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Download CV
-              <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-            </a>
-          </nav>
-        </Container>
-      )}
+      {/* Mobile menu */}
+      <MobileMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
     </header>
   );
 };
