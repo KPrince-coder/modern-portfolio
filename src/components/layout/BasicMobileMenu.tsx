@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { usePersonalData } from '../../hooks/useSupabase';
@@ -13,65 +14,51 @@ const BasicMobileMenu = ({ isOpen, onClose }: BasicMobileMenuProps) => {
   const { data: personalData } = usePersonalData();
   const resumeUrl = personalData?.resume_url ?? '#';
 
-  // Prevent scrolling when menu is open
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-
-    return () => {
-      document.body.style.overflow = '';
-    };
+    document.body.style.overflow = isOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
   }, [isOpen]);
-
-  // Debug log
-  console.log('BasicMobileMenu isOpen:', isOpen);
 
   if (!isOpen) return null;
 
   return (
-    <>
-      {/* Debug indicator */}
-      <div className="fixed top-0 left-0 right-0 bg-green-600 text-white p-2 text-center font-bold z-[10000]">
-        BASIC MOBILE MENU OPEN
-      </div>
-
-      {/* Overlay */}
-      <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9000]"
+    <div className="fixed inset-0 z-[9000] flex md:hidden">
+      {/* Improved Backdrop */}
+      <button
+        type="button"
+        className="absolute inset-0 bg-black/80 backdrop-blur-lg"
         onClick={onClose}
+        aria-label="Close menu overlay"
       />
 
-      {/* Menu */}
-      <div className="fixed top-0 right-0 bottom-0 w-4/5 max-w-sm bg-white dark:bg-gray-900 shadow-xl z-[9999] overflow-auto">
-        <div className="flex flex-col h-full">
-          {/* Header */}
-          <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-800">
-            <Link to="/" className="text-xl font-bold text-indigo-600 dark:text-indigo-400">
-              Portfolio
+      {/* Menu Container with Solid Background */}
+      <div className="absolute inset-y-0 right-0 w-80 bg-indigo-900/95 text-white flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-white/10">
+          <div className="flex items-center space-x-4">
+            <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
+              <span className="text-2xl font-bold">P</span>
+            </div>
+            <Link to="/" className="text-xl font-extrabold tracking-wider">
+              {personalData?.name ?? 'Portfolio'}
             </Link>
-            <button
-              type="button"
-              className="p-2 rounded-md text-gray-700 dark:text-gray-200"
-              onClick={onClose}
-              aria-label="Close menu"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
           </div>
 
-          {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto p-4">
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-transform hover:scale-110"
+            aria-label="Close menu"
+          >
+            <svg className="w-6 h-6" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Navigation Links */}
+        <div className="flex-1 px-6 py-8 bg-black/80">
+          <nav>
             <ul className="space-y-4">
               {navLinks.map((link) => {
                 const isActive = location.pathname === link.path ||
@@ -81,39 +68,59 @@ const BasicMobileMenu = ({ isOpen, onClose }: BasicMobileMenuProps) => {
                   <li key={link.path}>
                     <Link
                       to={link.path}
-                      className={`block py-3 px-4 rounded-lg text-lg ${
-                        isActive
-                          ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 font-medium'
-                          : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
-                      }`}
+                      className={`group flex items-center w-full p-3 rounded-lg transition-all duration-300
+                        ${isActive ? 'bg-indigo-700/50 text-white' : 'text-white/90 hover:text-white hover:bg-indigo-700/30'}`}
                       onClick={onClose}
                     >
-                      {link.label}
+                      {/* Arrow Icon */}
+                      <svg
+                        className={`w-5 h-5 transition-transform duration-300
+                          ${isActive ? 'translate-x-2 text-purple-300' : 'group-hover:translate-x-2'}`}
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                      </svg>
+                      <span className="ml-4 text-lg font-medium">{link.label}</span>
                     </Link>
                   </li>
                 );
               })}
             </ul>
           </nav>
+        </div>
 
-          {/* Footer */}
-          <div className="p-4 border-t border-gray-200 dark:border-gray-800">
-            <a
-              href={resumeUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+        {/* Download CV Button */}
+        <div className="p-6 border-t border-white/40 bg-black/80">
+          <a
+            href={resumeUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full flex items-center justify-center gap-3 p-4 bg-white text-indigo-700 rounded-lg font-bold shadow-lg transition-transform hover:scale-[1.02]"
+            onClick={onClose}
+          >
+            <svg
+              className="w-6 h-6 animate-bounce"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-              Download CV
-            </a>
-          </div>
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            <span>Download CV</span>
+          </a>
+        </div>
+
+        {/* Decorative Elements */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-20 left-0 w-24 h-24 bg-white/10 rounded-full blur-2xl animate-float"></div>
+          <div className="absolute bottom-20 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl animate-float-reverse"></div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
 export default BasicMobileMenu;
+
