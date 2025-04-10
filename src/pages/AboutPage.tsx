@@ -49,8 +49,8 @@ const AboutPage = () => {
                 {personalData.bio}
               </p>
               <div className="flex flex-wrap gap-4">
-                <Button 
-                  href={personalData.resume_url} 
+                <Button
+                  href={personalData.resume_url}
                   variant="primary"
                   isExternal
                   rightIcon={
@@ -61,8 +61,8 @@ const AboutPage = () => {
                 >
                   Download CV
                 </Button>
-                <Button 
-                  href="/contact" 
+                <Button
+                  href="/contact"
                   variant="outline"
                 >
                   Contact Me
@@ -73,9 +73,9 @@ const AboutPage = () => {
               <div className="aspect-square rounded-full bg-gradient-to-br from-indigo-400 to-purple-600 p-1">
                 <div className="w-full h-full rounded-full bg-white dark:bg-gray-900 flex items-center justify-center overflow-hidden">
                   {personalData.profile_image_url ? (
-                    <img 
-                      src={personalData.profile_image_url} 
-                      alt={personalData.name} 
+                    <img
+                      src={personalData.profile_image_url}
+                      alt={personalData.name}
                       className="w-full h-full object-cover"
                     />
                   ) : (
@@ -105,7 +105,7 @@ const AboutPage = () => {
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {skills.map((skill, index) => (
-              <SkillCard 
+              <SkillCard
                 key={skill.name}
                 name={skill.name}
                 description={skill.description}
@@ -129,7 +129,7 @@ const AboutPage = () => {
           </h2>
           <div className="space-y-8">
             {workExperience.map((experience, index) => (
-              <ExperienceItem 
+              <ExperienceItem
                 key={`${experience.company}-${index}`}
                 title={experience.title}
                 company={experience.company}
@@ -158,7 +158,7 @@ const AboutPage = () => {
           </h2>
           <div className="space-y-8">
             {education.map((edu, index) => (
-              <EducationItem 
+              <EducationItem
                 key={`${edu.institution}-${index}`}
                 degree={edu.degree}
                 institution={edu.institution}
@@ -185,7 +185,7 @@ const AboutPage = () => {
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {interests.map((interest, index) => (
-              <InterestItem 
+              <InterestItem
                 key={interest.name}
                 name={interest.name}
                 icon={interest.icon}
@@ -286,7 +286,7 @@ const workExperience = [
     endDate: 'Present',
     description: 'Leading the frontend development team in building modern, responsive web applications using React, TypeScript, and Tailwind CSS.',
     achievements: [
-      'Redesigned the company's flagship product, resulting in a 40% increase in user engagement',
+      'Redesigned the company\'s flagship product, resulting in a 40% increase in user engagement',
       'Implemented a component library that reduced development time by 30%',
       'Mentored junior developers and conducted code reviews',
       'Optimized application performance, reducing load times by 50%'
