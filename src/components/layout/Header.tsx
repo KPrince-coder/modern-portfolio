@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import Container from './Container';
 import ThemeToggler from '../ui/ThemeToggler';
 import Button from '../ui/Button';
@@ -110,14 +110,24 @@ const Header = () => {
 };
 
 // Helper component for navigation links
-const NavLink = ({ to, children, onClick }: { to: string; children: React.ReactNode; onClick?: () => void }) => (
-  <Link
-    to={to}
-    className="text-gray-700 dark:text-gray-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-200"
-    onClick={onClick}
-  >
-    {children}
-  </Link>
-);
+const NavLink = ({ to, children, onClick }: { to: string; children: React.ReactNode; onClick?: () => void }) => {
+  const location = useLocation();
+  const isActive = location.pathname === to || (to !== '/' && location.pathname.startsWith(to));
+
+  return (
+    <Link
+      to={to}
+      className={`relative transition-colors duration-200 ${isActive
+        ? 'text-indigo-600 dark:text-indigo-400 font-medium'
+        : 'text-gray-700 dark:text-gray-200 hover:text-indigo-600 dark:hover:text-indigo-400'}`}
+      onClick={onClick}
+    >
+      {children}
+      {isActive && (
+        <span className="absolute -bottom-1 left-0 w-full h-0.5 bg-indigo-600 dark:bg-indigo-400 rounded-full"></span>
+      )}
+    </Link>
+  );
+};
 
 export default Header;
