@@ -6,6 +6,7 @@ import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 import ScrollToTop from './components/utils/ScrollToTop';
+import { ThemeProvider } from './context/ThemeContext';
 import { routes } from './routes';
 import './App.css';
 
@@ -23,24 +24,26 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router>
-        <ScrollToTop />
-        <Layout>
-          <Header />
-          <Suspense fallback={<LoadingSpinner size="lg" text="Loading page..." />}>
-            <Routes>
-              {routes.map((route) => (
-                <Route
-                  key={route.path}
-                  path={route.path}
-                  element={<route.element />}
-                />
-              ))}
-            </Routes>
-          </Suspense>
-          <Footer />
-        </Layout>
-      </Router>
+      <ThemeProvider>
+        <Router>
+          <ScrollToTop />
+          <Layout>
+            <Header />
+            <Suspense fallback={<LoadingSpinner size="lg" text="Loading page..." />}>
+              <Routes>
+                {routes.map((route) => (
+                  <Route
+                    key={route.path}
+                    path={route.path}
+                    element={<route.element />}
+                  />
+                ))}
+              </Routes>
+            </Suspense>
+            <Footer />
+          </Layout>
+        </Router>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }
