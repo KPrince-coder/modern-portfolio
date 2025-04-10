@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { usePersonalData } from '../hooks/useSupabase';
+import { usePersonalData, useSkills, useWorkExperience, useEducation, useInterests } from '../hooks/useSupabase';
 import Container from '../components/layout/Container';
 import Button from '../components/ui/Button';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
@@ -9,7 +9,14 @@ import EducationItem from '../components/about/EducationItem';
 import InterestItem from '../components/about/InterestItem';
 
 const AboutPage = () => {
-  const { data: personalData, isLoading, error } = usePersonalData();
+  const { data: personalData, isLoading: isLoadingPersonal, error: personalError } = usePersonalData();
+  const { data: skills, isLoading: isLoadingSkills } = useSkills();
+  const { data: workExperience, isLoading: isLoadingWork } = useWorkExperience();
+  const { data: education, isLoading: isLoadingEducation } = useEducation();
+  const { data: interests, isLoading: isLoadingInterests } = useInterests();
+
+  const isLoading = isLoadingPersonal || isLoadingSkills || isLoadingWork || isLoadingEducation || isLoadingInterests;
+  const error = personalError;
 
   if (isLoading) {
     return <LoadingSpinner size="lg" text="Loading about information..." />;
@@ -104,12 +111,12 @@ const AboutPage = () => {
             Skills
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {skills.map((skill, index) => (
+            {(skills || sampleSkills).map((skill, index) => (
               <SkillCard
-                key={skill.name}
+                key={skill.name || skill.id}
                 name={skill.name}
                 description={skill.description}
-                icon={skill.icon}
+                icon={typeof skill.icon === 'string' ? <div dangerouslySetInnerHTML={{ __html: skill.icon }} /> : skill.icon}
                 index={index}
               />
             ))}
@@ -128,14 +135,14 @@ const AboutPage = () => {
             Work Experience
           </h2>
           <div className="space-y-8">
-            {workExperience.map((experience, index) => (
+            {(workExperience || sampleWorkExperience).map((experience, index) => (
               <ExperienceItem
-                key={`${experience.company}-${index}`}
+                key={experience.id || `${experience.company}-${index}`}
                 title={experience.title}
                 company={experience.company}
                 location={experience.location}
-                startDate={experience.startDate}
-                endDate={experience.endDate}
+                startDate={experience.start_date || experience.startDate}
+                endDate={experience.end_date || experience.endDate}
                 description={experience.description}
                 achievements={experience.achievements}
                 technologies={experience.technologies}
@@ -157,14 +164,14 @@ const AboutPage = () => {
             Education
           </h2>
           <div className="space-y-8">
-            {education.map((edu, index) => (
+            {(education || sampleEducation).map((edu, index) => (
               <EducationItem
-                key={`${edu.institution}-${index}`}
+                key={edu.id || `${edu.institution}-${index}`}
                 degree={edu.degree}
                 institution={edu.institution}
                 location={edu.location}
-                startDate={edu.startDate}
-                endDate={edu.endDate}
+                startDate={edu.start_date || edu.startDate}
+                endDate={edu.end_date || edu.endDate}
                 description={edu.description}
                 achievements={edu.achievements}
                 index={index}
@@ -184,11 +191,11 @@ const AboutPage = () => {
             Interests
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {interests.map((interest, index) => (
+            {(interests || sampleInterests).map((interest, index) => (
               <InterestItem
-                key={interest.name}
+                key={interest.id || interest.name}
                 name={interest.name}
-                icon={interest.icon}
+                icon={typeof interest.icon === 'string' ? <div dangerouslySetInnerHTML={{ __html: interest.icon }} /> : interest.icon}
                 index={index}
               />
             ))}
@@ -200,7 +207,7 @@ const AboutPage = () => {
 };
 
 // Sample data (in a real app, this would come from the CMS/Supabase)
-const skills = [
+const sampleSkills = [
   {
     name: 'Frontend Development',
     description: 'Creating responsive and interactive user interfaces with modern frameworks.',
@@ -277,7 +284,7 @@ const skills = [
   },
 ];
 
-const workExperience = [
+const sampleWorkExperience = [
   {
     title: 'Senior Frontend Developer',
     company: 'Tech Innovations Inc.',
@@ -324,7 +331,7 @@ const workExperience = [
   }
 ];
 
-const education = [
+const sampleEducation = [
   {
     degree: 'Master of Science in Computer Science',
     institution: 'Stanford University',
@@ -355,7 +362,7 @@ const education = [
   }
 ];
 
-const interests = [
+const sampleInterests = [
   {
     name: 'Photography',
     icon: (

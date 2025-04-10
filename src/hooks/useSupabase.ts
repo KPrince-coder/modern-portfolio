@@ -1,5 +1,5 @@
 import { useQuery, useMutation, QueryClient } from '@tanstack/react-query';
-import { api, Project, BlogPost, ContactMessage, SocialLink, PersonalData } from '../lib/supabase';
+import { api, ContactMessage } from '../lib/supabase';
 
 // Create a client
 export const queryClient = new QueryClient();
@@ -39,7 +39,7 @@ export const useBlogPostBySlug = (slug: string) => {
 // Contact message hook
 export const useSubmitContactMessage = () => {
   return useMutation({
-    mutationFn: (message: Omit<ContactMessage, 'id' | 'created_at' | 'is_read' | 'is_replied'>) => 
+    mutationFn: (message: Omit<ContactMessage, 'id' | 'created_at' | 'is_read' | 'is_replied'>) =>
       api.submitContactMessage(message),
     onSuccess: () => {
       // Optionally invalidate queries or perform other actions on success
@@ -60,5 +60,37 @@ export const useSocialLinks = () => {
   return useQuery({
     queryKey: ['socialLinks'],
     queryFn: api.getSocialLinks,
+  });
+};
+
+// Skills hook
+export const useSkills = () => {
+  return useQuery({
+    queryKey: ['skills'],
+    queryFn: api.getSkills,
+  });
+};
+
+// Work experience hook
+export const useWorkExperience = () => {
+  return useQuery({
+    queryKey: ['workExperience'],
+    queryFn: api.getWorkExperience,
+  });
+};
+
+// Education hook
+export const useEducation = () => {
+  return useQuery({
+    queryKey: ['education'],
+    queryFn: api.getEducation,
+  });
+};
+
+// Interests hook
+export const useInterests = () => {
+  return useQuery({
+    queryKey: ['interests'],
+    queryFn: api.getInterests,
   });
 };
