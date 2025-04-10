@@ -124,8 +124,34 @@ The portfolio includes a custom CMS for managing all content. The CMS is accessi
 
 ### Accessing the CMS
 
-1. Navigate to `/admin` in your browser
-2. Log in with the credentials created during setup
+1. Create an admin user (see below)
+2. Navigate to `/admin` in your browser
+3. Log in with your admin credentials
+
+### Creating an Admin User
+
+Before you can access the CMS, you need to create an admin user:
+
+#### Option 1: Using the provided script
+
+```bash
+# Set up environment variables
+export SUPABASE_URL=your-supabase-url
+export SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+export ADMIN_EMAIL=admin@example.com
+export ADMIN_PASSWORD=Admin123!
+
+# Run the script
+node scripts/create-admin-user.js
+```
+
+#### Option 2: Using the Supabase Dashboard
+
+1. Go to your Supabase dashboard
+2. Create a user in the Authentication section
+3. Assign the admin role using SQL
+
+Detailed instructions can be found in [docs/cms-access.md](docs/cms-access.md).
 
 ## Customization
 

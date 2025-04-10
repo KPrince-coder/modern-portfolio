@@ -87,6 +87,74 @@ supabase db reset --db-url postgresql://postgres:password@db.your-project-ref.su
 psql postgresql://postgres:password@db.your-project-ref.supabase.co:5432/postgres -f seed.sql
 ```
 
+## Creating an Admin User
+
+To access the CMS, you need to create an admin user. This involves two steps:
+
+1. Create a user through Supabase Authentication
+2. Assign the admin role to the user
+
+### Option 1: Using the Supabase Dashboard
+
+1. Go to your Supabase dashboard (https://app.supabase.io)
+2. Select your project
+3. Navigate to "Authentication" > "Users"
+4. Click "Add User" and create a user with an email and password (e.g., admin@example.com / Admin123!)
+5. Copy the UUID of the newly created user
+6. Go to "SQL Editor" and run the following query, replacing `your-user-uuid-here` with the actual UUID:
+
+```sql
+INSERT INTO portfolio.user_roles (user_id, role_id)
+VALUES (
+  'your-user-uuid-here',
+  (SELECT id FROM portfolio.roles WHERE name = 'admin')
+);
+```
+
+### Option 2: Using the Supabase API
+
+You can also create a user and assign the admin role programmatically:
+
+```javascript
+// Create a user
+const { data: { user }, error: signUpError } = await supabase.auth.signUp({
+  email: 'admin@example.com',
+  password: 'Admin123!',
+});
+
+if (signUpError) {
+  console.error('Error creating user:', signUpError);
+  return;
+}
+
+// Assign admin role
+const { error: roleError } = await supabase
+  .from('portfolio.user_roles')
+  .insert({
+    user_id: user.id,
+    role_id: '(SELECT id FROM portfolio.roles WHERE name = \'admin\')'
+  });
+
+if (roleError) {
+  console.error('Error assigning role:', roleError);
+}
+```
+
+### Option 3: Using the Admin API (Server-side only)
+
+For server-side applications, you can use the Admin API to create users:
+
+```javascript
+// This should only be used in a secure server environment
+const { data: { user }, error: createUserError } = await supabase.auth.admin.createUser({
+  email: 'admin@example.com',
+  password: 'Admin123!',
+  email_confirm: true
+});
+
+// Then assign the admin role as shown in Option 2
+```
+
 ## Schema Design Considerations
 
 ### Performance Optimization

@@ -19,28 +19,28 @@ const NotFoundPage = () => <div className="p-6"><h1 className="text-2xl font-sem
 const CMSRoutes: React.FC = () => {
   return (
     <Routes>
-      <Route path="/admin/login" element={<LoginPage />} />
-      
-      <Route path="/admin" element={<CMSLayout><DashboardPage /></CMSLayout>} />
-      <Route path="/admin/dashboard" element={<CMSLayout><DashboardPage /></CMSLayout>} />
-      
-      <Route path="/admin/projects" element={<CMSLayout><ProjectsPage /></CMSLayout>} />
-      <Route path="/admin/projects/:id" element={<CMSLayout><ProjectsPage /></CMSLayout>} />
-      <Route path="/admin/projects/new" element={<CMSLayout><ProjectsPage /></CMSLayout>} />
-      
-      <Route path="/admin/blog" element={<CMSLayout><BlogPage /></CMSLayout>} />
-      <Route path="/admin/blog/:id" element={<CMSLayout><BlogPage /></CMSLayout>} />
-      <Route path="/admin/blog/new" element={<CMSLayout><BlogPage /></CMSLayout>} />
-      
-      <Route path="/admin/about" element={<CMSLayout><AboutPage /></CMSLayout>} />
-      <Route path="/admin/messages" element={<CMSLayout><MessagesPage /></CMSLayout>} />
-      <Route path="/admin/media" element={<CMSLayout><MediaPage /></CMSLayout>} />
-      <Route path="/admin/ai" element={<CMSLayout><AIPage /></CMSLayout>} />
-      <Route path="/admin/analytics" element={<CMSLayout><AnalyticsPage /></CMSLayout>} />
-      <Route path="/admin/settings" element={<CMSLayout><SettingsPage /></CMSLayout>} />
-      <Route path="/admin/users" element={<CMSLayout><UsersPage /></CMSLayout>} />
-      
-      <Route path="/admin/*" element={<CMSLayout><NotFoundPage /></CMSLayout>} />
+      <Route path="login" element={<LoginPage />} />
+
+      <Route path="/" element={<CMSLayout><DashboardPage /></CMSLayout>} />
+      <Route path="dashboard" element={<CMSLayout><DashboardPage /></CMSLayout>} />
+
+      <Route path="projects" element={<CMSLayout><ProjectsPage /></CMSLayout>} />
+      <Route path="projects/:id" element={<CMSLayout><ProjectsPage /></CMSLayout>} />
+      <Route path="projects/new" element={<CMSLayout><ProjectsPage /></CMSLayout>} />
+
+      <Route path="blog" element={<CMSLayout><BlogPage /></CMSLayout>} />
+      <Route path="blog/:id" element={<CMSLayout><BlogPage /></CMSLayout>} />
+      <Route path="blog/new" element={<CMSLayout><BlogPage /></CMSLayout>} />
+
+      <Route path="about" element={<CMSLayout><AboutPage /></CMSLayout>} />
+      <Route path="messages" element={<CMSLayout><MessagesPage /></CMSLayout>} />
+      <Route path="media" element={<CMSLayout><MediaPage /></CMSLayout>} />
+      <Route path="ai" element={<CMSLayout><AIPage /></CMSLayout>} />
+      <Route path="analytics" element={<CMSLayout><AnalyticsPage /></CMSLayout>} />
+      <Route path="settings" element={<CMSLayout><SettingsPage /></CMSLayout>} />
+      <Route path="users" element={<CMSLayout><UsersPage /></CMSLayout>} />
+
+      <Route path="*" element={<CMSLayout><NotFoundPage /></CMSLayout>} />
     </Routes>
   );
 };

@@ -23,52 +23,50 @@ const queryClient = new QueryClient({
   },
 });
 
-// Conditional layout component that only renders header/footer for non-admin routes
-const ConditionalLayout = ({ children }: { children: React.ReactNode }) => {
-  const location = useLocation();
-  const isAdminRoute = location.pathname.startsWith('/admin');
-
-  if (isAdminRoute) {
-    return <>{children}</>;
-  }
-
-  return (
-    <Layout>
-      <Header />
-      {children}
-      <Footer />
-    </Layout>
-  );
-};
-
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <Router>
           <ScrollToTop />
-          <CMSProvider>
-            <ConditionalLayout>
-              <Suspense fallback={<LoadingSpinner size="lg" text="Loading page..." />}>
-                <Routes>
-                  {/* Main website routes */}
-                  {routes.map((route) => (
-                    <Route
-                      key={route.path}
-                      path={route.path}
-                      element={<route.element />}
-                    />
-                  ))}
-
-                  {/* CMS routes - handled by CMSRoutes component */}
-                  <Route path="/admin/*" element={<CMSRoutes />} />
-                </Routes>
-              </Suspense>
-            </ConditionalLayout>
-          </CMSProvider>
+          <AppContent />
         </Router>
       </ThemeProvider>
     </QueryClientProvider>
+  );
+}
+
+// AppContent component with access to router context
+const AppContent = () => {
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith('/admin');
+
+  return (
+    <CMSProvider>
+      {isAdminRoute ? (
+        <Suspense fallback={<LoadingSpinner size="lg" text="Loading page..." />}>
+          <Routes>
+            <Route path="/admin/*" element={<CMSRoutes />} />
+          </Routes>
+        </Suspense>
+      ) : (
+        <Layout>
+          <Header />
+          <Suspense fallback={<LoadingSpinner size="lg" text="Loading page..." />}>
+            <Routes>
+              {routes.map((route) => (
+                <Route
+                  key={route.path}
+                  path={route.path}
+                  element={<route.element />}
+                />
+              ))}
+            </Routes>
+          </Suspense>
+          <Footer />
+        </Layout>
+      )}
+    </CMSProvider>
   );
 }
 
