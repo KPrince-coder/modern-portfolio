@@ -5,6 +5,7 @@ import Layout from './components/layout/Layout';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import LoadingSpinner from './components/ui/LoadingSpinner';
+import ScrollToTop from './components/utils/ScrollToTop';
 import { routes } from './routes';
 import './App.css';
 
@@ -23,6 +24,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
+        <ScrollToTop />
         <Layout>
           <Header />
           <Suspense fallback={<LoadingSpinner size="lg" text="Loading page..." />}>
