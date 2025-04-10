@@ -4,7 +4,54 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React + TS</title>
+    <title>Portfolio</title>
+    <script>
+      // Immediately set the theme to prevent flash of wrong theme
+      (function() {
+        const storedTheme = localStorage.getItem('theme');
+
+        if (storedTheme === 'dark') {
+          document.documentElement.classList.add('dark');
+          document.documentElement.setAttribute('data-theme', 'dark');
+          document.documentElement.style.colorScheme = 'dark';
+
+          // Update CSS variables for dark mode
+          document.documentElement.style.setProperty('--foreground-rgb', '255, 255, 255');
+          document.documentElement.style.setProperty('--background-start-rgb', '0, 0, 0');
+          document.documentElement.style.setProperty('--background-end-rgb', '0, 0, 0');
+        } else if (storedTheme === 'light') {
+          document.documentElement.classList.remove('dark');
+          document.documentElement.setAttribute('data-theme', 'light');
+          document.documentElement.style.colorScheme = 'light';
+
+          // Update CSS variables for light mode
+          document.documentElement.style.setProperty('--foreground-rgb', '0, 0, 0');
+          document.documentElement.style.setProperty('--background-start-rgb', '214, 219, 220');
+          document.documentElement.style.setProperty('--background-end-rgb', '255, 255, 255');
+        } else {
+          // If no theme is stored, use system preference
+          if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+            document.documentElement.setAttribute('data-theme', 'dark');
+            document.documentElement.style.colorScheme = 'dark';
+
+            // Update CSS variables for dark mode
+            document.documentElement.style.setProperty('--foreground-rgb', '255, 255, 255');
+            document.documentElement.style.setProperty('--background-start-rgb', '0, 0, 0');
+            document.documentElement.style.setProperty('--background-end-rgb', '0, 0, 0');
+          } else {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.setAttribute('data-theme', 'light');
+            document.documentElement.style.colorScheme = 'light';
+
+            // Update CSS variables for light mode
+            document.documentElement.style.setProperty('--foreground-rgb', '0, 0, 0');
+            document.documentElement.style.setProperty('--background-start-rgb', '214, 219, 220');
+            document.documentElement.style.setProperty('--background-end-rgb', '255, 255, 255');
+          }
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
