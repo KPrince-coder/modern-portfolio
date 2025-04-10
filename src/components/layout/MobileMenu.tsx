@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { navLinks } from '../../routes';
@@ -13,8 +13,9 @@ const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
   const location = useLocation();
   const { data: personalData } = usePersonalData();
   const resumeUrl = personalData?.resume_url ?? '#';
-  
-  // Close menu when clicking outside
+
+  // We'll comment out the click outside handler for now to debug the menu
+  /*
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
@@ -22,18 +23,19 @@ const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
         onClose();
       }
     };
-    
+
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
   }, [isOpen, onClose]);
-  
+  */
+
   // Close menu when route changes
   useEffect(() => {
     if (isOpen) {
       onClose();
     }
   }, [location.pathname, isOpen, onClose]);
-  
+
   // Prevent scrolling when menu is open
   useEffect(() => {
     if (isOpen) {
@@ -41,12 +43,12 @@ const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
     } else {
       document.body.style.overflow = '';
     }
-    
+
     return () => {
       document.body.style.overflow = '';
     };
   }, [isOpen]);
-  
+
   const menuVariants = {
     closed: {
       x: '100%',
@@ -67,18 +69,18 @@ const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
       }
     }
   };
-  
+
   const itemVariants = {
-    closed: { 
-      x: 20, 
-      opacity: 0 
+    closed: {
+      x: 20,
+      opacity: 0
     },
-    open: { 
-      x: 0, 
-      opacity: 1 
+    open: {
+      x: 0,
+      opacity: 1
     }
   };
-  
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -90,12 +92,15 @@ const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
-            onClick={onClose}
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose();
+            }}
           />
-          
+
           {/* Menu */}
           <motion.div
-            className="fixed top-0 right-0 bottom-0 w-4/5 max-w-sm bg-white dark:bg-gray-900 shadow-xl z-50 mobile-menu-content"
+            className="fixed top-0 right-0 bottom-0 w-4/5 max-w-sm bg-white dark:bg-gray-900 shadow-xl z-[100] mobile-menu-content"
             initial="closed"
             animate="open"
             exit="closed"
@@ -124,14 +129,14 @@ const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
                   </svg>
                 </button>
               </div>
-              
+
               {/* Navigation */}
               <nav className="flex-1 overflow-y-auto p-4">
                 <ul className="space-y-4">
                   {navLinks.map((link) => {
-                    const isActive = location.pathname === link.path || 
+                    const isActive = location.pathname === link.path ||
                       (link.path !== '/' && location.pathname.startsWith(link.path));
-                    
+
                     return (
                       <motion.li key={link.path} variants={itemVariants}>
                         <Link
@@ -149,7 +154,7 @@ const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
                   })}
                 </ul>
               </nav>
-              
+
               {/* Footer */}
               <div className="p-4 border-t border-gray-200 dark:border-gray-800">
                 <motion.div variants={itemVariants}>
