@@ -63,11 +63,18 @@ export const useSocialLinks = () => {
   });
 };
 
-// Skills hook
+// Skills hooks
 export const useSkills = () => {
   return useQuery({
     queryKey: ['skills'],
     queryFn: api.getSkills,
+  });
+};
+
+export const useSoftSkills = () => {
+  return useQuery({
+    queryKey: ['softSkills'],
+    queryFn: api.getSoftSkills,
   });
 };
 

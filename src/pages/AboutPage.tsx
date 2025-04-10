@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { usePersonalData, useSkills, useWorkExperience, useEducation, useInterests } from '../hooks/useSupabase';
+import { usePersonalData, useSkills, useWorkExperience, useEducation, useInterests, useSoftSkills } from '../hooks/useSupabase';
 import Container from '../components/layout/Container';
 import Button from '../components/ui/Button';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
@@ -12,11 +12,12 @@ import InterestItem from '../components/about/InterestItem';
 const AboutPage = () => {
   const { data: personalData, isLoading: isLoadingPersonal, error: personalError } = usePersonalData();
   const { data: skills, isLoading: isLoadingSkills } = useSkills();
+  const { data: softSkills, isLoading: isLoadingSoftSkills } = useSoftSkills();
   const { data: workExperience, isLoading: isLoadingWork } = useWorkExperience();
   const { data: education, isLoading: isLoadingEducation } = useEducation();
   const { data: interests, isLoading: isLoadingInterests } = useInterests();
 
-  const isLoading = isLoadingPersonal || isLoadingSkills || isLoadingWork || isLoadingEducation || isLoadingInterests;
+  const isLoading = isLoadingPersonal || isLoadingSkills || isLoadingSoftSkills || isLoadingWork || isLoadingEducation || isLoadingInterests;
   const error = personalError;
 
   // Always render the component, but use sample data if the real data is not available
@@ -114,7 +115,7 @@ const AboutPage = () => {
 
         <SectionDivider />
 
-        {/* Skills Section */}
+        {/* Technical Skills Section */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -122,17 +123,50 @@ const AboutPage = () => {
           viewport={{ once: true }}
           className="mb-24 pt-8"
         >
-          <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-8">
-            Skills
+          <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-4">
+            Technical Skills
           </h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {(skills || sampleSkills).map((skill, index) => (
+          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mb-8">
+            My expertise in various technologies and tools that I use to build exceptional digital experiences.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {(skills || sampleTechnicalSkills).map((skill, index) => (
               <SkillCard
                 key={skill.name || skill.id}
                 name={skill.name}
                 description={skill.description}
                 icon={typeof skill.icon === 'string' ? <div dangerouslySetInnerHTML={{ __html: skill.icon }} /> : skill.icon}
                 index={index}
+                level={skill.level || 3}
+                type="technical"
+              />
+            ))}
+          </div>
+        </motion.section>
+
+        {/* Soft Skills Section */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+          className="mb-24 pt-8"
+        >
+          <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-4">
+            Soft Skills
+          </h2>
+          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mb-8">
+            Beyond technical abilities, these interpersonal skills help me collaborate effectively and deliver successful projects.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {(softSkills || sampleSoftSkills).map((skill, index) => (
+              <SkillCard
+                key={skill.name || skill.id}
+                name={skill.name}
+                description={skill.description}
+                icon={typeof skill.icon === 'string' ? <div dangerouslySetInnerHTML={{ __html: skill.icon }} /> : skill.icon}
+                index={index}
+                type="soft"
               />
             ))}
           </div>
@@ -229,10 +263,11 @@ const AboutPage = () => {
 };
 
 // Sample data (in a real app, this would come from the CMS/Supabase)
-const sampleSkills = [
+const sampleTechnicalSkills = [
   {
     name: 'Frontend Development',
     description: 'Creating responsive and interactive user interfaces with modern frameworks.',
+    level: 5,
     icon: (
       <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
         <path fillRule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -242,6 +277,7 @@ const sampleSkills = [
   {
     name: 'Backend Development',
     description: 'Building robust server-side applications and APIs.',
+    level: 4,
     icon: (
       <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
         <path fillRule="evenodd" d="M2 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm3.293 1.293a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 01-1.414-1.414L7.586 10 5.293 7.707a1 1 0 010-1.414zM11 12a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
@@ -251,6 +287,7 @@ const sampleSkills = [
   {
     name: 'UI/UX Design',
     description: 'Designing intuitive and visually appealing user experiences.',
+    level: 4,
     icon: (
       <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
         <path d="M10 3.5a1.5 1.5 0 013 0V4a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-.5a1.5 1.5 0 000 3h.5a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-.5a1.5 1.5 0 00-3 0v.5a1 1 0 01-1 1H6a1 1 0 01-1-1v-3a1 1 0 00-1-1h-.5a1.5 1.5 0 010-3H4a1 1 0 001-1V6a1 1 0 011-1h3a1 1 0 001-1v-.5z" />
@@ -260,6 +297,7 @@ const sampleSkills = [
   {
     name: 'Database Design',
     description: 'Designing and optimizing database schemas for performance.',
+    level: 3,
     icon: (
       <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
         <path d="M3 12v3c0 1.657 3.134 3 7 3s7-1.343 7-3v-3c0 1.657-3.134 3-7 3s-7-1.343-7-3z" />
@@ -271,6 +309,7 @@ const sampleSkills = [
   {
     name: 'AI Integration',
     description: 'Implementing AI solutions to enhance user experiences.',
+    level: 3,
     icon: (
       <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
         <path fillRule="evenodd" d="M10.496 2.132a1 1 0 00-.992 0l-7 4A1 1 0 003 8v7a1 1 0 100 2h14a1 1 0 100-2V8a1 1 0 00.496-1.868l-7-4zM6 9a1 1 0 00-1 1v3a1 1 0 102 0v-3a1 1 0 00-1-1zm3 1a1 1 0 012 0v3a1 1 0 11-2 0v-3zm5-1a1 1 0 00-1 1v3a1 1 0 102 0v-3a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -280,6 +319,7 @@ const sampleSkills = [
   {
     name: 'Performance Optimization',
     description: 'Optimizing applications for speed and efficiency.',
+    level: 4,
     icon: (
       <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
         <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
@@ -289,6 +329,7 @@ const sampleSkills = [
   {
     name: 'Responsive Design',
     description: 'Creating websites that work on all devices and screen sizes.',
+    level: 5,
     icon: (
       <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
         <path d="M2 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1H3a1 1 0 01-1-1V4zM8 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1H9a1 1 0 01-1-1V4zM15 3a1 1 0 00-1 1v12a1 1 0 001 1h2a1 1 0 001-1V4a1 1 0 00-1-1h-2z" />
@@ -298,9 +339,68 @@ const sampleSkills = [
   {
     name: 'Accessibility',
     description: 'Ensuring websites are usable by people of all abilities.',
+    level: 4,
     icon: (
       <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
         <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+      </svg>
+    ),
+  },
+];
+
+const sampleSoftSkills = [
+  {
+    name: 'Communication',
+    description: 'Effectively conveying ideas and information to team members, stakeholders, and clients.',
+    icon: (
+      <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
+        <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z" />
+      </svg>
+    ),
+  },
+  {
+    name: 'Problem Solving',
+    description: 'Analyzing complex issues and developing innovative solutions to technical challenges.',
+    icon: (
+      <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+        <path d="M11 17a1 1 0 001.447.894l4-2A1 1 0 0017 15V9.236a1 1 0 00-1.447-.894l-4 2a1 1 0 00-.553.894V17zM15.211 6.276a1 1 0 000-1.788l-4.764-2.382a1 1 0 00-.894 0L4.789 4.488a1 1 0 000 1.788l4.764 2.382a1 1 0 00.894 0l4.764-2.382zM4.447 8.342A1 1 0 003 9.236V15a1 1 0 00.553.894l4 2A1 1 0 009 17v-5.764a1 1 0 00-.553-.894l-4-2z" />
+      </svg>
+    ),
+  },
+  {
+    name: 'Teamwork',
+    description: 'Collaborating effectively with cross-functional teams to achieve project goals.',
+    icon: (
+      <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+        <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+      </svg>
+    ),
+  },
+  {
+    name: 'Time Management',
+    description: 'Prioritizing tasks and managing deadlines to deliver projects efficiently.',
+    icon: (
+      <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+      </svg>
+    ),
+  },
+  {
+    name: 'Adaptability',
+    description: 'Quickly learning new technologies and adjusting to changing project requirements.',
+    icon: (
+      <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+        <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM14 11a1 1 0 011 1v1h1a1 1 0 110 2h-1v1a1 1 0 11-2 0v-1h-1a1 1 0 110-2h1v-1a1 1 0 011-1z" />
+      </svg>
+    ),
+  },
+  {
+    name: 'Leadership',
+    description: 'Guiding and motivating team members to achieve their best work and meet project objectives.',
+    icon: (
+      <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+        <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
       </svg>
     ),
   },

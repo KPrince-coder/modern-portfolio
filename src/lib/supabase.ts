@@ -80,6 +80,8 @@ export interface Skill {
   icon: string;
   category?: string;
   display_order: number;
+  level?: number;
+  type?: 'technical' | 'soft';
 }
 
 export interface WorkExperience {
@@ -204,6 +206,19 @@ export const api = {
     const { data, error } = await supabase
       .from('skills')
       .select('*')
+      .eq('type', 'technical')
+      .order('display_order', { ascending: true });
+
+    if (error) throw error;
+    return data as Skill[];
+  },
+
+  // Soft Skills
+  getSoftSkills: async () => {
+    const { data, error } = await supabase
+      .from('skills')
+      .select('*')
+      .eq('type', 'soft')
       .order('display_order', { ascending: true });
 
     if (error) throw error;
