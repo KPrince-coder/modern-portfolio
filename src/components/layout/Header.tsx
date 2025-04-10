@@ -3,7 +3,8 @@ import { Link, useLocation } from 'react-router-dom';
 import Container from './Container';
 import ThemeToggler from '../ui/ThemeToggler';
 import Button from '../ui/Button';
-import BasicMobileMenu from './BasicMobileMenu';
+import SearchBar from '../ui/SearchBar';
+import MobileMenu from './MobileMenu';
 import { usePersonalData } from '../../hooks/useSupabase';
 import { navLinks } from '../../routes';
 
@@ -14,8 +15,6 @@ const Header = () => {
   // Fallback resume URL if data is not available
   const resumeUrl = personalData?.resume_url ?? '#';
 
-  // Debug log for menu state
-  console.log('Menu state:', isMenuOpen);
 
   return (
     <header className="py-6 sticky top-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm z-40 shadow-sm">
@@ -35,6 +34,11 @@ const Header = () => {
 
           {/* Right side actions */}
           <div className="flex items-center gap-4">
+            {/* Search - desktop only */}
+            <div className="hidden md:block">
+              <SearchBar />
+            </div>
+
             {/* CV Download Button - desktop only */}
             <div className="hidden md:block">
               <Button
@@ -58,12 +62,10 @@ const Header = () => {
             {/* Mobile menu button */}
             <button
               type="button"
-              className="md:hidden p-2 rounded-md bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
-              onClick={() => {
-                console.log('Toggle button clicked, current state:', isMenuOpen);
-                setIsMenuOpen(!isMenuOpen);
-              }}
+              className="md:hidden p-2 rounded-md bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-800/30 transition-colors"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
               aria-label="Toggle menu"
+              aria-expanded={isMenuOpen ? 'true' : 'false'}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -84,7 +86,7 @@ const Header = () => {
       </Container>
 
       {/* Mobile menu */}
-      <BasicMobileMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
+      <MobileMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
     </header>
   );
 };
@@ -111,3 +113,4 @@ const NavLink = ({ to, children, onClick }: { to: string; children: React.ReactN
 };
 
 export default Header;
+
