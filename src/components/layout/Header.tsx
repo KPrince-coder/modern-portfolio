@@ -2,20 +2,52 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Container from './Container';
 import ThemeToggler from '../ui/ThemeToggler';
+import Button from '../ui/Button';
+import { usePersonalData } from '../../hooks/useSupabase';
 import { navLinks } from '../../routes';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { data: personalData } = usePersonalData();
+
+  // Fallback resume URL if data is not available
+  const resumeUrl = personalData?.resume_url ?? '#';
 
   return (
     <header className="py-6 sticky top-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm z-40 shadow-sm">
       <Container>
         <div className="flex justify-between items-center">
+          {/* Logo */}
           <Link to="/" className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
             Portfolio
           </Link>
 
+          {/* Desktop navigation - centered */}
+          <nav className="hidden md:flex items-center justify-center space-x-8 flex-1 mx-8">
+            {navLinks.map((link) => (
+              <NavLink key={link.path} to={link.path}>{link.label}</NavLink>
+            ))}
+          </nav>
+
+          {/* Right side actions */}
           <div className="flex items-center gap-4">
+            {/* CV Download Button - desktop only */}
+            <div className="hidden md:block">
+              <Button
+                href={resumeUrl}
+                variant="outline"
+                size="sm"
+                isExternal
+                rightIcon={
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                }
+              >
+                Download CV
+              </Button>
+            </div>
+
             {/* Theme toggler */}
             <ThemeToggler />
 
@@ -40,13 +72,6 @@ const Header = () => {
                 )}
               </svg>
             </button>
-
-            {/* Desktop navigation */}
-            <nav className="hidden md:flex items-center space-x-8">
-              {navLinks.map((link) => (
-                <NavLink key={link.path} to={link.path}>{link.label}</NavLink>
-              ))}
-            </nav>
           </div>
         </div>
       </Container>
@@ -64,6 +89,19 @@ const Header = () => {
                 {link.label}
               </NavLink>
             ))}
+            {/* CV Download in mobile menu */}
+            <a
+              href={resumeUrl}
+              className="text-gray-700 dark:text-gray-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-200 flex items-center"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Download CV
+              <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+            </a>
           </nav>
         </Container>
       )}
