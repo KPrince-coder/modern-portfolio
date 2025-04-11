@@ -10,9 +10,8 @@ import { supabase } from '../../../lib/supabase';
 import Button from '../../../components/ui/Button';
 import LoadingSpinner from '../../../components/ui/LoadingSpinner';
 
-// Import file processing libraries
-const mammoth = typeof window !== 'undefined' ? require('mammoth') : null;
-const pdfParse = typeof window !== 'undefined' ? require('pdf-parse') : null;
+// We'll use dynamic imports for file processing libraries
+// These will be imported only when needed
 
 interface BlogPostContentProps {
   content: string;
@@ -91,7 +90,11 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
         // Handle DOCX files
         reader.onload = async (event) => {
           try {
+            setUploadProgress(30);
+            // Dynamically import mammoth.js
+            const mammoth = await import('mammoth');
             setUploadProgress(50);
+
             const arrayBuffer = event.target?.result as ArrayBuffer;
             const result = await mammoth.extractRawText({ arrayBuffer });
             extractedText = result.value;
@@ -108,7 +111,12 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
         // Handle PDF files
         reader.onload = async (event) => {
           try {
+            setUploadProgress(30);
+            // Dynamically import pdf-parse
+            const pdfParseModule = await import('pdf-parse');
+            const pdfParse = pdfParseModule.default;
             setUploadProgress(50);
+
             const arrayBuffer = event.target?.result as ArrayBuffer;
             const data = new Uint8Array(arrayBuffer);
             const result = await pdfParse(data);
@@ -289,6 +297,8 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
             className="hidden"
             accept=".txt,.docx,.pdf"
             onChange={handleFileUpload}
+            aria-label="Upload document file"
+            title="Upload document file"
           />
           <Button
             type="button"
