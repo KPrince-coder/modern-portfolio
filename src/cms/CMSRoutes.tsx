@@ -7,10 +7,10 @@ import AboutPage from './pages/AboutPage';
 import MessagesPage from './pages/MessagesPage';
 import MediaPage from './pages/MediaPage';
 import AIPage from './pages/AIPage';
+import BlogPage from './pages/BlogPage';
+import ProjectsPage from './pages/ProjectsPage';
 
 // Placeholder components for other pages
-const ProjectsPage = () => <div className="p-6"><h1 className="text-2xl font-semibold">Projects</h1><p className="mt-4">Projects management page</p></div>;
-const BlogPage = () => <div className="p-6"><h1 className="text-2xl font-semibold">Blog</h1><p className="mt-4">Blog management page</p></div>;
 const AnalyticsPage = () => <div className="p-6"><h1 className="text-2xl font-semibold">Analytics</h1><p className="mt-4">Site analytics</p></div>;
 const SettingsPage = () => <div className="p-6"><h1 className="text-2xl font-semibold">Settings</h1><p className="mt-4">Site settings</p></div>;
 const UsersPage = () => <div className="p-6"><h1 className="text-2xl font-semibold">Users</h1><p className="mt-4">User management</p></div>;
