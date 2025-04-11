@@ -9,9 +9,9 @@ import MediaPage from './pages/MediaPage';
 import AIPage from './pages/AIPage';
 import BlogPage from './pages/BlogPage';
 import ProjectsPage from './pages/ProjectsPage';
+import AnalyticsPage from './pages/AnalyticsPage';
 
 // Placeholder components for other pages
-const AnalyticsPage = () => <div className="p-6"><h1 className="text-2xl font-semibold">Analytics</h1><p className="mt-4">Site analytics</p></div>;
 const SettingsPage = () => <div className="p-6"><h1 className="text-2xl font-semibold">Settings</h1><p className="mt-4">Site settings</p></div>;
 const UsersPage = () => <div className="p-6"><h1 className="text-2xl font-semibold">Users</h1><p className="mt-4">User management</p></div>;
 const NotFoundPage = () => <div className="p-6"><h1 className="text-2xl font-semibold">404 - Not Found</h1><p className="mt-4">The page you're looking for doesn't exist.</p></div>;
