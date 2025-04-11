@@ -40,7 +40,7 @@ const WorkExperienceManager: React.FC = () => {
     queryKey: ['workExperiences'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('portfolio.work_experience')
+        .from('work_experience')
         .select('*')
         .order('display_order', { ascending: true });
 
@@ -56,7 +56,7 @@ const WorkExperienceManager: React.FC = () => {
   const deleteExperienceMutation = useMutation({
     mutationFn: async (experienceId: string) => {
       const { error } = await supabase
-        .from('portfolio.work_experience')
+        .from('work_experience')
         .delete()
         .eq('id', experienceId);
 

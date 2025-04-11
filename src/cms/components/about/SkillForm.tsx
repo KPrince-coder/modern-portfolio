@@ -139,7 +139,7 @@ const SkillForm: React.FC<SkillFormProps> = ({ skill, categories, onCancel, onSu
       if (data.id) {
         // Update existing skill
         const { error } = await supabase
-          .from('portfolio.skills')
+          .from('skills')
           .update({
             name: data.name,
             description: data.description,
@@ -159,7 +159,7 @@ const SkillForm: React.FC<SkillFormProps> = ({ skill, categories, onCancel, onSu
       } else {
         // Create new skill
         const { error } = await supabase
-          .from('portfolio.skills')
+          .from('skills')
           .insert({
             name: data.name,
             description: data.description,

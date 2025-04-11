@@ -49,7 +49,7 @@ const SkillsManager: React.FC = () => {
     queryKey: ['skills'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('portfolio.skills')
+        .from('skills')
         .select(`
           *,
           category:category_id(id, name)
@@ -73,7 +73,7 @@ const SkillsManager: React.FC = () => {
     queryKey: ['skillCategories'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('portfolio.skill_categories')
+        .from('skill_categories')
         .select('*')
         .order('display_order', { ascending: true });
 
@@ -89,7 +89,7 @@ const SkillsManager: React.FC = () => {
   const deleteSkillMutation = useMutation({
     mutationFn: async (skillId: string) => {
       const { error } = await supabase
-        .from('portfolio.skills')
+        .from('skills')
         .delete()
         .eq('id', skillId);
 

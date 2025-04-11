@@ -201,7 +201,7 @@ const WorkExperienceForm: React.FC<WorkExperienceFormProps> = ({ experience, onC
       if (data.id) {
         // Update existing experience
         const { error } = await supabase
-          .from('portfolio.work_experience')
+          .from('work_experience')
           .update({
             company: formattedData.company,
             position: formattedData.position,
@@ -224,7 +224,7 @@ const WorkExperienceForm: React.FC<WorkExperienceFormProps> = ({ experience, onC
       } else {
         // Create new experience
         const { error } = await supabase
-          .from('portfolio.work_experience')
+          .from('work_experience')
           .insert({
             company: formattedData.company,
             position: formattedData.position,

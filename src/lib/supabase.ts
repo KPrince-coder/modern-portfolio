@@ -8,7 +8,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.error('Missing Supabase URL or Anon Key. Make sure to set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file.');
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {db: {schema: 'portfolio'}});
 
 // Helper function to handle Supabase errors
 export const handleSupabaseError = (error: any) => {
@@ -33,7 +33,7 @@ export const formatSupabaseData = <T>(data: T) => {
 export const checkUserRole = async (userId: string, role: string) => {
   try {
     const { data, error } = await supabase
-      .from('portfolio.user_roles')
+      .from('user_roles')
       .select(`
         role_id,
         roles:role_id(name)
@@ -81,7 +81,7 @@ export const logAuditEvent = async (
     const user = await getCurrentUser();
 
     const { error } = await supabase
-      .from('portfolio.audit_logs')
+      .from('audit_logs')
       .insert({
         user_id: user?.id,
         action,

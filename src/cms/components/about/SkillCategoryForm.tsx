@@ -71,8 +71,8 @@ const SkillCategoryForm: React.FC<SkillCategoryFormProps> = ({ categories, onCan
     setEditingCategory(category);
     setFormData({
       name: category.name,
-      description: category.description || '',
-      icon: category.icon || '',
+      description: category.description ?? '',
+      icon: category.icon ?? '',
       display_order: category.display_order,
     });
     setErrors({});
@@ -108,7 +108,7 @@ const SkillCategoryForm: React.FC<SkillCategoryFormProps> = ({ categories, onCan
       if (data.id) {
         // Update existing category
         const { error } = await supabase
-          .from('portfolio.skill_categories')
+          .from('skill_categories')
           .update({
             name: data.category.name,
             description: data.category.description,
@@ -123,7 +123,7 @@ const SkillCategoryForm: React.FC<SkillCategoryFormProps> = ({ categories, onCan
       } else {
         // Create new category
         const { error } = await supabase
-          .from('portfolio.skill_categories')
+          .from('skill_categories')
           .insert({
             name: data.category.name,
             description: data.category.description,
@@ -147,7 +147,7 @@ const SkillCategoryForm: React.FC<SkillCategoryFormProps> = ({ categories, onCan
   const deleteCategoryMutation = useMutation({
     mutationFn: async (categoryId: string) => {
       const { error } = await supabase
-        .from('portfolio.skill_categories')
+        .from('skill_categories')
         .delete()
         .eq('id', categoryId);
 

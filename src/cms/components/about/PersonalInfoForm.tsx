@@ -197,7 +197,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ personalData }) => 
       // If we have an ID, update the existing record
       if (data.id) {
         const { error } = await supabase
-          .from('portfolio.personal_data')
+          .from('personal_data')
           .update({
             name: data.name,
             title: data.title,
@@ -223,7 +223,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ personalData }) => 
       } else {
         // Otherwise, insert a new record
         const { error } = await supabase
-          .from('portfolio.personal_data')
+          .from('personal_data')
           .insert({
             name: data.name,
             title: data.title,

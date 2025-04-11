@@ -39,7 +39,7 @@ const EducationManager: React.FC = () => {
     queryKey: ['education'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('portfolio.education')
+        .from('education')
         .select('*')
         .order('display_order', { ascending: true });
 
@@ -55,7 +55,7 @@ const EducationManager: React.FC = () => {
   const deleteEducationMutation = useMutation({
     mutationFn: async (educationId: string) => {
       const { error } = await supabase
-        .from('portfolio.education')
+        .from('education')
         .delete()
         .eq('id', educationId);
 

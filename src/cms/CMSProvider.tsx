@@ -62,7 +62,7 @@ export const CMSProvider = ({ children }: CMSProviderProps) => {
   const fetchUserRoles = async (userId: string) => {
     try {
       const { data, error } = await supabase
-        .from('portfolio.user_roles')
+        .from('user_roles')
         .select(`
           role_id,
           roles:role_id(name)

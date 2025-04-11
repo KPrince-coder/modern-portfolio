@@ -196,7 +196,7 @@ const EducationForm: React.FC<EducationFormProps> = ({ education, onCancel, onSu
       if (data.id) {
         // Update existing education
         const { error } = await supabase
-          .from('portfolio.education')
+          .from('education')
           .update({
             institution: formattedData.institution,
             degree: formattedData.degree,
@@ -219,7 +219,7 @@ const EducationForm: React.FC<EducationFormProps> = ({ education, onCancel, onSu
       } else {
         // Create new education
         const { error } = await supabase
-          .from('portfolio.education')
+          .from('education')
           .insert({
             institution: formattedData.institution,
             degree: formattedData.degree,
