@@ -1,8 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Tab } from '@headlessui/react';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import rehypeSanitize from 'rehype-sanitize';
@@ -30,38 +28,107 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
   const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Configure Quill modules and formats
-  const quillModules = {
-    toolbar: [
-      [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-      ['bold', 'italic', 'underline', 'strike', 'blockquote', 'code-block'],
-      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-      [{ 'script': 'sub' }, { 'script': 'super' }],
-      [{ 'indent': '-1' }, { 'indent': '+1' }],
-      [{ 'direction': 'rtl' }],
-      [{ 'color': [] }, { 'background': [] }],
-      [{ 'font': [] }],
-      [{ 'align': [] }],
-      ['link', 'image', 'video'],
-      ['clean']
-    ],
-    clipboard: {
-      matchVisual: false,
-    },
-  };
-
-  const quillFormats = [
-    'header',
-    'bold', 'italic', 'underline', 'strike', 'blockquote', 'code-block',
-    'list', 'bullet',
-    'script',
-    'indent',
-    'direction',
-    'color', 'background',
-    'font',
-    'align',
-    'link', 'image', 'video'
+  // Rich text formatting toolbar buttons
+  const formatButtons = [
+    { label: 'Bold', icon: '𝐁', format: '**', example: '**bold text**' },
+    { label: 'Italic', icon: '𝐼', format: '*', example: '*italic text*' },
+    { label: 'Heading 1', icon: 'H1', format: '# ', isBlock: true },
+    { label: 'Heading 2', icon: 'H2', format: '## ', isBlock: true },
+    { label: 'Heading 3', icon: 'H3', format: '### ', isBlock: true },
+    { label: 'Quote', icon: '❝', format: '> ', isBlock: true },
+    { label: 'Code', icon: '`', format: '`', example: '`code`' },
+    { label: 'Link', icon: '🔗', format: '[](url)', handler: insertLink },
+    { label: 'Image', icon: '🖼️', format: '![](url)', handler: insertImage },
+    { label: 'List', icon: '•', format: '- ', isBlock: true },
+    { label: 'Numbered List', icon: '1.', format: '1. ', isBlock: true },
   ];
+
+  // Function to handle inserting a link
+  function insertLink(textAreaRef: React.RefObject<HTMLTextAreaElement | null>) {
+    if (!textAreaRef.current) return;
+
+    const textarea = textAreaRef.current;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = textarea.value.substring(start, end);
+    const linkText = selectedText || 'link text';
+    const url = prompt('Enter the URL:', 'https://');
+
+    if (!url) return;
+
+    const linkMarkdown = `[${linkText}](${url})`;
+    const newValue = textarea.value.substring(0, start) + linkMarkdown + textarea.value.substring(end);
+
+    onChange(newValue);
+
+    // Set cursor position after the inserted link
+    setTimeout(() => {
+      textarea.focus();
+      const newCursorPos = start + linkMarkdown.length;
+      textarea.setSelectionRange(newCursorPos, newCursorPos);
+    }, 0);
+  }
+
+  // Function to handle inserting an image
+  function insertImage(textAreaRef: React.RefObject<HTMLTextAreaElement | null>) {
+    if (!textAreaRef.current) return;
+
+    const textarea = textAreaRef.current;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const altText = textarea.value.substring(start, end) || 'image';
+
+    // Open file picker
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.click();
+
+    input.onchange = async () => {
+      if (!input.files || !input.files[0]) return;
+
+      try {
+        setIsUploading(true);
+
+        // Create a unique file name
+        const file = input.files[0];
+        const fileExt = file.name.split('.').pop();
+        const fileName = `blog_${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+        const filePath = `blog_images/${fileName}`;
+
+        // Upload file to Supabase Storage
+        const { error: uploadError } = await supabase.storage
+          .from('portfolio')
+          .upload(filePath, file);
+
+        if (uploadError) {
+          throw uploadError;
+        }
+
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('portfolio')
+          .getPublicUrl(filePath);
+
+        // Insert image markdown
+        const imageMarkdown = `![${altText}](${publicUrl})`;
+        const newValue = textarea.value.substring(0, start) + imageMarkdown + textarea.value.substring(end);
+        onChange(newValue);
+
+        // Set cursor position after the inserted image
+        setTimeout(() => {
+          textarea.focus();
+          const newCursorPos = start + imageMarkdown.length;
+          textarea.setSelectionRange(newCursorPos, newCursorPos);
+        }, 0);
+      } catch (error) {
+        console.error('Error uploading image:', error);
+        alert('Failed to upload image. Please try again.');
+      } finally {
+        setIsUploading(false);
+      }
+    };
+  }
 
   // Handle file upload for content extraction
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -109,27 +176,22 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
         reader.readAsArrayBuffer(file);
       } else if (fileType === 'application/pdf') {
         // Handle PDF files
-        reader.onload = async (event) => {
+        reader.onload = async () => {
           try {
             setUploadProgress(30);
-            // Dynamically import pdf-parse
-            const pdfParseModule = await import('pdf-parse');
-            const pdfParse = pdfParseModule.default;
-            setUploadProgress(50);
-
-            const arrayBuffer = event.target?.result as ArrayBuffer;
-            const data = new Uint8Array(arrayBuffer);
-            const result = await pdfParse(data);
-            extractedText = result.text;
+            // PDF parsing in the browser is challenging without server-side help
+            // For now, we'll use a simple text extraction approach
+            const text = await extractTextFromPdf(file);
             setUploadProgress(100);
-            onChange(extractedText);
+            onChange(text);
             setIsUploading(false);
           } catch (error) {
             console.error('Error extracting text from PDF:', error);
+            alert('PDF extraction failed. This feature works best with server-side processing. Please try a TXT or DOCX file instead.');
             setIsUploading(false);
           }
         };
-        reader.readAsArrayBuffer(file);
+        reader.readAsText(file); // Just to keep the reader busy
       } else {
         alert('Unsupported file type. Please upload a TXT, DOCX, or PDF file.');
         setIsUploading(false);
@@ -140,131 +202,93 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
     }
   };
 
-  // Handle image upload for the rich text editor
-  const handleImageUpload = async () => {
-    const input = document.createElement('input');
-    input.setAttribute('type', 'file');
-    input.setAttribute('accept', 'image/*');
-    input.click();
+  // Create a reference for the textarea
+  const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
-    input.onchange = async () => {
-      const file = input.files?.[0];
-      if (!file) return;
+  // Function to apply formatting to selected text
+  const applyFormatting = (format: string, example?: string, isBlock = false) => {
+    if (!textAreaRef.current) return;
 
-      try {
-        setIsUploading(true);
+    const textarea = textAreaRef.current;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = textarea.value.substring(start, end);
 
-        // Create a unique file name
-        const fileExt = file.name.split('.').pop();
-        const fileName = `blog_${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
-        const filePath = `blog_images/${fileName}`;
+    let newText = '';
+    let newCursorPos = 0;
 
-        // Upload file to Supabase Storage
-        const { error: uploadError } = await supabase.storage
-          .from('portfolio')
-          .upload(filePath, file);
+    if (isBlock) {
+      // For block-level formatting (headings, lists, etc.)
+      const lineStart = textarea.value.lastIndexOf('\n', start - 1) + 1;
+      const lineEnd = textarea.value.indexOf('\n', end);
+      const currentLine = textarea.value.substring(lineStart, lineEnd === -1 ? textarea.value.length : lineEnd);
 
-        if (uploadError) {
-          throw uploadError;
-        }
+      newText = textarea.value.substring(0, lineStart) +
+               format +
+               currentLine +
+               textarea.value.substring(lineEnd === -1 ? textarea.value.length : lineEnd);
 
-        // Get public URL
-        const { data: { publicUrl } } = supabase.storage
-          .from('portfolio')
-          .getPublicUrl(filePath);
-
-        // Insert image URL at cursor position in Quill editor
-        const quill = (document.querySelector('.ql-editor') as any)?.quill;
-        if (quill) {
-          const range = quill.getSelection(true);
-          quill.insertEmbed(range.index, 'image', publicUrl);
-        }
-      } catch (error) {
-        console.error('Error uploading image:', error);
-      } finally {
-        setIsUploading(false);
+      newCursorPos = lineStart + format.length + currentLine.length;
+    } else if (selectedText) {
+      // For inline formatting with selected text
+      if (format === '`' || format === '**' || format === '*') {
+        newText = textarea.value.substring(0, start) +
+                 format + selectedText + format +
+                 textarea.value.substring(end);
+        newCursorPos = end + 2 * format.length;
+      } else {
+        newText = textarea.value.substring(0, start) +
+                 format.replace('(url)', `(https://example.com)`) +
+                 textarea.value.substring(end);
+        newCursorPos = start + format.length;
       }
-    };
+    } else if (example) {
+      // For inline formatting without selected text
+      newText = textarea.value.substring(0, start) +
+               example +
+               textarea.value.substring(end);
+      newCursorPos = start + example.length;
+    }
+
+    if (newText) {
+      onChange(newText);
+
+      // Set cursor position after formatting is applied
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(newCursorPos, newCursorPos);
+      }, 0);
+    }
   };
 
-  // Convert HTML to Markdown when switching from rich editor to markdown
-  const convertHtmlToMarkdown = (html: string): string => {
-    // This is a simple conversion. For a more robust solution, consider using a library like turndown
-    let markdown = html;
 
-    // Replace heading tags
-    markdown = markdown.replace(/<h1[^>]*>(.*?)<\/h1>/gi, '# $1\n');
-    markdown = markdown.replace(/<h2[^>]*>(.*?)<\/h2>/gi, '## $1\n');
-    markdown = markdown.replace(/<h3[^>]*>(.*?)<\/h3>/gi, '### $1\n');
-    markdown = markdown.replace(/<h4[^>]*>(.*?)<\/h4>/gi, '#### $1\n');
-    markdown = markdown.replace(/<h5[^>]*>(.*?)<\/h5>/gi, '##### $1\n');
-    markdown = markdown.replace(/<h6[^>]*>(.*?)<\/h6>/gi, '###### $1\n');
 
-    // Replace paragraph tags
-    markdown = markdown.replace(/<p[^>]*>(.*?)<\/p>/gi, '$1\n\n');
+  // Simple PDF text extraction function
+  // Note: This is a fallback and won't work well for all PDFs
+  // A better solution would be server-side processing
+  const extractTextFromPdf = async (file: File): Promise<string> => {
+    return new Promise((resolve) => {
+      // For now, we'll just return a placeholder message
+      // In a production app, you would implement server-side PDF parsing
+      resolve(
+        `# Content from ${file.name}
 
-    // Replace bold tags
-    markdown = markdown.replace(/<strong[^>]*>(.*?)<\/strong>/gi, '**$1**');
-    markdown = markdown.replace(/<b[^>]*>(.*?)<\/b>/gi, '**$1**');
+PDF content extraction requires server-side processing.
 
-    // Replace italic tags
-    markdown = markdown.replace(/<em[^>]*>(.*?)<\/em>/gi, '*$1*');
-    markdown = markdown.replace(/<i[^>]*>(.*?)<\/i>/gi, '*$1*');
+In a production environment, you would:
+1. Upload the PDF to the server
+2. Process it with a PDF parsing library
+3. Return the extracted text
 
-    // Replace links
-    markdown = markdown.replace(/<a[^>]*href=["']([^"']*)["'][^>]*>(.*?)<\/a>/gi, '[$2]($1)');
-
-    // Replace images
-    markdown = markdown.replace(/<img[^>]*src=["']([^"']*)["'][^>]*alt=["']([^"']*)["'][^>]*>/gi, '![$2]($1)');
-    markdown = markdown.replace(/<img[^>]*alt=["']([^"']*)["'][^>]*src=["']([^"']*)["'][^>]*>/gi, '![$1]($2)');
-    markdown = markdown.replace(/<img[^>]*src=["']([^"']*)["'][^>]*>/gi, '![]($1)');
-
-    // Replace unordered lists
-    markdown = markdown.replace(/<ul[^>]*>(.*?)<\/ul>/gis, function(match, content) {
-      return content.replace(/<li[^>]*>(.*?)<\/li>/gi, '- $1\n');
+For now, please manually copy and paste the content or use a TXT/DOCX file instead.`
+      );
     });
-
-    // Replace ordered lists
-    markdown = markdown.replace(/<ol[^>]*>(.*?)<\/ol>/gis, function(match, content) {
-      let index = 1;
-      return content.replace(/<li[^>]*>(.*?)<\/li>/gi, function(match, item) {
-        return `${index++}. ${item}\n`;
-      });
-    });
-
-    // Replace blockquotes
-    markdown = markdown.replace(/<blockquote[^>]*>(.*?)<\/blockquote>/gi, '> $1\n');
-
-    // Replace code blocks
-    markdown = markdown.replace(/<pre[^>]*><code[^>]*>(.*?)<\/code><\/pre>/gi, '```\n$1\n```\n');
-
-    // Replace inline code
-    markdown = markdown.replace(/<code[^>]*>(.*?)<\/code>/gi, '`$1`');
-
-    // Replace horizontal rules
-    markdown = markdown.replace(/<hr[^>]*>/gi, '---\n');
-
-    // Remove remaining HTML tags
-    markdown = markdown.replace(/<[^>]*>/g, '');
-
-    // Decode HTML entities
-    markdown = markdown.replace(/&lt;/g, '<');
-    markdown = markdown.replace(/&gt;/g, '>');
-    markdown = markdown.replace(/&amp;/g, '&');
-    markdown = markdown.replace(/&quot;/g, '"');
-    markdown = markdown.replace(/&#39;/g, "'");
-
-    return markdown;
   };
 
   // Handle switching between editor modes
   const handleEditorModeChange = (mode: 'markdown' | 'rich') => {
-    if (mode === 'markdown' && editorMode === 'rich') {
-      // Convert HTML to Markdown when switching from rich to markdown
-      const htmlContent = document.querySelector('.ql-editor')?.innerHTML || '';
-      const markdownContent = convertHtmlToMarkdown(htmlContent);
-      onChange(markdownContent);
-    }
+    // We're using a simplified approach now - both modes use markdown
+    // Just update the mode state
     setEditorMode(mode);
   };
 
@@ -357,31 +381,36 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
                 </div>
               </div>
 
-              {editorMode === 'markdown' ? (
+              <div className="space-y-2">
+                {editorMode === 'rich' && (
+                  <div className="flex flex-wrap gap-2 p-2 bg-gray-100 dark:bg-gray-800 rounded-t-lg border border-gray-300 dark:border-gray-600">
+                    {formatButtons.map((button, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        onClick={() => button.handler ? button.handler(textAreaRef) : applyFormatting(button.format, button.example, button.isBlock)}
+                        className="px-2 py-1 text-sm font-medium rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+                        title={button.label}
+                      >
+                        {button.icon}
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <textarea
                   id="content"
+                  ref={textAreaRef}
                   value={content}
                   onChange={(e) => onChange(e.target.value)}
                   rows={20}
-                  className={`w-full px-4 py-2 rounded-lg border ${
+                  className={`w-full px-4 py-2 rounded-lg ${editorMode === 'rich' ? 'rounded-t-none' : ''} border ${
                     error
                       ? 'border-red-500 dark:border-red-500'
                       : 'border-gray-300 dark:border-gray-600'
                   } bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 font-mono`}
                   placeholder="Write your post content here..."
                 />
-              ) : (
-                <div className="border rounded-lg overflow-hidden">
-                  <ReactQuill
-                    theme="snow"
-                    value={content}
-                    onChange={onChange}
-                    modules={quillModules}
-                    formats={quillFormats}
-                    className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white h-[500px] overflow-y-auto"
-                  />
-                </div>
-              )}
+              </div>
 
               {error && (
                 <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
@@ -441,15 +470,15 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-gray-600 dark:text-gray-400">
             <div>
               <p>Use the toolbar above to format your text</p>
-              <p>Insert images by clicking the image icon</p>
-              <p>Add links by selecting text and clicking the link icon</p>
-              <p>Create lists using the bullet or numbered list icons</p>
+              <p>Select text and click B for bold formatting</p>
+              <p>Select text and click I for italic formatting</p>
+              <p>Click H1, H2, or H3 to create headings</p>
             </div>
             <div>
-              <p>Embed videos by clicking the video icon</p>
-              <p>Format code blocks using the code block button</p>
-              <p>Change text alignment with the alignment buttons</p>
-              <p>Switch to Markdown editor for more advanced formatting</p>
+              <p>Click the link icon to insert a link</p>
+              <p>Click the image icon to upload and insert an image</p>
+              <p>Click the list icons to create bulleted or numbered lists</p>
+              <p>All formatting is done using Markdown syntax</p>
             </div>
           </div>
         </div>
