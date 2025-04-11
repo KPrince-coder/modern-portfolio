@@ -3,14 +3,14 @@ import { Routes, Route } from 'react-router-dom';
 import CMSLayout from './components/CMSLayout';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
+import AboutPage from './pages/AboutPage';
+import MessagesPage from './pages/MessagesPage';
+import MediaPage from './pages/MediaPage';
+import AIPage from './pages/AIPage';
 
 // Placeholder components for other pages
 const ProjectsPage = () => <div className="p-6"><h1 className="text-2xl font-semibold">Projects</h1><p className="mt-4">Projects management page</p></div>;
 const BlogPage = () => <div className="p-6"><h1 className="text-2xl font-semibold">Blog</h1><p className="mt-4">Blog management page</p></div>;
-const AboutPage = () => <div className="p-6"><h1 className="text-2xl font-semibold">About</h1><p className="mt-4">About page content management</p></div>;
-const MessagesPage = () => <div className="p-6"><h1 className="text-2xl font-semibold">Messages</h1><p className="mt-4">Contact messages</p></div>;
-const MediaPage = () => <div className="p-6"><h1 className="text-2xl font-semibold">Media</h1><p className="mt-4">Media library</p></div>;
-const AIPage = () => <div className="p-6"><h1 className="text-2xl font-semibold">AI Assistant</h1><p className="mt-4">AI content generation</p></div>;
 const AnalyticsPage = () => <div className="p-6"><h1 className="text-2xl font-semibold">Analytics</h1><p className="mt-4">Site analytics</p></div>;
 const SettingsPage = () => <div className="p-6"><h1 className="text-2xl font-semibold">Settings</h1><p className="mt-4">Site settings</p></div>;
 const UsersPage = () => <div className="p-6"><h1 className="text-2xl font-semibold">Users</h1><p className="mt-4">User management</p></div>;
