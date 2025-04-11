@@ -39,7 +39,7 @@ const BlogTagsList: React.FC<BlogTagsListProps> = ({
       if (data.id) {
         // Update existing tag
         const { error } = await supabase
-          .from('portfolio.blog_tags')
+          .from('blog_tags')
           .update({
             ...data.tag,
             updated_at: new Date().toISOString(),
@@ -52,7 +52,7 @@ const BlogTagsList: React.FC<BlogTagsListProps> = ({
       } else {
         // Create new tag
         const { error } = await supabase
-          .from('portfolio.blog_tags')
+          .from('blog_tags')
           .insert({
             ...data.tag,
             created_at: new Date().toISOString(),
@@ -74,7 +74,7 @@ const BlogTagsList: React.FC<BlogTagsListProps> = ({
   const deleteTagMutation = useMutation({
     mutationFn: async (tagId: string) => {
       const { error } = await supabase
-        .from('portfolio.blog_tags')
+        .from('blog_tags')
         .delete()
         .eq('id', tagId);
 

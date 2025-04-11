@@ -166,7 +166,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
       if (projectId) {
         // Update existing project
         const { error } = await supabase
-          .from('portfolio.projects')
+          .from('projects')
           .update({
             ...projectData,
             updated_at: new Date().toISOString(),
@@ -179,7 +179,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
       } else {
         // Create new project
         const { data: newProject, error } = await supabase
-          .from('portfolio.projects')
+          .from('projects')
           .insert({
             ...projectData,
             created_at: new Date().toISOString(),
@@ -202,7 +202,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
         
         if (currentImageIds.length > 0) {
           const { error: deleteError } = await supabase
-            .from('portfolio.project_images')
+            .from('project_images')
             .delete()
             .eq('project_id', projectId)
             .not('id', 'in', `(${currentImageIds.join(',')})`);
@@ -213,7 +213,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
         } else {
           // If no images with IDs, delete all images for this project
           const { error: deleteAllError } = await supabase
-            .from('portfolio.project_images')
+            .from('project_images')
             .delete()
             .eq('project_id', projectId);
           
@@ -227,7 +227,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
           if (image.id) {
             // Update existing image
             const { error: updateError } = await supabase
-              .from('portfolio.project_images')
+              .from('project_images')
               .update({
                 image_url: image.image_url,
                 alt_text: image.alt_text,
@@ -242,7 +242,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
           } else {
             // Insert new image
             const { error: insertError } = await supabase
-              .from('portfolio.project_images')
+              .from('project_images')
               .insert({
                 project_id: projectId,
                 image_url: image.image_url,

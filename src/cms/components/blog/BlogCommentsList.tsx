@@ -42,7 +42,7 @@ const BlogCommentsList: React.FC<BlogCommentsListProps> = ({
   const updateCommentStatusMutation = useMutation({
     mutationFn: async ({ commentId, isApproved }: { commentId: string; isApproved: boolean }) => {
       const { error } = await supabase
-        .from('portfolio.blog_comments')
+        .from('blog_comments')
         .update({
           is_approved: isApproved,
           updated_at: new Date().toISOString(),
@@ -62,7 +62,7 @@ const BlogCommentsList: React.FC<BlogCommentsListProps> = ({
   const deleteCommentMutation = useMutation({
     mutationFn: async (commentId: string) => {
       const { error } = await supabase
-        .from('portfolio.blog_comments')
+        .from('nts')
         .delete()
         .eq('id', commentId);
 
@@ -80,7 +80,7 @@ const BlogCommentsList: React.FC<BlogCommentsListProps> = ({
   const addReplyMutation = useMutation({
     mutationFn: async ({ parentId, content }: { parentId: string; content: string }) => {
       const { error } = await supabase
-        .from('portfolio.blog_comments')
+        .from('blog_comments')
         .insert({
           post_id: postId,
           parent_id: parentId,

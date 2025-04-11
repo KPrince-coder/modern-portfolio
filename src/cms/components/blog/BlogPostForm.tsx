@@ -151,7 +151,7 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
       if (postId) {
         // Update existing post
         const { error } = await supabase
-          .from('portfolio.blog_posts')
+          .from('blog_posts')
           .update({
             ...postData,
             updated_at: new Date().toISOString(),
@@ -164,7 +164,7 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
       } else {
         // Create new post
         const { data: newPost, error } = await supabase
-          .from('portfolio.blog_posts')
+          .from('blog_posts')
           .insert({
             ...postData,
             created_at: new Date().toISOString(),
@@ -184,7 +184,7 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
       if (postId) {
         // First, remove all existing tag associations
         const { error: deleteError } = await supabase
-          .from('portfolio.blog_post_tags')
+          .from('blog_post_tags')
           .delete()
           .eq('post_id', postId);
         
@@ -200,7 +200,7 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
           }));
           
           const { error: insertError } = await supabase
-            .from('portfolio.blog_post_tags')
+            .from('blog_post_tags')
             .insert(tagAssociations);
           
           if (insertError) {

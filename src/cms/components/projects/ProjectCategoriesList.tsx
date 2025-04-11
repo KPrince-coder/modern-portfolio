@@ -45,7 +45,7 @@ const ProjectCategoriesList: React.FC<ProjectCategoriesListProps> = ({
       if (data.id) {
         // Update existing category
         const { error } = await supabase
-          .from('portfolio.project_categories')
+          .from('project_categories')
           .update({
             ...data.category,
             updated_at: new Date().toISOString(),
@@ -58,7 +58,7 @@ const ProjectCategoriesList: React.FC<ProjectCategoriesListProps> = ({
       } else {
         // Create new category
         const { error } = await supabase
-          .from('portfolio.project_categories')
+          .from('project_categories')
           .insert({
             ...data.category,
             created_at: new Date().toISOString(),
@@ -80,7 +80,7 @@ const ProjectCategoriesList: React.FC<ProjectCategoriesListProps> = ({
   const deleteCategoryMutation = useMutation({
     mutationFn: async (categoryId: string) => {
       const { error } = await supabase
-        .from('portfolio.project_categories')
+        .from('project_categories')
         .delete()
         .eq('id', categoryId);
 

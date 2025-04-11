@@ -1,7 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import Button from '../../../components/ui/Button';
-import LoadingSpinner from '../../../components/ui/LoadingSpinner';
 import BlogCategoriesManager from './BlogCategoriesManager';
 
 // Types

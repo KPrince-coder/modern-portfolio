@@ -100,7 +100,7 @@ const BlogPage: React.FC = () => {
     queryKey: ['blogPosts', searchQuery, statusFilter, categoryFilter],
     queryFn: async () => {
       let query = supabase
-        .from('portfolio.blog_posts')
+        .from('blog_posts')
         .select(`
           *,
           category:category_id(id, name)
@@ -140,7 +140,7 @@ const BlogPage: React.FC = () => {
     queryKey: ['blogCategories'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('portfolio.blog_categories')
+        .from('blog_categories')
         .select('*')
         .order('display_order', { ascending: true });
 
@@ -162,7 +162,7 @@ const BlogPage: React.FC = () => {
     queryKey: ['blogTags'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('portfolio.blog_tags')
+        .from('blog_tags')
         .select('*')
         .order('name', { ascending: true });
 
@@ -184,7 +184,7 @@ const BlogPage: React.FC = () => {
     queryKey: ['blogPost', id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('portfolio.blog_posts')
+        .from('blog_posts')
         .select(`
           *,
           category:category_id(id, name),
@@ -221,7 +221,7 @@ const BlogPage: React.FC = () => {
     queryKey: ['blogComments', selectedPostId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('portfolio.blog_comments')
+        .from('blog_comments')
         .select('*')
         .eq('post_id', selectedPostId)
         .order('created_at', { ascending: false });
@@ -239,7 +239,7 @@ const BlogPage: React.FC = () => {
   const deletePostMutation = useMutation({
     mutationFn: async (postId: string) => {
       const { error } = await supabase
-        .from('portfolio.blog_posts')
+        .from('blog_posts')
         .delete()
         .eq('id', postId);
 

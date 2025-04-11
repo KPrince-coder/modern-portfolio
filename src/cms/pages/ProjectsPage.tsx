@@ -58,14 +58,17 @@ const ProjectsPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<'all' | 'draft' | 'published' | 'archived'>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
 
-  // Redirect to form view if ID is provided
+  // Redirect to form view if ID is provided or if we're on the 'new' route
   useEffect(() => {
-    if (id) {
+    // Check if we're on the 'new' route
+    const isNewRoute = window.location.pathname.endsWith('/new');
+
+    if (id || isNewRoute) {
       setView('form');
-    } else {
+    } else if (view === 'form' && !isNewRoute) {
       setView('list');
     }
-  }, [id]);
+  }, [id, view]);
 
   // Fetch projects
   const {
@@ -76,7 +79,7 @@ const ProjectsPage: React.FC = () => {
     queryKey: ['projects', searchQuery, statusFilter, categoryFilter],
     queryFn: async () => {
       let query = supabase
-        .from('portfolio.projects')
+        .from('projects')
         .select(`
           *,
           category:category_id(id, name)
@@ -116,7 +119,7 @@ const ProjectsPage: React.FC = () => {
     queryKey: ['projectCategories'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('portfolio.project_categories')
+        .from('project_categories')
         .select('*')
         .order('display_order', { ascending: true });
 
@@ -138,11 +141,11 @@ const ProjectsPage: React.FC = () => {
     queryKey: ['project', id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('portfolio.projects')
+        .from('projects')
         .select(`
           *,
           category:category_id(id, name),
-          images:portfolio.project_images(*)
+          images:project_images(*)
         `)
         .eq('id', id)
         .single();
@@ -163,7 +166,7 @@ const ProjectsPage: React.FC = () => {
   const deleteProjectMutation = useMutation({
     mutationFn: async (projectId: string) => {
       const { error } = await supabase
-        .from('portfolio.projects')
+        .from('projects')
         .delete()
         .eq('id', projectId);
 
@@ -188,9 +191,14 @@ const ProjectsPage: React.FC = () => {
   };
 
   // Handle view changes
-  const handleViewChange = (newView: 'list' | 'form' | 'categories') => {
+  const handleViewChange = (newView: 'list' | 'form' | 'categories', projectId?: string) => {
     setView(newView);
-    if (newView === 'list' && id) {
+
+    if (newView === 'form' && projectId) {
+      navigate(`/admin/projects/${projectId}`);
+    } else if (newView === 'form' && !projectId) {
+      navigate('/admin/projects/new');
+    } else if (newView === 'list' && id) {
       navigate('/admin/projects');
     }
   };
@@ -238,8 +246,8 @@ const ProjectsPage: React.FC = () => {
               All Projects
             </Button>
             <Button
-              variant={view === 'form' && !id ? 'primary' : 'secondary'}
-              onClick={() => navigate('/admin/projects/new')}
+              variant={view === 'form' && (window.location.pathname.endsWith('/new') || !id) ? 'primary' : 'secondary'}
+              onClick={() => handleViewChange('form')}
             >
               Add Project
             </Button>
@@ -259,7 +267,7 @@ const ProjectsPage: React.FC = () => {
               categories={categories || []}
               isLoading={projectsLoading || categoriesLoading}
               onDelete={handleDeleteProject}
-              onEdit={(projectId) => navigate(`/admin/projects/${projectId}`)}
+              onEdit={(projectId: string) => handleViewChange('form', projectId)}
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
               statusFilter={statusFilter}

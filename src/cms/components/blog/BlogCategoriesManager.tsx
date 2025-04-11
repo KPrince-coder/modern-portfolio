@@ -43,7 +43,7 @@ const BlogCategoriesManager: React.FC<BlogCategoriesManagerProps> = ({
       if (data.id) {
         // Update existing category
         const { error } = await supabase
-          .from('portfolio.blog_categories')
+          .from('blog_categories')
           .update({
             ...data.category,
             updated_at: new Date().toISOString(),
@@ -56,7 +56,7 @@ const BlogCategoriesManager: React.FC<BlogCategoriesManagerProps> = ({
       } else {
         // Create new category
         const { error } = await supabase
-          .from('portfolio.blog_categories')
+          .from('blog_categories')
           .insert({
             ...data.category,
             created_at: new Date().toISOString(),
@@ -78,7 +78,7 @@ const BlogCategoriesManager: React.FC<BlogCategoriesManagerProps> = ({
   const deleteCategoryMutation = useMutation({
     mutationFn: async (categoryId: string) => {
       const { error } = await supabase
-        .from('portfolio.blog_categories')
+        .from('blog_categories')
         .delete()
         .eq('id', categoryId);
 
