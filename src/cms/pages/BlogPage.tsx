@@ -80,12 +80,18 @@ const BlogPage: React.FC = () => {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
 
-  // Redirect to form view if ID is provided
+  // Redirect to form view if ID is provided or if we're on the 'new' route
   useEffect(() => {
+    // Check if we're on the 'new' route
+    const isNewRoute = window.location.pathname.endsWith('/new');
+
     if (id) {
       setView('form');
       setSelectedPostId(id);
-    } else if (view === 'form') {
+    } else if (isNewRoute) {
+      setView('form');
+      setSelectedPostId(null);
+    } else if (view === 'form' && !isNewRoute) {
       setView('posts');
       setSelectedPostId(null);
     }
@@ -266,7 +272,7 @@ const BlogPage: React.FC = () => {
   // Handle view changes
   const handleViewChange = (newView: BlogView, postId?: string) => {
     setView(newView);
-    
+
     if (newView === 'form' && postId) {
       navigate(`/admin/blog/${postId}`);
     } else if (newView === 'form' && !postId) {
@@ -323,7 +329,7 @@ const BlogPage: React.FC = () => {
               All Posts
             </Button>
             <Button
-              variant={view === 'form' && !id ? 'primary' : 'secondary'}
+              variant={view === 'form' && (window.location.pathname.endsWith('/new') || !id) ? 'primary' : 'secondary'}
               onClick={() => handleViewChange('form')}
             >
               Add Post
