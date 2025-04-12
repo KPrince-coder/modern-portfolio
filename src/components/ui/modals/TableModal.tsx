@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import SimpleModal from '../SimpleModal';
+import BasicModal from '../BasicModal';
 
 interface TableModalProps {
   isOpen: boolean;
@@ -36,7 +36,7 @@ const TableModal: React.FC<TableModalProps> = ({
   };
 
   return (
-    <SimpleModal
+    <BasicModal
       isOpen={isOpen}
       onClose={onClose}
       title="Insert Table"
@@ -122,7 +122,7 @@ const TableModal: React.FC<TableModalProps> = ({
           </p>
         </div>
       </div>
-    </SimpleModal>
+    </BasicModal>
   );
 };
 

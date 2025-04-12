@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import SimpleModal from '../SimpleModal';
+import BasicModal from '../BasicModal';
 
 interface LinkModalProps {
   isOpen: boolean;
@@ -45,7 +45,7 @@ const LinkModal: React.FC<LinkModalProps> = ({
   };
 
   return (
-    <SimpleModal
+    <BasicModal
       isOpen={isOpen}
       onClose={onClose}
       title="Insert Link"
@@ -105,7 +105,7 @@ const LinkModal: React.FC<LinkModalProps> = ({
           </p>
         </div>
       </div>
-    </SimpleModal>
+    </BasicModal>
   );
 };
 

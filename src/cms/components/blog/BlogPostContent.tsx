@@ -109,6 +109,9 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
 
     onChange(newValue);
 
+    // Close the modal
+    setLinkModalOpen(false);
+
     // Set cursor position after the inserted link
     setTimeout(() => {
       textarea.focus();
@@ -387,6 +390,9 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
     const newValue = textarea.value.substring(0, start) + embedCode + textarea.value.substring(end);
     onChange(newValue);
 
+    // Close the modal
+    setYoutubeModalOpen(false);
+
     // Set cursor position after the inserted video
     setTimeout(() => {
       textarea.focus();
@@ -446,6 +452,9 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
     const newValue = textarea.value.substring(0, start) + tableMarkdown + textarea.value.substring(end);
     onChange(newValue);
 
+    // Close the modal
+    setTableModalOpen(false);
+
     // Set cursor position after the inserted table
     setTimeout(() => {
       textarea.focus();
@@ -479,6 +488,9 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
 
     const newValue = textarea.value.substring(0, start) + htmlCode + textarea.value.substring(end);
     onChange(newValue);
+
+    // Close the modal
+    setHtmlModalOpen(false);
 
     // Set cursor position after the inserted HTML
     setTimeout(() => {
@@ -547,6 +559,9 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
 
     const newValue = textarea.value.substring(0, start) + plainText + textarea.value.substring(end);
     onChange(newValue);
+
+    // Close the modal
+    setConfirmModalOpen(false);
 
     // Set cursor position after the cleared text
     setTimeout(() => {
@@ -638,7 +653,7 @@ For now, please manually copy and paste the content or use a TXT/DOCX file inste
       <SimpleTabs.Group selectedIndex={activeTab} onChange={setActiveTab}>
         <SimpleTabs.List className="flex space-x-1 rounded-xl bg-gray-100 dark:bg-gray-700 p-1">
           <SimpleTabs.Tab
-            className={({ selected }) =>
+            className={({ selected }: { selected: boolean }) =>
               `w-full rounded-lg py-2.5 text-sm font-medium leading-5
               ${
                 selected
@@ -650,7 +665,7 @@ For now, please manually copy and paste the content or use a TXT/DOCX file inste
             Write
           </SimpleTabs.Tab>
           <SimpleTabs.Tab
-            className={({ selected }) =>
+            className={({ selected }: { selected: boolean }) =>
               `w-full rounded-lg py-2.5 text-sm font-medium leading-5
               ${
                 selected

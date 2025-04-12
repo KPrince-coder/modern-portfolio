@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import SimpleModal from '../SimpleModal';
+import BasicModal from '../BasicModal';
 
 interface HtmlModalProps {
   isOpen: boolean;
@@ -43,7 +43,7 @@ const HtmlModal: React.FC<HtmlModalProps> = ({
   ];
 
   return (
-    <SimpleModal
+    <BasicModal
       isOpen={isOpen}
       onClose={onClose}
       title="Insert HTML"
@@ -127,7 +127,7 @@ const HtmlModal: React.FC<HtmlModalProps> = ({
           </p>
         </div>
       </div>
-    </SimpleModal>
+    </BasicModal>
   );
 };
 

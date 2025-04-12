@@ -1,5 +1,5 @@
 import React from 'react';
-import SimpleModal from '../SimpleModal';
+import BasicModal from '../BasicModal';
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -25,7 +25,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
   icon,
 }) => {
   return (
-    <SimpleModal
+    <BasicModal
       isOpen={isOpen}
       onClose={onClose}
       title={title}
@@ -52,7 +52,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
           {message}
         </p>
       </div>
-    </SimpleModal>
+    </BasicModal>
   );
 };
 
