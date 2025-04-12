@@ -8,6 +8,7 @@ import LoadingSpinner from '../../../components/ui/LoadingSpinner';
 import AutosaveNotification from '../../../components/ui/AutosaveNotification';
 import AutosaveIndicator from '../../../components/ui/AutosaveIndicator';
 import AIGeneratedBadge from '../../../components/ui/AIGeneratedBadge';
+import { ConfirmModal } from '../../../components/ui/modals';
 import BlogPostBasicInfo from './BlogPostBasicInfo';
 import BlogPostContent from './BlogPostContent';
 import BlogPostSEO from './BlogPostSEO';
@@ -110,6 +111,10 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
   const [lastSaved, setLastSaved] = useState<string | null>(null);
   const autosaveIntervalRef = useRef<number | null>(null);
   const formInitializedRef = useRef(false);
+
+  // Success modal state
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   // Generate a unique key for this form session
   const getFormKey = useCallback((): string => {
@@ -413,7 +418,8 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
 
       // Show success message
       const message = post?.id ? 'Blog post updated successfully!' : 'Blog post created successfully!';
-      alert(message);
+      setSuccessMessage(message);
+      setIsSuccessModalOpen(true);
 
       // Check if we should redirect to the blog list (from AI generation)
       const shouldRedirect = sessionStorage.getItem('redirect_to_blog_list_after_save');
@@ -421,9 +427,6 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
         // Remove the flag
         sessionStorage.removeItem('redirect_to_blog_list_after_save');
       }
-
-      // Navigate back to the blog list
-      navigate('/admin/blog');
     },
   });
 
@@ -758,6 +761,30 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
         timestamp={autosaveTimestamp}
         onRestore={handleRestoreSavedData}
         onDiscard={handleDiscardSavedData}
+      />
+
+      {/* Success Modal */}
+      <ConfirmModal
+        isOpen={isSuccessModalOpen}
+        onClose={() => {
+          setIsSuccessModalOpen(false);
+          // Navigate back to the blog list after closing the modal
+          navigate('/admin/blog');
+        }}
+        onConfirm={() => {
+          setIsSuccessModalOpen(false);
+          // Navigate back to the blog list after confirming
+          navigate('/admin/blog');
+        }}
+        title="Success"
+        message={successMessage}
+        confirmLabel="OK"
+        variant="primary"
+        icon={
+          <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        }
       />
     </motion.div>
   );
