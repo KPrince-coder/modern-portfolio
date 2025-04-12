@@ -164,8 +164,14 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
 
 
 
+  // Track whether form has been initialized with data
+  const formDataInitializedRef = useRef(false);
+
   // Initialize form with existing data if editing or with AI-generated content
   useEffect(() => {
+    // Skip if already initialized
+    if (formDataInitializedRef.current) return;
+
     // Check for AI-generated content in sessionStorage
     const aiGeneratedData = sessionStorage.getItem('ai_generated_blog_data');
 
@@ -174,9 +180,9 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
         const parsedData = JSON.parse(aiGeneratedData);
         console.log('Loading AI-generated blog data:', parsedData);
 
-        // Prepare form data from AI-generated content
-        const newFormData = {
-          ...formData,
+        // Prepare form data from AI-generated content using function form to avoid dependency on formData
+        setFormData(prevFormData => ({
+          ...prevFormData,
           title: parsedData.title ?? '',
           slug: generateSlug(parsedData.title ?? ''),
           summary: parsedData.summary ?? '',
@@ -188,9 +194,7 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
           meta_keywords: parsedData.metaKeywords ?? '',
           ai_generated: true,
           reading_time_minutes: calculateReadingTime(parsedData.content ?? ''),
-        };
-
-        setFormData(newFormData);
+        }));
 
         // Find matching tags or create new ones
         if (parsedData.tags && parsedData.tags.length > 0) {
@@ -210,6 +214,9 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
 
         // Clear the sessionStorage to prevent reloading on refresh
         sessionStorage.removeItem('ai_generated_blog_data');
+
+        // Mark as initialized
+        formDataInitializedRef.current = true;
       } catch (error) {
         console.error('Error parsing AI-generated blog data:', error);
       }
@@ -238,11 +245,17 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
       if (post.tags && post.tags.length > 0) {
         setSelectedTags(post.tags.map(tag => tag.id));
       }
-    }
-  }, [post, tags, formData, setActiveTab, generateSlug]);
 
-  // Setup autosave
-  useEffect(() => {
+      // Mark as initialized
+      formDataInitializedRef.current = true;
+    } else {
+      // Even if we don't have data to load, mark as initialized
+      formDataInitializedRef.current = true;
+    }
+  }, [post, tags, setActiveTab, generateSlug]);
+
+  // Create a stable saveData function that doesn't change on every render
+  const saveData = useCallback(() => {
     if (!formInitializedRef.current) return;
 
     // Only save if there's actual content to save
@@ -256,36 +269,40 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
 
     const formKey = getFormKey();
 
-    // Save immediately when form data changes
-    const saveData = () => {
-      // Show saving indicator
-      setIsSaving(true);
+    // Show saving indicator
+    setIsSaving(true);
 
-      // Log what we're saving
-      console.log('Saving form data:', {
-        title: formData.title,
-        content: formData.content ? `${formData.content.substring(0, 50)}...` : '',
-        selectedTags
-      });
+    // Log what we're saving
+    console.log('Saving form data:', {
+      title: formData.title,
+      content: formData.content ? `${formData.content.substring(0, 50)}...` : '',
+      selectedTags
+    });
 
-      // Save to localStorage
-      saveToLocalStorage(formKey, {
-        formData,
-        selectedTags,
-      });
+    // Save to localStorage
+    saveToLocalStorage(formKey, {
+      formData,
+      selectedTags,
+    });
 
-      // Update last saved time and hide indicator after a delay
-      const now = new Date().toISOString();
-      setLastSaved(now);
+    // Update last saved time and hide indicator after a delay
+    const now = new Date().toISOString();
+    setLastSaved(now);
 
-      // Hide the saving indicator after 1 second
-      setTimeout(() => {
-        setIsSaving(false);
-      }, 1000);
-    };
+    // Hide the saving indicator after 1 second
+    setTimeout(() => {
+      setIsSaving(false);
+    }, 1000);
+  }, [formData, selectedTags, getFormKey]);
 
-    // Save immediately when the effect runs (form data changed)
-    saveData();
+  // Setup autosave with debounce to prevent infinite loops
+  useEffect(() => {
+    if (!formInitializedRef.current) return;
+
+    // Create a debounced version of saveData to prevent too many saves
+    const debouncedSave = setTimeout(() => {
+      saveData();
+    }, 1000); // 1 second debounce
 
     // Setup autosave interval for ongoing changes
     const intervalId = window.setInterval(saveData, 30000); // Also save every 30 seconds as backup
@@ -295,11 +312,12 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
 
     // Cleanup function
     return () => {
+      clearTimeout(debouncedSave);
       if (autosaveIntervalRef.current) {
         window.clearInterval(autosaveIntervalRef.current);
       }
     };
-  }, [formData, selectedTags, getFormKey]);
+  }, [saveData]);
 
   // Save blog post mutation
   const savePostMutation = useMutation({
