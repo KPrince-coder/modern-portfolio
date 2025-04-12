@@ -185,14 +185,18 @@ console.log(result); // 42`}
               </h3>
 
               <div className="flex flex-wrap gap-2">
-                {post.tags.map((tag: string) => (
-                  <span
-                    key={tag}
-                    className="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full text-sm"
-                  >
-                    {tag}
-                  </span>
-                ))}
+                {post.tags && Array.isArray(post.tags) ? (
+                  post.tags.map((tag: string) => (
+                    <span
+                      key={tag}
+                      className="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full text-sm"
+                    >
+                      {tag}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-gray-500 dark:text-gray-400">No tags</span>
+                )}
               </div>
             </div>
 
