@@ -7,6 +7,7 @@ import rehypeSanitize from 'rehype-sanitize';
 import { supabase } from '../../../lib/supabase';
 import Button from '../../../components/ui/Button';
 import LoadingSpinner from '../../../components/ui/LoadingSpinner';
+import { LinkModal, YouTubeModal, TableModal, HtmlModal, ConfirmModal } from '../../../components/ui/modals';
 
 // We'll use dynamic imports for file processing libraries
 // These will be imported only when needed
@@ -27,6 +28,16 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Modal states
+  const [linkModalOpen, setLinkModalOpen] = useState(false);
+  const [youtubeModalOpen, setYoutubeModalOpen] = useState(false);
+  const [tableModalOpen, setTableModalOpen] = useState(false);
+  const [htmlModalOpen, setHtmlModalOpen] = useState(false);
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+
+  // Selected text state for modals
+  const [selectedText, setSelectedText] = useState({ text: '', start: 0, end: 0 });
 
   // Rich text formatting toolbar buttons
   const formatButtons = [
@@ -75,13 +86,24 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
     const textarea = textAreaRef.current;
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
-    const selectedText = textarea.value.substring(start, end);
-    const linkText = selectedText || 'link text';
-    const url = prompt('Enter the URL:', 'https://');
+    const text = textarea.value.substring(start, end);
 
-    if (!url) return;
+    // Save selected text info for the modal
+    setSelectedText({ text, start, end });
 
-    const linkMarkdown = `[${linkText}](${url})`;
+    // Open the link modal
+    setLinkModalOpen(true);
+  }
+
+  // Handle link confirmation from modal
+  const handleLinkConfirm = (url: string, linkText: string) => {
+    if (!textAreaRef.current) return;
+
+    const textarea = textAreaRef.current;
+    const { start, end } = selectedText;
+
+    const finalLinkText = linkText || selectedText.text || 'link text';
+    const linkMarkdown = `[${finalLinkText}](${url})`;
     const newValue = textarea.value.substring(0, start) + linkMarkdown + textarea.value.substring(end);
 
     onChange(newValue);
@@ -148,7 +170,13 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
         }, 0);
       } catch (error) {
         console.error('Error uploading image:', error);
-        alert('Failed to upload image. Please try again.');
+        // Show error in a modal instead of alert
+        setSelectedText({
+          text: 'Failed to upload image. Please try again.',
+          start: 0,
+          end: 0
+        });
+        setConfirmModalOpen(true);
       } finally {
         setIsUploading(false);
       }
@@ -212,13 +240,25 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
             setIsUploading(false);
           } catch (error) {
             console.error('Error extracting text from PDF:', error);
-            alert('PDF extraction failed. This feature works best with server-side processing. Please try a TXT or DOCX file instead.');
+            // Show error in a modal instead of alert
+            setSelectedText({
+              text: 'PDF extraction failed. This feature works best with server-side processing. Please try a TXT or DOCX file instead.',
+              start: 0,
+              end: 0
+            });
+            setConfirmModalOpen(true);
             setIsUploading(false);
           }
         };
         reader.readAsText(file); // Just to keep the reader busy
       } else {
-        alert('Unsupported file type. Please upload a TXT, DOCX, or PDF file.');
+        // Show error in a modal instead of alert
+        setSelectedText({
+          text: 'Unsupported file type. Please upload a TXT, DOCX, or PDF file.',
+          start: 0,
+          end: 0
+        });
+        setConfirmModalOpen(true);
         setIsUploading(false);
       }
     } catch (error) {
@@ -316,20 +356,19 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
 
-    const videoUrl = prompt('Enter YouTube video URL:', 'https://www.youtube.com/watch?v=');
-    if (!videoUrl) return;
+    // Save selected text info for the modal
+    setSelectedText({ text: '', start, end });
 
-    // Extract video ID from various YouTube URL formats
-    let videoId = '';
-    const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})/i;
-    const match = videoUrl.match(youtubeRegex);
+    // Open the YouTube modal
+    setYoutubeModalOpen(true);
+  }
 
-    if (match && match[1]) {
-      videoId = match[1];
-    } else {
-      alert('Invalid YouTube URL. Please enter a valid YouTube video URL.');
-      return;
-    }
+  // Handle YouTube video confirmation from modal
+  const handleYouTubeConfirm = (videoId: string) => {
+    if (!textAreaRef.current) return;
+
+    const textarea = textAreaRef.current;
+    const { start, end } = selectedText;
 
     // Create markdown for embedding YouTube video
     const embedCode = `<div class="video-container">
@@ -363,14 +402,19 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
 
-    // Prompt for table dimensions
-    const rows = parseInt(prompt('Enter number of rows:', '3') || '3');
-    const cols = parseInt(prompt('Enter number of columns:', '3') || '3');
+    // Save selected text info for the modal
+    setSelectedText({ text: '', start, end });
 
-    if (isNaN(rows) || isNaN(cols) || rows < 1 || cols < 1) {
-      alert('Please enter valid numbers for rows and columns.');
-      return;
-    }
+    // Open the table modal
+    setTableModalOpen(true);
+  }
+
+  // Handle table confirmation from modal
+  const handleTableConfirm = (rows: number, cols: number) => {
+    if (!textAreaRef.current) return;
+
+    const textarea = textAreaRef.current;
+    const { start, end } = selectedText;
 
     // Create markdown table
     let tableMarkdown = '\n';
@@ -416,10 +460,21 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
     const textarea = textAreaRef.current;
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
-    const selectedText = textarea.value.substring(start, end);
+    const text = textarea.value.substring(start, end);
 
-    const htmlCode = prompt('Enter HTML code:', selectedText || '<div class="custom-element">\n  Your content here\n</div>');
-    if (!htmlCode) return;
+    // Save selected text info for the modal
+    setSelectedText({ text, start, end });
+
+    // Open the HTML modal
+    setHtmlModalOpen(true);
+  }
+
+  // Handle HTML confirmation from modal
+  const handleHtmlConfirm = (htmlCode: string) => {
+    if (!textAreaRef.current) return;
+
+    const textarea = textAreaRef.current;
+    const { start, end } = selectedText;
 
     const newValue = textarea.value.substring(0, start) + htmlCode + textarea.value.substring(end);
     onChange(newValue);
@@ -441,14 +496,31 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
     const end = textarea.selectionEnd;
 
     if (start === end) {
-      alert('Please select text to clear formatting.');
+      // Show error message in modal
+      setConfirmModalOpen(true);
       return;
     }
 
-    const selectedText = textarea.value.substring(start, end);
+    const text = textarea.value.substring(start, end);
+
+    // Save selected text info for the modal
+    setSelectedText({ text, start, end });
+
+    // Open the confirm modal
+    setConfirmModalOpen(true);
+  }
+
+  // Handle clear formatting confirmation from modal
+  const handleClearFormattingConfirm = () => {
+    if (!textAreaRef.current) return;
+
+    const textarea = textAreaRef.current;
+    const { text, start, end } = selectedText;
+
+    if (!text) return;
 
     // Remove markdown and HTML formatting
-    let plainText = selectedText
+    let plainText = text
       // Remove HTML tags
       .replace(/<[^>]*>/g, '')
       // Remove markdown headings
@@ -805,6 +877,54 @@ For now, please manually copy and paste the content or use a TXT/DOCX file inste
           </div>
         </div>
       )}
+
+      {/* Custom Modals */}
+      <LinkModal
+        isOpen={linkModalOpen}
+        onClose={() => setLinkModalOpen(false)}
+        onConfirm={handleLinkConfirm}
+        initialText={selectedText.text}
+        initialUrl="https://"
+      />
+
+      <YouTubeModal
+        isOpen={youtubeModalOpen}
+        onClose={() => setYoutubeModalOpen(false)}
+        onConfirm={handleYouTubeConfirm}
+      />
+
+      <TableModal
+        isOpen={tableModalOpen}
+        onClose={() => setTableModalOpen(false)}
+        onConfirm={handleTableConfirm}
+      />
+
+      <HtmlModal
+        isOpen={htmlModalOpen}
+        onClose={() => setHtmlModalOpen(false)}
+        onConfirm={handleHtmlConfirm}
+        initialHtml={selectedText.text ? selectedText.text : '<div class="custom-element">\n  Your content here\n</div>'}
+      />
+
+      <ConfirmModal
+        isOpen={confirmModalOpen}
+        onClose={() => setConfirmModalOpen(false)}
+        onConfirm={handleClearFormattingConfirm}
+        title={selectedText.start === selectedText.end ? "Error" : "Clear Formatting"}
+        message={selectedText.start === selectedText.end
+          ? "Please select text to clear formatting."
+          : "Are you sure you want to remove all formatting from the selected text? This will remove bold, italic, links, and other formatting."}
+        confirmLabel={selectedText.start === selectedText.end ? "OK" : "Clear Formatting"}
+        variant={selectedText.start === selectedText.end ? "primary" : "danger"}
+        icon={
+          <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            {selectedText.start === selectedText.end
+              ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            }
+          </svg>
+        }
+      />
     </div>
   );
 };
