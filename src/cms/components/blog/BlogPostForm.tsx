@@ -674,6 +674,7 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
               content={formData.content}
               error={errors.content}
               onChange={(content: string) => handleChange('content', content)}
+              isAIGenerated={formData.ai_generated}
             />
           )}
 

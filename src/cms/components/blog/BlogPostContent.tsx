@@ -8,6 +8,7 @@ import rehypeSanitize from 'rehype-sanitize';
 import { supabase } from '../../../lib/supabase';
 import Button from '../../../components/ui/Button';
 import LoadingSpinner from '../../../components/ui/LoadingSpinner';
+import BlogSectionsEditor from '../../../components/ui/BlogSectionsEditor';
 import { LinkModal, YouTubeModal, TableModal, HtmlModal, ConfirmModal, ImageLinkModal } from '../../../components/ui/modals';
 
 // We'll use dynamic imports for file processing libraries
@@ -17,12 +18,14 @@ interface BlogPostContentProps {
   content: string;
   error?: string;
   onChange: (content: string) => void;
+  isAIGenerated?: boolean;
 }
 
 const BlogPostContent: React.FC<BlogPostContentProps> = ({
   content,
   error,
   onChange,
+  isAIGenerated = false,
 }) => {
   const [activeTab, setActiveTab] = useState(0);
   const [editorMode, setEditorMode] = useState<'markdown' | 'rich'>('markdown');
@@ -928,6 +931,15 @@ For now, please manually copy and paste the content or use a TXT/DOCX file inste
           </SimpleTabs.Panel>
         </SimpleTabs.Panels>
       </SimpleTabs.Group>
+
+      {/* Blog Sections Editor for AI-generated content */}
+      {isAIGenerated && (
+        <BlogSectionsEditor
+          content={content}
+          isAIGenerated={isAIGenerated}
+          onChange={onChange}
+        />
+      )}
 
       {editorMode === 'markdown' && (
         <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">

@@ -6,6 +6,7 @@ import { useCMS } from '../CMSProvider';
 import Button from '../../components/ui/Button';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import SaveToBlogButton from '../../components/ui/SaveToBlogButton';
+import AIGenerationHistory from '../../components/ui/AIGenerationHistory';
 import { groqAPI, BlogPostPrompt, EmailResponsePrompt } from '../../lib/groq';
 
 type AITask = 'blog' | 'email' | 'seo';
@@ -191,6 +192,22 @@ Complete Guide to ${prompt}: Expert Tips & Best Practices
       </div>
     );
   }
+
+  // Handle selecting a generation from history
+  const handleSelectGeneration = (content: string) => {
+    // Create a new result with the selected content
+    const newResult: AIPrompt = {
+      id: Date.now().toString(),
+      task: 'blog',
+      prompt: 'Selected from history',
+      status: 'success',
+      result: content,
+      timestamp: new Date().toISOString(),
+    };
+
+    // Add the result to the list
+    setAiResults([newResult, ...aiResults]);
+  };
 
   return (
     <div className="py-6">
@@ -392,6 +409,16 @@ Complete Guide to ${prompt}: Expert Tips & Best Practices
               </div>
             </div>
           </div>
+
+          {/* AI Generation History */}
+          {activeTask === 'blog' && (
+            <div className="lg:col-span-3 mt-6">
+              <AIGenerationHistory
+                onSelectGeneration={handleSelectGeneration}
+                className="shadow-md"
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>
