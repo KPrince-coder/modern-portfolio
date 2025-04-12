@@ -117,16 +117,25 @@ export interface Project {
 }
 
 export interface BlogPost {
-  id: number;
+  id: string;
   title: string;
   slug: string;
-  excerpt: string;
+  summary: string;
   content: string;
-  image_url?: string;
-  category: string;
-  tags: string[];
-  author: string;
-  read_time: number;
+  featured_image_url?: string;
+  category_id?: string;
+  category?: { id: string; name: string; slug: string };
+  tags?: { id: string; name: string; slug: string }[];
+  reading_time_minutes?: number;
+  is_featured: boolean;
+  status: 'draft' | 'published' | 'archived';
+  published_at?: string;
+  meta_title?: string;
+  meta_description?: string;
+  meta_keywords?: string;
+  structured_data?: any;
+  ai_generated: boolean;
+  ai_prompt?: string;
   created_at: string;
   updated_at: string;
 }
@@ -230,25 +239,251 @@ export const api = {
   },
 
   // Blog posts
-  getBlogPosts: async () => {
-    const { data, error } = await supabase
+  getBlogPosts: async (options?: {
+    limit?: number;
+    page?: number;
+    category?: string;
+    tag?: string;
+    search?: string;
+    orderBy?: string;
+    orderDirection?: 'asc' | 'desc';
+    featured?: boolean;
+  }) => {
+    const {
+      limit = 10,
+      page = 1,
+      category,
+      tag,
+      search,
+      orderBy = 'published_at',
+      orderDirection = 'desc',
+      featured
+    } = options || {};
+
+    // Calculate offset based on page and limit
+    const offset = (page - 1) * limit;
+
+    // Start building the query
+    let query = supabase
       .from('blog_posts')
-      .select('*')
-      .order('created_at', { ascending: false });
+      .select(`
+        *,
+        category:category_id(id, name, slug),
+        tags:blog_post_tags(tag_id(id, name, slug))
+      `)
+      .eq('status', 'published')
+      .order(orderBy, { ascending: orderDirection === 'asc' });
+
+    // Apply filters if provided
+    if (category) {
+      // First try to filter by category ID
+      if (category.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+        query = query.eq('category_id', category);
+      } else {
+        // Otherwise filter by category slug through the join
+        query = query.eq('category.slug', category);
+      }
+    }
+
+    if (tag) {
+      // Filter by tag through the join
+      query = query.eq('tags.tag_id.slug', tag);
+    }
+
+    if (search) {
+      // Full-text search on title and content
+      query = query.or(`title.ilike.%${search}%,summary.ilike.%${search}%,content.ilike.%${search}%`);
+    }
+
+    if (featured !== undefined) {
+      query = query.eq('is_featured', featured);
+    }
+
+    // Apply pagination
+    query = query.range(offset, offset + limit - 1);
+
+    // Execute the query
+    const { data, error, count } = await query;
 
     if (error) throw error;
-    return data as BlogPost[];
+
+    // Format the tags array for each post
+    const formattedPosts = data?.map(post => {
+      const formattedTags = post.tags?.map((tag: any) => ({
+        id: tag.tag_id.id,
+        name: tag.tag_id.name,
+        slug: tag.tag_id.slug
+      })) || [];
+
+      return {
+        ...post,
+        tags: formattedTags
+      };
+    });
+
+    return {
+      posts: formattedPosts as BlogPost[],
+      count,
+      page,
+      limit,
+      totalPages: count ? Math.ceil(count / limit) : 0
+    };
   },
 
   getBlogPostBySlug: async (slug: string) => {
+    // Fetch the blog post
     const { data, error } = await supabase
       .from('blog_posts')
-      .select('*')
+      .select(`
+        *,
+        category:category_id(id, name, slug),
+        tags:blog_post_tags(tag_id(id, name, slug))
+      `)
       .eq('slug', slug)
+      .eq('status', 'published')
       .single();
 
     if (error) throw error;
-    return data as BlogPost;
+
+    // Format the tags array
+    const formattedTags = data.tags?.map((tag: any) => ({
+      id: tag.tag_id.id,
+      name: tag.tag_id.name,
+      slug: tag.tag_id.slug
+    })) || [];
+
+    // Track the view
+    try {
+      await supabase.rpc('increment_blog_post_view', { post_id: data.id });
+    } catch (trackError) {
+      console.error('Error tracking blog post view:', trackError);
+    }
+
+    return { ...data, tags: formattedTags } as BlogPost;
+  },
+
+  // Blog categories
+  getBlogCategories: async () => {
+    const { data, error } = await supabase
+      .from('blog_categories')
+      .select('*')
+      .order('display_order', { ascending: true });
+
+    if (error) throw error;
+    return data;
+  },
+
+  // Blog tags
+  getBlogTags: async () => {
+    const { data, error } = await supabase
+      .from('blog_tags')
+      .select('*')
+      .order('name', { ascending: true });
+
+    if (error) throw error;
+    return data;
+  },
+
+  // Blog comments
+  getBlogComments: async (postId: string) => {
+    const { data, error } = await supabase
+      .from('blog_comments')
+      .select('*')
+      .eq('post_id', postId)
+      .eq('is_approved', true)
+      .order('created_at', { ascending: true });
+
+    if (error) throw error;
+    return data;
+  },
+
+  submitBlogComment: async (comment: {
+    post_id: string;
+    parent_id?: string;
+    author_name: string;
+    author_email: string;
+    author_website?: string;
+    content: string;
+  }) => {
+    const { data, error } = await supabase
+      .from('blog_comments')
+      .insert([{
+        ...comment,
+        is_approved: false // Comments require approval by default
+      }])
+      .select();
+
+    if (error) throw error;
+    return data[0];
+  },
+
+  // Blog analytics
+  trackBlogShare: async (postId: string, platform: string) => {
+    const { data, error } = await supabase
+      .from('blog_post_shares')
+      .insert([{
+        post_id: postId,
+        platform
+      }]);
+
+    if (error) throw error;
+    return data;
+  },
+
+  trackBlogTimeSpent: async (postId: string, timeSpentSeconds: number) => {
+    const { data, error } = await supabase
+      .rpc('update_blog_post_time_spent', {
+        post_id: postId,
+        time_spent: timeSpentSeconds
+      });
+
+    if (error) throw error;
+    return data;
+  },
+
+  getRelatedBlogPosts: async (postId: string, limit: number = 3) => {
+    const { data: post, error: postError } = await supabase
+      .from('blog_posts')
+      .select('category_id, tags:blog_post_tags(tag_id)')
+      .eq('id', postId)
+      .single();
+
+    if (postError) throw postError;
+
+    // Extract tag IDs
+    const tagIds = post.tags.map((tag: { tag_id: string }) => tag.tag_id);
+
+    // Find posts with the same category or tags
+    const { data, error } = await supabase
+      .from('blog_posts')
+      .select(`
+        *,
+        category:category_id(id, name, slug),
+        tags:blog_post_tags(tag_id(id, name, slug))
+      `)
+      .eq('status', 'published')
+      .neq('id', postId) // Exclude the current post
+      .or(`category_id.eq.${post.category_id},tags.tag_id.in.(${tagIds.join(',')})`) // Match category or tags
+      .order('published_at', { ascending: false })
+      .limit(limit);
+
+    if (error) throw error;
+
+    // Format the tags array for each post
+    const formattedPosts = data?.map(post => {
+      const formattedTags = post.tags?.map((tag: { tag_id: { id: string; name: string; slug: string } }) => ({
+        id: tag.tag_id.id,
+        name: tag.tag_id.name,
+        slug: tag.tag_id.slug
+      })) || [];
+
+      return {
+        ...post,
+        tags: formattedTags
+      };
+    });
+
+    return formattedPosts as BlogPost[];
   },
 
   // Contact messages
@@ -345,6 +580,476 @@ export const api = {
 
     if (error) throw error;
     return data as Interest[];
+  },
+
+  // Blog Analytics
+  getBlogAnalyticsSummary: async (timeRange?: { startDate: string; endDate: string }) => {
+    // Build query with time range filter if provided
+    let query = supabase
+      .from('blog_post_analytics')
+      .select(`
+        id,
+        post_id,
+        views,
+        shares,
+        avg_time_spent,
+        total_time_spent,
+        view_count_for_time,
+        ai_generated,
+        ai_feedback_rating,
+        ai_feedback_count,
+        created_at,
+        last_viewed_at,
+        blog_posts:post_id(title, slug)
+      `);
+
+    // Apply time range filter if provided
+    if (timeRange && timeRange.startDate && timeRange.endDate) {
+      query = query.gte('created_at', timeRange.startDate)
+                   .lte('created_at', timeRange.endDate);
+    }
+
+    // Execute query
+    const { data: overallData, error: overallError } = await query;
+
+    if (overallError) throw overallError;
+
+    // Get AI content performance comparison with time range filter
+    let aiPerformanceQuery = supabase.rpc('get_ai_content_performance');
+
+    // Apply time range filter if provided (assuming the RPC function accepts these parameters)
+    if (timeRange && timeRange.startDate && timeRange.endDate) {
+      aiPerformanceQuery = aiPerformanceQuery.eq('start_date', timeRange.startDate)
+                                           .eq('end_date', timeRange.endDate);
+    }
+
+    const { data: aiPerformanceData, error: aiPerformanceError } = await aiPerformanceQuery;
+
+    if (aiPerformanceError) throw aiPerformanceError;
+
+    // Get share analytics with time range filter
+    let shareQuery = supabase
+      .from('blog_post_shares')
+      .select(`
+        id,
+        post_id,
+        platform,
+        shared_at,
+        blog_posts:post_id(title, slug)
+      `);
+
+    // Apply time range filter if provided
+    if (timeRange && timeRange.startDate && timeRange.endDate) {
+      shareQuery = shareQuery.gte('shared_at', timeRange.startDate)
+                            .lte('shared_at', timeRange.endDate);
+    }
+
+    const { data: shareData, error: shareError } = await shareQuery;
+
+    if (shareError) throw shareError;
+
+    // Get AI feedback with time range filter
+    let feedbackQuery = supabase
+      .from('ai_content_feedback')
+      .select(`
+        id,
+        post_id,
+        rating,
+        feedback,
+        created_at,
+        blog_posts:post_id(title, slug)
+      `);
+
+    // Apply time range filter if provided
+    if (timeRange && timeRange.startDate && timeRange.endDate) {
+      feedbackQuery = feedbackQuery.gte('created_at', timeRange.startDate)
+                                 .lte('created_at', timeRange.endDate);
+    }
+
+    const { data: feedbackData, error: feedbackError } = await feedbackQuery;
+
+    if (feedbackError) throw feedbackError;
+
+    // Get audience data (device, browser, location)
+    const { data: audienceData, error: audienceError } = await supabase
+      .from('blog_audience_data')
+      .select('*');
+
+    if (audienceError) throw audienceError;
+
+    // Get content engagement data (scroll depth, element interactions)
+    const { data: engagementData, error: engagementError } = await supabase
+      .from('blog_content_engagement')
+      .select('*');
+
+    if (engagementError) throw engagementError;
+
+    // Calculate summary metrics
+    const totalViews = overallData.reduce((sum, item) => sum + item.views, 0);
+    const totalShares = shareData.length;
+    const avgTimeSpent = overallData.reduce((sum, item) => sum + (item.avg_time_spent || 0), 0) /
+      overallData.filter(item => item.avg_time_spent).length || 0;
+
+    // Get top posts by views
+    const topPostsByViews = [...overallData]
+      .sort((a, b) => b.views - a.views)
+      .slice(0, 10)
+      .map(item => ({
+        id: item.post_id,
+        title: item.blog_posts?.title || 'Unknown',
+        slug: item.blog_posts?.slug || '',
+        views: item.views,
+        shares: item.shares,
+        avgTimeSpent: item.avg_time_spent,
+        aiGenerated: item.ai_generated
+      }));
+
+    // Get top posts by time spent
+    const topPostsByTimeSpent = [...overallData]
+      .sort((a, b) => (b.avg_time_spent || 0) - (a.avg_time_spent || 0))
+      .slice(0, 10)
+      .map(item => ({
+        id: item.post_id,
+        title: item.blog_posts?.title || 'Unknown',
+        slug: item.blog_posts?.slug || '',
+        views: item.views,
+        avgTimeSpent: item.avg_time_spent,
+        aiGenerated: item.ai_generated
+      }));
+
+    // Get share distribution by platform
+    const sharesByPlatform = shareData.reduce((acc: Record<string, number>, item) => {
+      const platform = item.platform || 'unknown';
+      acc[platform] = (acc[platform] || 0) + 1;
+      return acc;
+    }, {});
+
+    // Format share distribution for chart
+    const shareDistribution = Object.entries(sharesByPlatform).map(([platform, count]) => ({
+      platform,
+      count,
+      percentage: Math.round((count / (shareData.length || 1)) * 100)
+    }));
+
+    // Process audience data
+    const deviceDistribution = audienceData ? audienceData.reduce((acc: Record<string, number>, item: any) => {
+      const device = item.device_type || 'unknown';
+      acc[device] = (acc[device] || 0) + 1;
+      return acc;
+    }, {}) : {};
+
+    const browserDistribution = audienceData ? audienceData.reduce((acc: Record<string, number>, item: any) => {
+      const browser = item.browser || 'unknown';
+      acc[browser] = (acc[browser] || 0) + 1;
+      return acc;
+    }, {}) : {};
+
+    const locationDistribution = audienceData ? audienceData.reduce((acc: Record<string, number>, item: any) => {
+      const country = item.country || 'unknown';
+      acc[country] = (acc[country] || 0) + 1;
+      return acc;
+    }, {}) : {};
+
+    // Process engagement data
+    const scrollDepthData = engagementData ? engagementData.reduce((acc: Record<string, number>, item: any) => {
+      const depth = item.scroll_depth || 'unknown';
+      acc[depth] = (acc[depth] || 0) + 1;
+      return acc;
+    }, {}) : {};
+
+    const elementInteractionData = engagementData ? engagementData.reduce((acc: Record<string, number>, item: any) => {
+      const element = item.element_type || 'unknown';
+      acc[element] = (acc[element] || 0) + 1;
+      return acc;
+    }, {}) : {};
+
+    return {
+      summary: {
+        totalViews,
+        totalShares,
+        avgTimeSpent,
+        totalPosts: overallData.length,
+        aiGeneratedPosts: overallData.filter(item => item.ai_generated).length,
+        avgAiFeedbackRating: overallData.reduce((sum, item) => sum + (item.ai_feedback_rating || 0), 0) /
+          (overallData.filter(item => item.ai_feedback_count > 0).length || 1)
+      },
+      aiPerformance: aiPerformanceData || [],
+      topPostsByViews,
+      topPostsByTimeSpent,
+      shareDistribution,
+      audienceInsights: {
+        deviceDistribution,
+        browserDistribution,
+        locationDistribution,
+        newVsReturning: { new: 65, returning: 35 } // Mock data, replace with actual data when available
+      },
+      contentEngagement: {
+        scrollDepthData,
+        elementInteractionData,
+        readingTimeDistribution: { // Mock data, replace with actual data when available
+          'less_than_1_min': 120,
+          '1_to_3_min': 350,
+          '3_to_5_min': 280,
+          '5_to_10_min': 190,
+          'more_than_10_min': 60
+        }
+      },
+      rawData: {
+        overallData,
+        shareData,
+        feedbackData,
+        audienceData: audienceData || [],
+        engagementData: engagementData || []
+      }
+    };
+  },
+
+  // Get detailed analytics for a specific blog post
+  getBlogPostAnalytics: async (postId: string) => {
+    // Get post analytics
+    const { data: postAnalytics, error: postError } = await supabase
+      .from('blog_post_analytics')
+      .select('*')
+      .eq('post_id', postId)
+      .single();
+
+    if (postError) throw postError;
+
+    // Get post shares
+    const { data: shareData, error: shareError } = await supabase
+      .from('blog_post_shares')
+      .select('*')
+      .eq('post_id', postId);
+
+    if (shareError) throw shareError;
+
+    // Get AI feedback if applicable
+    const { data: feedbackData, error: feedbackError } = await supabase
+      .from('ai_content_feedback')
+      .select('*')
+      .eq('post_id', postId);
+
+    if (feedbackError) throw feedbackError;
+
+    // Get the blog post details
+    const { data: postData, error: postDetailsError } = await supabase
+      .from('blog_posts')
+      .select('*')
+      .eq('id', postId)
+      .single();
+
+    if (postDetailsError) throw postDetailsError;
+
+    // Get audience data for this post
+    const { data: audienceData, error: audienceError } = await supabase
+      .from('blog_audience_data')
+      .select('*')
+      .eq('post_id', postId);
+
+    if (audienceError) throw audienceError;
+
+    // Get content engagement data for this post
+    const { data: engagementData, error: engagementError } = await supabase
+      .from('blog_content_engagement')
+      .select('*')
+      .eq('post_id', postId);
+
+    if (engagementError) throw engagementError;
+
+    // Calculate share distribution by platform
+    const sharesByPlatform = shareData.reduce((acc: Record<string, number>, item) => {
+      const platform = item.platform || 'unknown';
+      acc[platform] = (acc[platform] || 0) + 1;
+      return acc;
+    }, {});
+
+    // Define types for audience and engagement data
+    interface AudienceDataItem {
+      id: string;
+      post_id: string;
+      session_id: string;
+      device_type: string;
+      browser: string;
+      country?: string;
+      region?: string;
+      city?: string;
+      is_new_visitor: boolean;
+      created_at: string;
+    }
+
+    interface EngagementDataItem {
+      id: string;
+      post_id: string;
+      session_id: string;
+      scroll_depth?: number;
+      element_type?: string;
+      element_id?: string;
+      interaction_type?: string;
+      time_spent_seconds?: number;
+      created_at: string;
+    }
+
+    // Process audience data
+    const deviceDistribution = audienceData ? audienceData.reduce((acc: Record<string, number>, item: AudienceDataItem) => {
+      const device = item.device_type || 'unknown';
+      acc[device] = (acc[device] || 0) + 1;
+      return acc;
+    }, {}) : {};
+
+    const browserDistribution = audienceData ? audienceData.reduce((acc: Record<string, number>, item: AudienceDataItem) => {
+      const browser = item.browser || 'unknown';
+      acc[browser] = (acc[browser] || 0) + 1;
+      return acc;
+    }, {}) : {};
+
+    const locationDistribution = audienceData ? audienceData.reduce((acc: Record<string, number>, item: AudienceDataItem) => {
+      const country = item.country || 'unknown';
+      acc[country] = (acc[country] || 0) + 1;
+      return acc;
+    }, {}) : {};
+
+    const newVsReturningVisitors = {
+      new: audienceData ? audienceData.filter(item => item.is_new_visitor).length : 0,
+      returning: audienceData ? audienceData.filter(item => !item.is_new_visitor).length : 0
+    };
+
+    // Process engagement data
+    const scrollDepthDistribution = engagementData ? {
+      labels: ['0-25%', '25-50%', '50-75%', '75-100%'],
+      values: [
+        engagementData.filter(item => item.scroll_depth <= 25).length,
+        engagementData.filter(item => item.scroll_depth > 25 && item.scroll_depth <= 50).length,
+        engagementData.filter(item => item.scroll_depth > 50 && item.scroll_depth <= 75).length,
+        engagementData.filter(item => item.scroll_depth > 75).length
+      ]
+    } : { labels: [], values: [] };
+
+    // Process element interactions
+    const elementInteractions = engagementData ? engagementData.reduce((acc: Record<string, number>, item: EngagementDataItem) => {
+      const element = item.element_type || 'unknown';
+      acc[element] = (acc[element] || 0) + 1;
+      return acc;
+    }, {}) : {};
+
+    const elementInteractionData = {
+      elements: Object.keys(elementInteractions),
+      interactions: Object.values(elementInteractions) as number[]
+    };
+
+    // Process reading time distribution
+    const readingTimeDistribution = {
+      labels: ['< 1 min', '1-3 min', '3-5 min', '5-10 min', '> 10 min'],
+      values: [
+        engagementData ? engagementData.filter(item => (item.time_spent_seconds || 0) < 60).length : 0,
+        engagementData ? engagementData.filter(item => (item.time_spent_seconds || 0) >= 60 && (item.time_spent_seconds || 0) < 180).length : 0,
+        engagementData ? engagementData.filter(item => (item.time_spent_seconds || 0) >= 180 && (item.time_spent_seconds || 0) < 300).length : 0,
+        engagementData ? engagementData.filter(item => (item.time_spent_seconds || 0) >= 300 && (item.time_spent_seconds || 0) < 600).length : 0,
+        engagementData ? engagementData.filter(item => (item.time_spent_seconds || 0) >= 600).length : 0
+      ]
+    };
+
+    // Calculate engagement metrics
+    const avgScrollDepth = engagementData && engagementData.length > 0
+      ? engagementData.reduce((sum, item) => sum + (item.scroll_depth || 0), 0) / engagementData.length
+      : 0;
+
+    const completionRate = engagementData && engagementData.length > 0
+      ? (engagementData.filter(item => (item.scroll_depth || 0) >= 90).length / engagementData.length) * 100
+      : 0;
+
+    const interactionRate = engagementData && engagementData.length > 0
+      ? (engagementData.filter(item => item.element_type).length / engagementData.length) * 100
+      : 0;
+
+    // Generate content optimization tips based on analytics
+    const optimizationTips = [];
+
+    // Tip for scroll depth
+    if (avgScrollDepth < 50) {
+      optimizationTips.push({
+        title: 'Improve Content Engagement',
+        description: 'Average scroll depth is below 50%. Consider making your content more engaging with better hooks, visuals, or breaking up text into smaller paragraphs.',
+        type: 'warning'
+      });
+    } else if (avgScrollDepth >= 75) {
+      optimizationTips.push({
+        title: 'Strong Content Engagement',
+        description: 'Your content has excellent scroll depth (75%+). Keep using this style and structure in future posts.',
+        type: 'success'
+      });
+    }
+
+    // Tip for completion rate
+    if (completionRate < 40) {
+      optimizationTips.push({
+        title: 'Low Completion Rate',
+        description: 'Less than 40% of readers are completing your post. Consider shortening the content or adding more engaging elements throughout.',
+        type: 'warning'
+      });
+    }
+
+    // Tip for mobile optimization if high mobile usage
+    const mobilePercentage = deviceDistribution['mobile']
+      ? (deviceDistribution['mobile'] / Object.values(deviceDistribution).reduce((a, b) => a + b, 0)) * 100
+      : 0;
+
+    if (mobilePercentage > 40) {
+      optimizationTips.push({
+        title: 'Optimize for Mobile',
+        description: `${Math.round(mobilePercentage)}% of your readers are on mobile devices. Ensure your content is mobile-friendly with appropriate font sizes and image scaling.`,
+        type: 'info'
+      });
+    }
+
+    // Tip for element interactions
+    if (interactionRate < 10) {
+      optimizationTips.push({
+        title: 'Increase Interactive Elements',
+        description: 'Your content has low interaction rates. Consider adding more clickable elements like links to related content, interactive examples, or media.',
+        type: 'info'
+      });
+    }
+
+    return {
+      post: postData,
+      analytics: postAnalytics,
+      shares: {
+        total: shareData.length,
+        byPlatform: sharesByPlatform,
+        history: shareData
+      },
+      feedback: feedbackData,
+      audience: {
+        deviceDistribution: {
+          labels: Object.keys(deviceDistribution),
+          values: Object.values(deviceDistribution)
+        },
+        locationDistribution: {
+          labels: Object.keys(locationDistribution),
+          values: Object.values(locationDistribution)
+        },
+        newVsReturning: newVsReturningVisitors,
+        browserDistribution
+      },
+      engagement: {
+        metrics: {
+          avgScrollDepth,
+          completionRate,
+          interactionRate,
+          avgTimeSpent: postAnalytics?.avg_time_spent || 0
+        },
+        scrollDepthDistribution,
+        elementInteractionData,
+        readingTimeDistribution
+      },
+      optimization: {
+        tips: optimizationTips
+      },
+      rawData: {
+        audienceData: audienceData || [],
+        engagementData: engagementData || []
+      }
+    };
   },
 };
 
