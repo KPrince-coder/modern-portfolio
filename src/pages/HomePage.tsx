@@ -1,8 +1,10 @@
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import Container from '../components/layout/Container';
 import SectionDivider from '../components/ui/SectionDivider';
 import SkillCard from '../components/ui/SkillCard';
 import ProjectCard from '../components/ui/ProjectCard';
+import FeaturedBlogPosts from '../components/home/FeaturedBlogPosts';
 
 const HomePage = () => {
   return (
@@ -139,6 +141,35 @@ const HomePage = () => {
           >
             View All Projects
           </a>
+        </div>
+      </section>
+
+      <SectionDivider />
+
+      {/* Featured Blog Posts Section */}
+      <section className="mb-32 pt-8" id="blog">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+          className="text-center mb-12"
+        >
+          <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-4">Featured Blog Posts</h2>
+          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+            Check out my latest thoughts and insights on technology, design, and development.
+          </p>
+        </motion.div>
+
+        <FeaturedBlogPosts />
+
+        <div className="text-center mt-12">
+          <Link
+            to="/blog"
+            className="px-6 py-3 border border-indigo-600 text-indigo-600 dark:text-indigo-400 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors"
+          >
+            View All Posts
+          </Link>
         </div>
       </section>
 
