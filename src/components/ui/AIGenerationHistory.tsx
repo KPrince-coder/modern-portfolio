@@ -102,69 +102,89 @@ const AIGenerationHistory: React.FC<AIGenerationHistoryProps> = ({
         </p>
       </div>
 
-      {isLoading ? (
-        <div className="p-6 flex justify-center">
-          <LoadingSpinner size="md" />
-        </div>
-      ) : error ? (
-        <div className="p-6 text-center text-red-500">
-          {error}
-        </div>
-      ) : generations.length === 0 ? (
-        <div className="p-6 text-center text-gray-500 dark:text-gray-400">
-          No AI generations found
-        </div>
-      ) : (
-        <div className="divide-y divide-gray-200 dark:divide-gray-700">
-          {generations.map((generation) => (
-            <motion.div
-              key={generation.id}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className={`p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 ${
-                selectedGeneration === generation.id ? 'bg-indigo-50 dark:bg-indigo-900/20' : ''
-              }`}
-            >
-              <div className="flex justify-between items-start">
-                <div>
-                  <h4 className="text-sm font-medium text-gray-900 dark:text-white">
-                    {generation.prompt?.title || 'Untitled Generation'}
-                  </h4>
-                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                    {formatDate(generation.created_at)}
-                  </p>
-                </div>
-                <div className="flex space-x-2">
-                  <button
-                    type="button"
-                    onClick={() => handlePreview(generation.result)}
-                    className="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300"
-                  >
-                    Preview
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleSelectGeneration(generation)}
-                    className="text-xs text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300"
-                  >
-                    Use
-                  </button>
-                </div>
-              </div>
-              <div className="mt-2 text-xs text-gray-600 dark:text-gray-300">
-                <p>
-                  <span className="font-medium">Topic:</span>{' '}
-                  {generation.prompt?.topic || 'N/A'}
-                </p>
-                <p className="mt-1">
-                  <span className="font-medium">Keywords:</span>{' '}
-                  {generation.prompt?.keywords?.join(', ') || 'N/A'}
-                </p>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      )}
+      {(() => {
+        if (isLoading) {
+          return (
+            <div className="p-6 flex justify-center">
+              <LoadingSpinner size="md" />
+            </div>
+          );
+        }
+
+        if (error) {
+          return (
+            <div className="p-6 text-center text-red-500">
+              {error}
+            </div>
+          );
+        }
+
+        if (generations.length === 0) {
+          return (
+            <div className="p-6 text-center text-gray-500 dark:text-gray-400">
+              No AI generations found
+            </div>
+          );
+        }
+
+        return (
+          <div className="divide-y divide-gray-200 dark:divide-gray-700">
+            {generations.map((generation) => {
+              const prompt = typeof generation.prompt === 'string' 
+                ? JSON.parse(generation.prompt) 
+                : generation.prompt;
+
+              return (
+                <motion.div
+                  key={generation.id}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className={`p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 ${
+                    selectedGeneration === generation.id ? 'bg-indigo-50 dark:bg-indigo-900/20' : ''
+                  }`}
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-900 dark:text-white">
+                        {prompt?.title || 'Untitled Generation'}
+                      </h4>
+                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        {formatDate(generation.created_at)}
+                      </p>
+                    </div>
+                    <div className="flex space-x-2">
+                      <button
+                        type="button"
+                        onClick={() => handlePreview(generation.result)}
+                        className="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300"
+                      >
+                        Preview
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSelectGeneration(generation)}
+                        className="text-xs text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300"
+                      >
+                        Use
+                      </button>
+                    </div>
+                  </div>
+                  <div className="mt-2 text-xs text-gray-600 dark:text-gray-300">
+                    <p>
+                      <span className="font-medium">Topic:</span>{' '}
+                      {prompt?.topic || 'N/A'}
+                    </p>
+                    <p className="mt-1">
+                      <span className="font-medium">Keywords:</span>{' '}
+                      {prompt?.keywords?.join(', ') || 'N/A'}
+                    </p>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        );
+      })()}
 
       {/* Preview Modal */}
       <AnimatePresence>
@@ -229,3 +249,4 @@ const AIGenerationHistory: React.FC<AIGenerationHistoryProps> = ({
 };
 
 export default AIGenerationHistory;
+
