@@ -129,12 +129,22 @@ export const extractYoutubeEmbeds = (content: string): string[] => {
  * @returns Cleaned content
  */
 export const cleanupContent = (content: string): string => {
-  return content
-    .replace(/SUMMARY:\s*[^\n]+(?:\n[^\n]+)*/g, '')
+  // Remove tags section
+  let cleanedContent = content.replace(/(?:Tags:|Related topics:|Keywords:)\s*\n(?:\s*[-*]\s*[^\n]+\n)+/gi, '');
+
+  // Remove summary section
+  cleanedContent = cleanedContent.replace(/SUMMARY:\s*[^\n]+(?:\n[^\n]+)*/g, '');
+
+  // Remove metadata
+  cleanedContent = cleanedContent
     .replace(/META_TITLE:\s*.+(?:\n|$)/g, '')
     .replace(/META_DESCRIPTION:\s*.+(?:\n|$)/g, '')
-    .replace(/META_KEYWORDS:\s*.+(?:\n|$)/g, '')
-    .trim();
+    .replace(/META_KEYWORDS:\s*.+(?:\n|$)/g, '');
+
+  // Remove any trailing list of tags that might be in a different format
+  cleanedContent = cleanedContent.replace(/\n\s*[-*]\s*[\w\s,]+\s*(?:\n\s*[-*]\s*[\w\s,]+\s*){2,}$/g, '');
+
+  return cleanedContent.trim();
 };
 
 /**

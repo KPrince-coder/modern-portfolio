@@ -189,7 +189,8 @@ export const groqAPI = {
       - Include the keywords: ${prompt.keywords.join(', ')}
       - Write approximately ${wordCount} words
       - Format the content in Markdown
-      - Create a compelling title if none is provided
+      - Start with a level 1 heading (# Title) as the blog post title
+      - Structure the content with proper hierarchy (use ## for main sections, ### for subsections)
       - Include an introduction, several sections with subheadings (H2, H3), and a conclusion
       - Add relevant examples, statistics, or case studies where appropriate
       - Include code blocks with proper syntax highlighting where relevant (use triple backticks with language specification)
@@ -199,12 +200,24 @@ export const groqAPI = {
       - Include blockquotes for important points or testimonials
       - Ensure the content is original, informative, and valuable to readers
       - Include a call-to-action at the end
-      - End with a list of 5-7 relevant tags for the blog post
-      - Add a 2-3 sentence summary of the blog post at the very end, prefixed with "SUMMARY:"
-      - Add SEO metadata at the very end in this format:
-        META_TITLE: [SEO-optimized title]
-        META_DESCRIPTION: [Compelling meta description under 160 characters]
-        META_KEYWORDS: [comma-separated keywords]
+
+      After the main content, add the following metadata sections (each separated by a blank line):
+
+      1. Tags section:
+      Tags:
+      - tag1
+      - tag2
+      - tag3
+      - tag4
+      - tag5
+
+      2. Summary section (2-3 sentences):
+      SUMMARY: A concise summary of the blog post.
+
+      3. SEO metadata:
+      META_TITLE: [SEO-optimized title]
+      META_DESCRIPTION: [Compelling meta description under 160 characters]
+      META_KEYWORDS: [comma-separated keywords]
 
       The blog post should be ready to publish with minimal editing.`;
 
