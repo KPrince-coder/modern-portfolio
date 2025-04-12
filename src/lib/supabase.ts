@@ -214,6 +214,32 @@ export interface Interest {
   display_order: number;
 }
 
+// Analytics data types
+export interface AudienceDataItem {
+  id: string;
+  post_id: string;
+  session_id: string;
+  device_type: string;
+  browser: string;
+  country?: string;
+  region?: string;
+  city?: string;
+  is_new_visitor: boolean;
+  created_at: string;
+}
+
+export interface EngagementDataItem {
+  id: string;
+  post_id: string;
+  session_id: string;
+  scroll_depth?: number;
+  element_type?: string;
+  element_id?: string;
+  interaction_type?: string;
+  time_spent_seconds?: number;
+  created_at: string;
+}
+
 // API functions
 export const api = {
   // Projects
@@ -614,16 +640,11 @@ export const api = {
 
     if (overallError) throw overallError;
 
-    // Get AI content performance comparison with time range filter
-    let aiPerformanceQuery = supabase.rpc('get_ai_content_performance');
-
-    // Apply time range filter if provided (assuming the RPC function accepts these parameters)
-    if (timeRange && timeRange.startDate && timeRange.endDate) {
-      aiPerformanceQuery = aiPerformanceQuery.eq('start_date', timeRange.startDate)
-                                           .eq('end_date', timeRange.endDate);
-    }
-
-    const { data: aiPerformanceData, error: aiPerformanceError } = await aiPerformanceQuery;
+    // Get AI content performance comparison
+    // Note: The RPC function doesn't accept time range parameters directly
+    // In a production environment, you would modify the RPC function to accept these parameters
+    const { data: aiPerformanceData, error: aiPerformanceError } = await supabase
+      .rpc('get_ai_content_performance');
 
     if (aiPerformanceError) throw aiPerformanceError;
 
@@ -731,33 +752,59 @@ export const api = {
       percentage: Math.round((count / (shareData.length || 1)) * 100)
     }));
 
+    // Define types for audience and engagement data
+    interface AudienceDataItem {
+      id: string;
+      post_id: string;
+      session_id: string;
+      device_type: string;
+      browser: string;
+      country?: string;
+      region?: string;
+      city?: string;
+      is_new_visitor: boolean;
+      created_at: string;
+    }
+
+    interface EngagementDataItem {
+      id: string;
+      post_id: string;
+      session_id: string;
+      scroll_depth?: number;
+      element_type?: string;
+      element_id?: string;
+      interaction_type?: string;
+      time_spent_seconds?: number;
+      created_at: string;
+    }
+
     // Process audience data
-    const deviceDistribution = audienceData ? audienceData.reduce((acc: Record<string, number>, item: any) => {
+    const deviceDistribution = audienceData ? audienceData.reduce((acc: Record<string, number>, item: AudienceDataItem) => {
       const device = item.device_type || 'unknown';
       acc[device] = (acc[device] || 0) + 1;
       return acc;
     }, {}) : {};
 
-    const browserDistribution = audienceData ? audienceData.reduce((acc: Record<string, number>, item: any) => {
+    const browserDistribution = audienceData ? audienceData.reduce((acc: Record<string, number>, item: AudienceDataItem) => {
       const browser = item.browser || 'unknown';
       acc[browser] = (acc[browser] || 0) + 1;
       return acc;
     }, {}) : {};
 
-    const locationDistribution = audienceData ? audienceData.reduce((acc: Record<string, number>, item: any) => {
+    const locationDistribution = audienceData ? audienceData.reduce((acc: Record<string, number>, item: AudienceDataItem) => {
       const country = item.country || 'unknown';
       acc[country] = (acc[country] || 0) + 1;
       return acc;
     }, {}) : {};
 
     // Process engagement data
-    const scrollDepthData = engagementData ? engagementData.reduce((acc: Record<string, number>, item: any) => {
+    const scrollDepthData = engagementData ? engagementData.reduce((acc: Record<string, number>, item: EngagementDataItem) => {
       const depth = item.scroll_depth || 'unknown';
       acc[depth] = (acc[depth] || 0) + 1;
       return acc;
     }, {}) : {};
 
-    const elementInteractionData = engagementData ? engagementData.reduce((acc: Record<string, number>, item: any) => {
+    const elementInteractionData = engagementData ? engagementData.reduce((acc: Record<string, number>, item: EngagementDataItem) => {
       const element = item.element_type || 'unknown';
       acc[element] = (acc[element] || 0) + 1;
       return acc;
@@ -863,31 +910,7 @@ export const api = {
       return acc;
     }, {});
 
-    // Define types for audience and engagement data
-    interface AudienceDataItem {
-      id: string;
-      post_id: string;
-      session_id: string;
-      device_type: string;
-      browser: string;
-      country?: string;
-      region?: string;
-      city?: string;
-      is_new_visitor: boolean;
-      created_at: string;
-    }
-
-    interface EngagementDataItem {
-      id: string;
-      post_id: string;
-      session_id: string;
-      scroll_depth?: number;
-      element_type?: string;
-      element_id?: string;
-      interaction_type?: string;
-      time_spent_seconds?: number;
-      created_at: string;
-    }
+    // Using the AudienceDataItem and EngagementDataItem interfaces defined at the top of the file
 
     // Process audience data
     const deviceDistribution = audienceData ? audienceData.reduce((acc: Record<string, number>, item: AudienceDataItem) => {
