@@ -108,6 +108,19 @@ The database schema includes the following tables:
 
 Detailed schema information can be found in the `supabase/README.md` file.
 
+### Storage Buckets
+
+The application uses the following Supabase storage buckets for file uploads:
+
+- `profile`: For profile images and resume files
+- `projects`: For project thumbnails, gallery images, and videos
+- `blog`: For blog featured images, content images, and videos
+- `experience`: For company logos and institution logos
+- `seo`: For Open Graph images and site icons
+- `media`: For general media library assets (images, videos, documents)
+
+Detailed information about storage buckets can be found in the [docs/storage-buckets.md](docs/storage-buckets.md) file.
+
 ## Content Management System (CMS)
 
 The portfolio includes a custom CMS for managing all content. The CMS is accessible at `/admin` and requires authentication.
