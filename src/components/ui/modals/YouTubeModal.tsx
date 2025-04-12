@@ -91,7 +91,7 @@ const YouTubeModal: React.FC<YouTubeModalProps> = ({
         {previewAvailable && (
           <div className="mt-4">
             <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Preview:</p>
-            <div className="aspect-w-16 aspect-h-9 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden">
+            <div className="aspect-[16/9] bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden">
               <iframe
                 src={`https://www.youtube.com/embed/${videoId}`}
                 title="YouTube video player"
