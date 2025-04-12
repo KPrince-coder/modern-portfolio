@@ -392,6 +392,12 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
     onSuccess: (postId) => {
       queryClient.invalidateQueries({ queryKey: ['blogPosts'] });
       queryClient.invalidateQueries({ queryKey: ['blogPost', postId] });
+
+      // Show success message
+      const message = post?.id ? 'Blog post updated successfully!' : 'Blog post created successfully!';
+      alert(message);
+
+      // Navigate back to the blog list
       navigate('/admin/blog');
     },
   });
