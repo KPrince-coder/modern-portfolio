@@ -55,26 +55,26 @@ const ProjectBasicInfo: React.FC<ProjectBasicInfoProps> = ({
 
     try {
       setIsUploading(true);
-      
+
       // Create a unique file name
       const fileExt = file.name.split('.').pop();
       const fileName = `project_${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
       const filePath = `project_images/${fileName}`;
-      
+
       // Upload file to Supabase Storage
       const { error: uploadError } = await supabase.storage
-        .from('portfolio')
+        .from('projects')
         .upload(filePath, file);
-      
+
       if (uploadError) {
         throw uploadError;
       }
-      
+
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
-        .from('portfolio')
+        .from('projects')
         .getPublicUrl(filePath);
-      
+
       // Update form data with new image URL
       onChange('thumbnail_url', publicUrl);
     } catch (error) {
@@ -87,7 +87,7 @@ const ProjectBasicInfo: React.FC<ProjectBasicInfoProps> = ({
   // Handle adding a technology
   const handleAddTechnology = () => {
     if (!techInput.trim()) return;
-    
+
     const newTech = techInput.trim();
     if (!formData.technologies.includes(newTech)) {
       onChange('technologies', [...formData.technologies, newTech]);
@@ -122,8 +122,8 @@ const ProjectBasicInfo: React.FC<ProjectBasicInfoProps> = ({
             value={formData.title}
             onChange={(e) => onTitleChange(e.target.value)}
             className={`w-full px-4 py-2 rounded-lg border ${
-              errors.title 
-                ? 'border-red-500 dark:border-red-500' 
+              errors.title
+                ? 'border-red-500 dark:border-red-500'
                 : 'border-gray-300 dark:border-gray-600'
             } bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400`}
             placeholder="Enter project title"
@@ -148,8 +148,8 @@ const ProjectBasicInfo: React.FC<ProjectBasicInfoProps> = ({
               value={formData.slug}
               onChange={(e) => onChange('slug', e.target.value)}
               className={`flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md border ${
-                errors.slug 
-                  ? 'border-red-500 dark:border-red-500' 
+                errors.slug
+                  ? 'border-red-500 dark:border-red-500'
                   : 'border-gray-300 dark:border-gray-600'
               } bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400`}
               placeholder="project-slug"
@@ -214,8 +214,8 @@ const ProjectBasicInfo: React.FC<ProjectBasicInfoProps> = ({
           onChange={(e) => onChange('description', e.target.value)}
           rows={3}
           className={`w-full px-4 py-2 rounded-lg border ${
-            errors.description 
-              ? 'border-red-500 dark:border-red-500' 
+            errors.description
+              ? 'border-red-500 dark:border-red-500'
               : 'border-gray-300 dark:border-gray-600'
           } bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400`}
           placeholder="Brief description of the project"
@@ -263,11 +263,11 @@ const ProjectBasicInfo: React.FC<ProjectBasicInfoProps> = ({
             Add
           </Button>
         </div>
-        
+
         {formData.technologies.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-2">
             {formData.technologies.map((tech, index) => (
-              <div 
+              <div
                 key={index}
                 className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300"
               >
@@ -295,9 +295,9 @@ const ProjectBasicInfo: React.FC<ProjectBasicInfoProps> = ({
         <div className="flex items-center space-x-4">
           {formData.thumbnail_url && (
             <div className="w-32 h-32 bg-gray-100 dark:bg-gray-700 rounded-md overflow-hidden">
-              <img 
-                src={formData.thumbnail_url} 
-                alt="Thumbnail" 
+              <img
+                src={formData.thumbnail_url}
+                alt="Thumbnail"
                 className="w-full h-full object-cover"
               />
             </div>

@@ -60,7 +60,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
 
       // Upload file to Supabase Storage
       const { data, error } = await supabase.storage
-        .from('portfolio')
+        .from('media')
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: false,
@@ -72,7 +72,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
 
       // Get the public URL
       const { data: { publicUrl } } = supabase.storage
-        .from('portfolio')
+        .from('media')
         .getPublicUrl(filePath);
 
       // Call the callback with the URL

@@ -20,10 +20,10 @@ interface UploadFile {
   url?: string;
 }
 
-const MediaUploader: React.FC<MediaUploaderProps> = ({ 
-  currentFolder, 
-  onClose, 
-  onUploadComplete 
+const MediaUploader: React.FC<MediaUploaderProps> = ({
+  currentFolder,
+  onClose,
+  onUploadComplete
 }) => {
   const [files, setFiles] = useState<UploadFile[]>([]);
   const [isDragging, setIsDragging] = useState(false);
@@ -34,10 +34,10 @@ const MediaUploader: React.FC<MediaUploaderProps> = ({
   const uploadFileMutation = useMutation({
     mutationFn: async (fileData: { file: File; id: string; folder: string | null }) => {
       // Update file status to uploading
-      setFiles(prev => 
-        prev.map(f => 
-          f.id === fileData.id 
-            ? { ...f, status: 'uploading' } 
+      setFiles(prev =>
+        prev.map(f =>
+          f.id === fileData.id
+            ? { ...f, status: 'uploading' }
             : f
         )
       );
@@ -46,27 +46,27 @@ const MediaUploader: React.FC<MediaUploaderProps> = ({
         // Create a unique file name
         const fileExt = fileData.file.name.split('.').pop();
         const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
-        const filePath = fileData.folder 
-          ? `${fileData.folder}/${fileName}` 
+        const filePath = fileData.folder
+          ? `${fileData.folder}/${fileName}`
           : fileName;
-        
+
         // Upload file to Supabase Storage
         const { error: uploadError, data } = await supabase.storage
-          .from('portfolio')
+          .from('media')
           .upload(filePath, fileData.file, {
             cacheControl: '3600',
             upsert: false
           });
-        
+
         if (uploadError) {
           throw uploadError;
         }
-        
+
         // Get public URL
         const { data: { publicUrl } } = supabase.storage
-          .from('portfolio')
+          .from('media')
           .getPublicUrl(filePath);
-        
+
         // Create thumbnail for images
         let thumbnailUrl = '';
         if (fileData.file.type.startsWith('image/')) {
@@ -74,7 +74,7 @@ const MediaUploader: React.FC<MediaUploaderProps> = ({
           // For now, we'll use the same URL
           thumbnailUrl = publicUrl;
         }
-        
+
         // Add file record to database
         const { error: dbError } = await supabase
           .from('portfolio.media')
@@ -90,33 +90,33 @@ const MediaUploader: React.FC<MediaUploaderProps> = ({
               lastModified: fileData.file.lastModified,
             },
           });
-        
+
         if (dbError) {
           throw dbError;
         }
-        
+
         // Update file status to success
-        setFiles(prev => 
-          prev.map(f => 
-            f.id === fileData.id 
-              ? { ...f, status: 'success', progress: 100, url: publicUrl } 
+        setFiles(prev =>
+          prev.map(f =>
+            f.id === fileData.id
+              ? { ...f, status: 'success', progress: 100, url: publicUrl }
               : f
           )
         );
-        
+
         return publicUrl;
       } catch (error) {
         console.error('Error uploading file:', error);
-        
+
         // Update file status to error
-        setFiles(prev => 
-          prev.map(f => 
-            f.id === fileData.id 
-              ? { ...f, status: 'error', error: (error as Error).message } 
+        setFiles(prev =>
+          prev.map(f =>
+            f.id === fileData.id
+              ? { ...f, status: 'error', error: (error as Error).message }
               : f
           )
         );
-        
+
         throw error;
       }
     },
@@ -126,14 +126,14 @@ const MediaUploader: React.FC<MediaUploaderProps> = ({
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = e.target.files;
     if (!selectedFiles || selectedFiles.length === 0) return;
-    
+
     const newFiles: UploadFile[] = Array.from(selectedFiles).map(file => ({
       id: Math.random().toString(36).substring(2, 15),
       file,
       progress: 0,
       status: 'pending',
     }));
-    
+
     setFiles(prev => [...prev, ...newFiles]);
   };
 
@@ -159,17 +159,17 @@ const MediaUploader: React.FC<MediaUploaderProps> = ({
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
-    
+
     const droppedFiles = e.dataTransfer.files;
     if (!droppedFiles || droppedFiles.length === 0) return;
-    
+
     const newFiles: UploadFile[] = Array.from(droppedFiles).map(file => ({
       id: Math.random().toString(36).substring(2, 15),
       file,
       progress: 0,
       status: 'pending',
     }));
-    
+
     setFiles(prev => [...prev, ...newFiles]);
   };
 
@@ -181,9 +181,9 @@ const MediaUploader: React.FC<MediaUploaderProps> = ({
   // Handle upload all files
   const handleUploadAll = async () => {
     const pendingFiles = files.filter(file => file.status === 'pending');
-    
+
     if (pendingFiles.length === 0) return;
-    
+
     // Upload files sequentially
     for (const file of pendingFiles) {
       try {
@@ -196,12 +196,12 @@ const MediaUploader: React.FC<MediaUploaderProps> = ({
         // Error is handled in the mutation
       }
     }
-    
+
     // Check if all files are processed
-    const allProcessed = files.every(file => 
+    const allProcessed = files.every(file =>
       file.status === 'success' || file.status === 'error'
     );
-    
+
     if (allProcessed) {
       onUploadComplete();
     }
@@ -210,11 +210,11 @@ const MediaUploader: React.FC<MediaUploaderProps> = ({
   // Format file size for display
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes';
-    
+
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    
+
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
@@ -240,7 +240,7 @@ const MediaUploader: React.FC<MediaUploaderProps> = ({
             </svg>
           </button>
         </div>
-        
+
         {/* Folder Selection */}
         <div className="p-4 border-b border-gray-200 dark:border-gray-700">
           <label htmlFor="folder" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -255,12 +255,12 @@ const MediaUploader: React.FC<MediaUploaderProps> = ({
             placeholder="e.g. images/blog (leave empty for root folder)"
           />
         </div>
-        
+
         {/* Drop Zone */}
-        <div 
+        <div
           className={`p-6 flex-1 flex flex-col items-center justify-center border-2 border-dashed rounded-lg m-4 ${
-            isDragging 
-              ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' 
+            isDragging
+              ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
               : 'border-gray-300 dark:border-gray-600'
           }`}
           onDragEnter={handleDragEnter}
@@ -292,7 +292,7 @@ const MediaUploader: React.FC<MediaUploaderProps> = ({
             Supported formats: Images, Videos, Audio, PDFs, and Documents
           </p>
         </div>
-        
+
         {/* File List */}
         {files.length > 0 && (
           <div className="p-4 border-t border-gray-200 dark:border-gray-700 max-h-[300px] overflow-y-auto">
@@ -312,8 +312,8 @@ const MediaUploader: React.FC<MediaUploaderProps> = ({
                     <div className="flex items-center flex-1 min-w-0">
                       {file.file.type.startsWith('image/') ? (
                         <div className="h-10 w-10 bg-gray-200 dark:bg-gray-600 rounded-md overflow-hidden mr-3">
-                          <img 
-                            src={file.url || URL.createObjectURL(file.file)} 
+                          <img
+                            src={file.url || URL.createObjectURL(file.file)}
                             alt={file.file.name}
                             className="h-full w-full object-cover"
                           />
@@ -334,7 +334,7 @@ const MediaUploader: React.FC<MediaUploaderProps> = ({
                         </p>
                       </div>
                     </div>
-                    
+
                     <div className="ml-4 flex items-center">
                       {file.status === 'pending' && (
                         <button
@@ -346,19 +346,19 @@ const MediaUploader: React.FC<MediaUploaderProps> = ({
                           </svg>
                         </button>
                       )}
-                      
+
                       {file.status === 'uploading' && (
                         <div className="w-5 h-5">
                           <LoadingSpinner size="sm" text="" />
                         </div>
                       )}
-                      
+
                       {file.status === 'success' && (
                         <svg className="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                       )}
-                      
+
                       {file.status === 'error' && (
                         <div className="flex items-center">
                           <svg className="h-5 w-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -374,7 +374,7 @@ const MediaUploader: React.FC<MediaUploaderProps> = ({
             </ul>
           </div>
         )}
-        
+
         {/* Actions */}
         <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-end space-x-2">
           <Button

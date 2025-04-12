@@ -72,7 +72,7 @@ const EducationForm: React.FC<EducationFormProps> = ({ education, onCancel, onSu
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    
+
     // Clear error when field is edited
     if (errors[name]) {
       setErrors((prev) => {
@@ -87,7 +87,7 @@ const EducationForm: React.FC<EducationFormProps> = ({ education, onCancel, onSu
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: Number(value) }));
-    
+
     // Clear error when field is edited
     if (errors[name]) {
       setErrors((prev) => {
@@ -102,7 +102,7 @@ const EducationForm: React.FC<EducationFormProps> = ({ education, onCancel, onSu
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = e.target;
     setFormData((prev) => ({ ...prev, [name]: checked }));
-    
+
     // If current education is checked, clear end date
     if (name === 'is_current' && checked) {
       setFormData((prev) => ({ ...prev, end_date: '' }));
@@ -121,26 +121,26 @@ const EducationForm: React.FC<EducationFormProps> = ({ education, onCancel, onSu
 
     try {
       setIsUploading(true);
-      
+
       // Create a unique file name
       const fileExt = file.name.split('.').pop();
       const fileName = `institution_logo_${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
       const filePath = `institution_logos/${fileName}`;
-      
+
       // Upload file to Supabase Storage
       const { error: uploadError } = await supabase.storage
-        .from('portfolio')
+        .from('experience')
         .upload(filePath, file);
-      
+
       if (uploadError) {
         throw uploadError;
       }
-      
+
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
-        .from('portfolio')
+        .from('experience')
         .getPublicUrl(filePath);
-      
+
       // Update form data with new logo URL
       setFormData((prev) => ({ ...prev, institution_logo_url: publicUrl }));
     } catch (error) {
@@ -154,31 +154,31 @@ const EducationForm: React.FC<EducationFormProps> = ({ education, onCancel, onSu
   // Validate form
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!formData.institution.trim()) {
       newErrors.institution = 'Institution name is required';
     }
-    
+
     if (!formData.degree.trim()) {
       newErrors.degree = 'Degree is required';
     }
-    
+
     if (!formData.field_of_study.trim()) {
       newErrors.field_of_study = 'Field of study is required';
     }
-    
+
     if (!formData.start_date) {
       newErrors.start_date = 'Start date is required';
     }
-    
+
     if (!formData.is_current && !formData.end_date) {
       newErrors.end_date = 'End date is required for completed education';
     }
-    
+
     if (formData.start_date && formData.end_date && new Date(formData.start_date) > new Date(formData.end_date)) {
       newErrors.end_date = 'End date must be after start date';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -192,7 +192,7 @@ const EducationForm: React.FC<EducationFormProps> = ({ education, onCancel, onSu
         start_date: new Date(data.start_date).toISOString(),
         end_date: data.end_date ? new Date(data.end_date).toISOString() : null,
       };
-      
+
       if (data.id) {
         // Update existing education
         const { error } = await supabase
@@ -248,11 +248,11 @@ const EducationForm: React.FC<EducationFormProps> = ({ education, onCancel, onSu
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
-    
+
     try {
       await saveEducationMutation.mutateAsync(formData);
     } catch (error) {
@@ -281,7 +281,7 @@ const EducationForm: React.FC<EducationFormProps> = ({ education, onCancel, onSu
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-md">
           <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Institution Information</h3>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             {/* Institution Name Field */}
             <div>
@@ -295,8 +295,8 @@ const EducationForm: React.FC<EducationFormProps> = ({ education, onCancel, onSu
                 value={formData.institution}
                 onChange={handleChange}
                 className={`w-full px-4 py-2 rounded-lg border ${
-                  errors.institution 
-                    ? 'border-red-500 dark:border-red-500' 
+                  errors.institution
+                    ? 'border-red-500 dark:border-red-500'
                     : 'border-gray-300 dark:border-gray-600'
                 } bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400`}
                 placeholder="e.g. Stanford University"
@@ -305,7 +305,7 @@ const EducationForm: React.FC<EducationFormProps> = ({ education, onCancel, onSu
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.institution}</p>
               )}
             </div>
-            
+
             {/* Location Field */}
             <div>
               <label htmlFor="location" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -322,7 +322,7 @@ const EducationForm: React.FC<EducationFormProps> = ({ education, onCancel, onSu
               />
             </div>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             {/* Institution URL Field */}
             <div>
@@ -339,7 +339,7 @@ const EducationForm: React.FC<EducationFormProps> = ({ education, onCancel, onSu
                 placeholder="https://example.edu"
               />
             </div>
-            
+
             {/* Display Order Field */}
             <div>
               <label htmlFor="display_order" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -360,7 +360,7 @@ const EducationForm: React.FC<EducationFormProps> = ({ education, onCancel, onSu
               </p>
             </div>
           </div>
-          
+
           {/* Institution Logo Upload */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -369,9 +369,9 @@ const EducationForm: React.FC<EducationFormProps> = ({ education, onCancel, onSu
             <div className="flex items-center space-x-4">
               {formData.institution_logo_url && (
                 <div className="w-16 h-16 bg-white dark:bg-gray-800 rounded-md p-1 shadow-sm flex items-center justify-center">
-                  <img 
-                    src={formData.institution_logo_url} 
-                    alt={formData.institution} 
+                  <img
+                    src={formData.institution_logo_url}
+                    alt={formData.institution}
                     className="max-h-full max-w-full object-contain"
                   />
                 </div>
@@ -400,10 +400,10 @@ const EducationForm: React.FC<EducationFormProps> = ({ education, onCancel, onSu
             )}
           </div>
         </div>
-        
+
         <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-md">
           <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Degree Information</h3>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             {/* Degree Field */}
             <div>
@@ -417,8 +417,8 @@ const EducationForm: React.FC<EducationFormProps> = ({ education, onCancel, onSu
                 value={formData.degree}
                 onChange={handleChange}
                 className={`w-full px-4 py-2 rounded-lg border ${
-                  errors.degree 
-                    ? 'border-red-500 dark:border-red-500' 
+                  errors.degree
+                    ? 'border-red-500 dark:border-red-500'
                     : 'border-gray-300 dark:border-gray-600'
                 } bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400`}
                 placeholder="e.g. Bachelor of Science"
@@ -427,7 +427,7 @@ const EducationForm: React.FC<EducationFormProps> = ({ education, onCancel, onSu
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.degree}</p>
               )}
             </div>
-            
+
             {/* Field of Study Field */}
             <div>
               <label htmlFor="field_of_study" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -440,8 +440,8 @@ const EducationForm: React.FC<EducationFormProps> = ({ education, onCancel, onSu
                 value={formData.field_of_study}
                 onChange={handleChange}
                 className={`w-full px-4 py-2 rounded-lg border ${
-                  errors.field_of_study 
-                    ? 'border-red-500 dark:border-red-500' 
+                  errors.field_of_study
+                    ? 'border-red-500 dark:border-red-500'
                     : 'border-gray-300 dark:border-gray-600'
                 } bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400`}
                 placeholder="e.g. Computer Science"
@@ -451,7 +451,7 @@ const EducationForm: React.FC<EducationFormProps> = ({ education, onCancel, onSu
               )}
             </div>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             {/* Start Date Field */}
             <div>
@@ -465,8 +465,8 @@ const EducationForm: React.FC<EducationFormProps> = ({ education, onCancel, onSu
                 value={formData.start_date}
                 onChange={handleChange}
                 className={`w-full px-4 py-2 rounded-lg border ${
-                  errors.start_date 
-                    ? 'border-red-500 dark:border-red-500' 
+                  errors.start_date
+                    ? 'border-red-500 dark:border-red-500'
                     : 'border-gray-300 dark:border-gray-600'
                 } bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400`}
               />
@@ -474,7 +474,7 @@ const EducationForm: React.FC<EducationFormProps> = ({ education, onCancel, onSu
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.start_date}</p>
               )}
             </div>
-            
+
             {/* End Date Field */}
             <div>
               <div className="flex items-center justify-between">
@@ -503,8 +503,8 @@ const EducationForm: React.FC<EducationFormProps> = ({ education, onCancel, onSu
                 onChange={handleChange}
                 disabled={formData.is_current}
                 className={`w-full px-4 py-2 rounded-lg border ${
-                  errors.end_date 
-                    ? 'border-red-500 dark:border-red-500' 
+                  errors.end_date
+                    ? 'border-red-500 dark:border-red-500'
                     : 'border-gray-300 dark:border-gray-600'
                 } bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 ${
                   formData.is_current ? 'opacity-50 cursor-not-allowed' : ''
@@ -515,7 +515,7 @@ const EducationForm: React.FC<EducationFormProps> = ({ education, onCancel, onSu
               )}
             </div>
           </div>
-          
+
           {/* Description Field */}
           <div className="mb-6">
             <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -531,7 +531,7 @@ const EducationForm: React.FC<EducationFormProps> = ({ education, onCancel, onSu
               placeholder="Describe your studies, focus areas, or thesis"
             />
           </div>
-          
+
           {/* Achievements Field */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -547,7 +547,7 @@ const EducationForm: React.FC<EducationFormProps> = ({ education, onCancel, onSu
             </p>
           </div>
         </div>
-        
+
         {/* Form Actions */}
         <div className="flex justify-end space-x-3">
           <Button

@@ -189,7 +189,7 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
 
         // Upload file to Supabase Storage
         const { error: uploadError } = await supabase.storage
-          .from('portfolio')
+          .from('blog')
           .upload(filePath, file);
 
         if (uploadError) {
@@ -198,7 +198,7 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
 
         // Get public URL
         const { data: { publicUrl } } = supabase.storage
-          .from('portfolio')
+          .from('blog')
           .getPublicUrl(filePath);
 
         // Insert image markdown

@@ -72,7 +72,7 @@ const WorkExperienceForm: React.FC<WorkExperienceFormProps> = ({ experience, onC
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    
+
     // Clear error when field is edited
     if (errors[name]) {
       setErrors((prev) => {
@@ -87,7 +87,7 @@ const WorkExperienceForm: React.FC<WorkExperienceFormProps> = ({ experience, onC
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: Number(value) }));
-    
+
     // Clear error when field is edited
     if (errors[name]) {
       setErrors((prev) => {
@@ -102,7 +102,7 @@ const WorkExperienceForm: React.FC<WorkExperienceFormProps> = ({ experience, onC
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = e.target;
     setFormData((prev) => ({ ...prev, [name]: checked }));
-    
+
     // If current job is checked, clear end date
     if (name === 'is_current' && checked) {
       setFormData((prev) => ({ ...prev, end_date: '' }));
@@ -126,26 +126,26 @@ const WorkExperienceForm: React.FC<WorkExperienceFormProps> = ({ experience, onC
 
     try {
       setIsUploading(true);
-      
+
       // Create a unique file name
       const fileExt = file.name.split('.').pop();
       const fileName = `company_logo_${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
       const filePath = `company_logos/${fileName}`;
-      
+
       // Upload file to Supabase Storage
       const { error: uploadError } = await supabase.storage
-        .from('portfolio')
+        .from('experience')
         .upload(filePath, file);
-      
+
       if (uploadError) {
         throw uploadError;
       }
-      
+
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
-        .from('portfolio')
+        .from('experience')
         .getPublicUrl(filePath);
-      
+
       // Update form data with new logo URL
       setFormData((prev) => ({ ...prev, company_logo_url: publicUrl }));
     } catch (error) {
@@ -159,31 +159,31 @@ const WorkExperienceForm: React.FC<WorkExperienceFormProps> = ({ experience, onC
   // Validate form
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!formData.company.trim()) {
       newErrors.company = 'Company name is required';
     }
-    
+
     if (!formData.position.trim()) {
       newErrors.position = 'Position is required';
     }
-    
+
     if (!formData.description.trim()) {
       newErrors.description = 'Description is required';
     }
-    
+
     if (!formData.start_date) {
       newErrors.start_date = 'Start date is required';
     }
-    
+
     if (!formData.is_current && !formData.end_date) {
       newErrors.end_date = 'End date is required for past positions';
     }
-    
+
     if (formData.start_date && formData.end_date && new Date(formData.start_date) > new Date(formData.end_date)) {
       newErrors.end_date = 'End date must be after start date';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -197,7 +197,7 @@ const WorkExperienceForm: React.FC<WorkExperienceFormProps> = ({ experience, onC
         start_date: new Date(data.start_date).toISOString(),
         end_date: data.end_date ? new Date(data.end_date).toISOString() : null,
       };
-      
+
       if (data.id) {
         // Update existing experience
         const { error } = await supabase
@@ -253,11 +253,11 @@ const WorkExperienceForm: React.FC<WorkExperienceFormProps> = ({ experience, onC
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
-    
+
     try {
       await saveExperienceMutation.mutateAsync(formData);
     } catch (error) {
@@ -286,7 +286,7 @@ const WorkExperienceForm: React.FC<WorkExperienceFormProps> = ({ experience, onC
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-md">
           <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Company Information</h3>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             {/* Company Name Field */}
             <div>
@@ -300,8 +300,8 @@ const WorkExperienceForm: React.FC<WorkExperienceFormProps> = ({ experience, onC
                 value={formData.company}
                 onChange={handleChange}
                 className={`w-full px-4 py-2 rounded-lg border ${
-                  errors.company 
-                    ? 'border-red-500 dark:border-red-500' 
+                  errors.company
+                    ? 'border-red-500 dark:border-red-500'
                     : 'border-gray-300 dark:border-gray-600'
                 } bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400`}
                 placeholder="e.g. Acme Inc."
@@ -310,7 +310,7 @@ const WorkExperienceForm: React.FC<WorkExperienceFormProps> = ({ experience, onC
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.company}</p>
               )}
             </div>
-            
+
             {/* Position Field */}
             <div>
               <label htmlFor="position" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -323,8 +323,8 @@ const WorkExperienceForm: React.FC<WorkExperienceFormProps> = ({ experience, onC
                 value={formData.position}
                 onChange={handleChange}
                 className={`w-full px-4 py-2 rounded-lg border ${
-                  errors.position 
-                    ? 'border-red-500 dark:border-red-500' 
+                  errors.position
+                    ? 'border-red-500 dark:border-red-500'
                     : 'border-gray-300 dark:border-gray-600'
                 } bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400`}
                 placeholder="e.g. Senior Frontend Developer"
@@ -334,7 +334,7 @@ const WorkExperienceForm: React.FC<WorkExperienceFormProps> = ({ experience, onC
               )}
             </div>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             {/* Company URL Field */}
             <div>
@@ -351,7 +351,7 @@ const WorkExperienceForm: React.FC<WorkExperienceFormProps> = ({ experience, onC
                 placeholder="https://example.com"
               />
             </div>
-            
+
             {/* Location Field */}
             <div>
               <label htmlFor="location" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -368,7 +368,7 @@ const WorkExperienceForm: React.FC<WorkExperienceFormProps> = ({ experience, onC
               />
             </div>
           </div>
-          
+
           {/* Company Logo Upload */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -377,9 +377,9 @@ const WorkExperienceForm: React.FC<WorkExperienceFormProps> = ({ experience, onC
             <div className="flex items-center space-x-4">
               {formData.company_logo_url && (
                 <div className="w-16 h-16 bg-white dark:bg-gray-800 rounded-md p-1 shadow-sm flex items-center justify-center">
-                  <img 
-                    src={formData.company_logo_url} 
-                    alt={formData.company} 
+                  <img
+                    src={formData.company_logo_url}
+                    alt={formData.company}
                     className="max-h-full max-w-full object-contain"
                   />
                 </div>
@@ -408,10 +408,10 @@ const WorkExperienceForm: React.FC<WorkExperienceFormProps> = ({ experience, onC
             )}
           </div>
         </div>
-        
+
         <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-md">
           <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Employment Details</h3>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             {/* Start Date Field */}
             <div>
@@ -425,8 +425,8 @@ const WorkExperienceForm: React.FC<WorkExperienceFormProps> = ({ experience, onC
                 value={formData.start_date}
                 onChange={handleChange}
                 className={`w-full px-4 py-2 rounded-lg border ${
-                  errors.start_date 
-                    ? 'border-red-500 dark:border-red-500' 
+                  errors.start_date
+                    ? 'border-red-500 dark:border-red-500'
                     : 'border-gray-300 dark:border-gray-600'
                 } bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400`}
               />
@@ -434,7 +434,7 @@ const WorkExperienceForm: React.FC<WorkExperienceFormProps> = ({ experience, onC
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.start_date}</p>
               )}
             </div>
-            
+
             {/* End Date Field */}
             <div>
               <div className="flex items-center justify-between">
@@ -463,8 +463,8 @@ const WorkExperienceForm: React.FC<WorkExperienceFormProps> = ({ experience, onC
                 onChange={handleChange}
                 disabled={formData.is_current}
                 className={`w-full px-4 py-2 rounded-lg border ${
-                  errors.end_date 
-                    ? 'border-red-500 dark:border-red-500' 
+                  errors.end_date
+                    ? 'border-red-500 dark:border-red-500'
                     : 'border-gray-300 dark:border-gray-600'
                 } bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 ${
                   formData.is_current ? 'opacity-50 cursor-not-allowed' : ''
@@ -475,7 +475,7 @@ const WorkExperienceForm: React.FC<WorkExperienceFormProps> = ({ experience, onC
               )}
             </div>
           </div>
-          
+
           {/* Display Order Field */}
           <div className="mb-6">
             <label htmlFor="display_order" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -496,10 +496,10 @@ const WorkExperienceForm: React.FC<WorkExperienceFormProps> = ({ experience, onC
             </p>
           </div>
         </div>
-        
+
         <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-md">
           <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Job Details</h3>
-          
+
           {/* Description Field */}
           <div className="mb-6">
             <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -512,8 +512,8 @@ const WorkExperienceForm: React.FC<WorkExperienceFormProps> = ({ experience, onC
               onChange={handleChange}
               rows={4}
               className={`w-full px-4 py-2 rounded-lg border ${
-                errors.description 
-                  ? 'border-red-500 dark:border-red-500' 
+                errors.description
+                  ? 'border-red-500 dark:border-red-500'
                   : 'border-gray-300 dark:border-gray-600'
               } bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400`}
               placeholder="Describe your role, responsibilities, and the company"
@@ -522,7 +522,7 @@ const WorkExperienceForm: React.FC<WorkExperienceFormProps> = ({ experience, onC
               <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.description}</p>
             )}
           </div>
-          
+
           {/* Technologies Field */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -538,7 +538,7 @@ const WorkExperienceForm: React.FC<WorkExperienceFormProps> = ({ experience, onC
               Add technologies, frameworks, or tools you used in this role
             </p>
           </div>
-          
+
           {/* Achievements Field */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -555,7 +555,7 @@ const WorkExperienceForm: React.FC<WorkExperienceFormProps> = ({ experience, onC
             </p>
           </div>
         </div>
-        
+
         {/* Form Actions */}
         <div className="flex justify-end space-x-3">
           <Button

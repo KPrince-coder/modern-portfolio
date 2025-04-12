@@ -35,33 +35,33 @@ const ProjectImages: React.FC<ProjectImagesProps> = ({
 
     try {
       setIsUploading(true);
-      
+
       const newImages: ProjectImage[] = [...images];
-      
+
       // Process each file
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        
+
         // Create a unique file name
         const fileExt = file.name.split('.').pop();
         const fileName = `project_${Math.random().toString(36).substring(2, 15)}_${Date.now()}_${i}.${fileExt}`;
         const filePath = `project_images/${fileName}`;
-        
+
         // Upload file to Supabase Storage
         const { error: uploadError } = await supabase.storage
-          .from('portfolio')
+          .from('projects')
           .upload(filePath, file);
-        
+
         if (uploadError) {
           console.error('Error uploading image:', uploadError);
           continue;
         }
-        
+
         // Get public URL
         const { data: { publicUrl } } = supabase.storage
-          .from('portfolio')
+          .from('projects')
           .getPublicUrl(filePath);
-        
+
         // Add new image to the list
         newImages.push({
           image_url: publicUrl,
@@ -69,7 +69,7 @@ const ProjectImages: React.FC<ProjectImagesProps> = ({
           display_order: newImages.length,
         });
       }
-      
+
       // Update images state
       onChange(newImages);
     } catch (error) {
@@ -83,14 +83,14 @@ const ProjectImages: React.FC<ProjectImagesProps> = ({
   const handleRemoveImage = (index: number) => {
     const newImages = [...images];
     newImages.splice(index, 1);
-    
+
     // Update display order
     newImages.forEach((image, i) => {
       image.display_order = i;
     });
-    
+
     onChange(newImages);
-    
+
     if (currentImageIndex === index) {
       setCurrentImageIndex(null);
     } else if (currentImageIndex !== null && currentImageIndex > index) {
@@ -108,28 +108,28 @@ const ProjectImages: React.FC<ProjectImagesProps> = ({
   // Handle drag and drop reordering
   const handleDragEnd = (result: any) => {
     if (!result.destination) return;
-    
+
     const newImages = [...images];
     const [movedItem] = newImages.splice(result.source.index, 1);
     newImages.splice(result.destination.index, 0, movedItem);
-    
+
     // Update display order
     newImages.forEach((image, i) => {
       image.display_order = i;
     });
-    
+
     onChange(newImages);
-    
+
     if (currentImageIndex === result.source.index) {
       setCurrentImageIndex(result.destination.index);
     } else if (
-      currentImageIndex !== null && 
+      currentImageIndex !== null &&
       ((currentImageIndex > result.source.index && currentImageIndex <= result.destination.index) ||
        (currentImageIndex < result.source.index && currentImageIndex >= result.destination.index))
     ) {
       setCurrentImageIndex(
-        currentImageIndex > result.source.index 
-          ? currentImageIndex - 1 
+        currentImageIndex > result.source.index
+          ? currentImageIndex - 1
           : currentImageIndex + 1
       );
     }
@@ -145,7 +145,7 @@ const ProjectImages: React.FC<ProjectImagesProps> = ({
           Add images to showcase your project. You can upload multiple images at once.
           Drag and drop to reorder images. The first image will be used as the main image.
         </p>
-        
+
         <div className="flex items-center space-x-4">
           <label className="flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer">
             <span>Upload Images</span>
@@ -185,13 +185,13 @@ const ProjectImages: React.FC<ProjectImagesProps> = ({
                           <div className="flex flex-col md:flex-row">
                             {/* Image Preview */}
                             <div className="w-full md:w-48 h-48 bg-gray-100 dark:bg-gray-700 flex-shrink-0">
-                              <img 
-                                src={image.image_url} 
+                              <img
+                                src={image.image_url}
                                 alt={image.alt_text}
                                 className="w-full h-full object-cover"
                               />
                             </div>
-                            
+
                             {/* Image Details */}
                             <div className="flex-1 p-4">
                               <div className="flex justify-between items-start">
@@ -218,7 +218,7 @@ const ProjectImages: React.FC<ProjectImagesProps> = ({
                                   </svg>
                                 </button>
                               </div>
-                              
+
                               <div className="mt-3 space-y-3">
                                 <div>
                                   <label htmlFor={`alt-text-${index}`} className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -233,7 +233,7 @@ const ProjectImages: React.FC<ProjectImagesProps> = ({
                                     placeholder="Descriptive text for accessibility"
                                   />
                                 </div>
-                                
+
                                 <div>
                                   <label htmlFor={`caption-${index}`} className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     Caption

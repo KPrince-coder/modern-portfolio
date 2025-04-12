@@ -74,7 +74,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ personalData }) => 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    
+
     // Clear error when field is edited
     if (errors[name]) {
       setErrors((prev) => {
@@ -98,26 +98,26 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ personalData }) => 
 
     try {
       setIsUploading(true);
-      
+
       // Create a unique file name
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
       const filePath = `profile_images/${fileName}`;
-      
+
       // Upload file to Supabase Storage
       const { error: uploadError, data } = await supabase.storage
-        .from('portfolio')
+        .from('profile')
         .upload(filePath, file);
-      
+
       if (uploadError) {
         throw uploadError;
       }
-      
+
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
-        .from('portfolio')
+        .from('profile')
         .getPublicUrl(filePath);
-      
+
       // Update form data with new image URL
       setFormData((prev) => ({ ...prev, profile_image_url: publicUrl }));
     } catch (error) {
@@ -135,26 +135,26 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ personalData }) => 
 
     try {
       setIsUploading(true);
-      
+
       // Create a unique file name
       const fileExt = file.name.split('.').pop();
       const fileName = `resume_${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
       const filePath = `resumes/${fileName}`;
-      
+
       // Upload file to Supabase Storage
       const { error: uploadError, data } = await supabase.storage
-        .from('portfolio')
+        .from('profile')
         .upload(filePath, file);
-      
+
       if (uploadError) {
         throw uploadError;
       }
-      
+
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
-        .from('portfolio')
+        .from('profile')
         .getPublicUrl(filePath);
-      
+
       // Update form data with new resume URL
       setFormData((prev) => ({ ...prev, resume_url: publicUrl }));
     } catch (error) {
@@ -168,25 +168,25 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ personalData }) => 
   // Validate form
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!formData.name.trim()) {
       newErrors.name = 'Name is required';
     }
-    
+
     if (!formData.title.trim()) {
       newErrors.title = 'Title is required';
     }
-    
+
     if (!formData.bio.trim()) {
       newErrors.bio = 'Bio is required';
     }
-    
+
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Email is invalid';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -254,11 +254,11 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ personalData }) => 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
-    
+
     try {
       await savePersonalDataMutation.mutateAsync(formData);
     } catch (error) {
@@ -274,12 +274,12 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ personalData }) => 
       className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6"
     >
       <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Personal Information</h2>
-      
+
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information Section */}
         <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-md">
           <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Basic Information</h3>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             {/* Name Field */}
             <div>
@@ -293,8 +293,8 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ personalData }) => 
                 value={formData.name}
                 onChange={handleChange}
                 className={`w-full px-4 py-2 rounded-lg border ${
-                  errors.name 
-                    ? 'border-red-500 dark:border-red-500' 
+                  errors.name
+                    ? 'border-red-500 dark:border-red-500'
                     : 'border-gray-300 dark:border-gray-600'
                 } bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400`}
                 placeholder="Your name"
@@ -303,7 +303,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ personalData }) => 
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.name}</p>
               )}
             </div>
-            
+
             {/* Title Field */}
             <div>
               <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -316,8 +316,8 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ personalData }) => 
                 value={formData.title}
                 onChange={handleChange}
                 className={`w-full px-4 py-2 rounded-lg border ${
-                  errors.title 
-                    ? 'border-red-500 dark:border-red-500' 
+                  errors.title
+                    ? 'border-red-500 dark:border-red-500'
                     : 'border-gray-300 dark:border-gray-600'
                 } bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400`}
                 placeholder="e.g. Frontend Developer"
@@ -327,7 +327,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ personalData }) => 
               )}
             </div>
           </div>
-          
+
           {/* Bio Field */}
           <div className="mb-6">
             <label htmlFor="bio" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -340,8 +340,8 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ personalData }) => 
               onChange={handleChange}
               rows={5}
               className={`w-full px-4 py-2 rounded-lg border ${
-                errors.bio 
-                  ? 'border-red-500 dark:border-red-500' 
+                errors.bio
+                  ? 'border-red-500 dark:border-red-500'
                   : 'border-gray-300 dark:border-gray-600'
               } bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400`}
               placeholder="Write a short bio about yourself"
@@ -350,7 +350,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ personalData }) => 
               <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.bio}</p>
             )}
           </div>
-          
+
           {/* Profile Image Upload */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -359,9 +359,9 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ personalData }) => 
             <div className="flex items-center space-x-4">
               {formData.profile_image_url && (
                 <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-600">
-                  <img 
-                    src={formData.profile_image_url} 
-                    alt="Profile" 
+                  <img
+                    src={formData.profile_image_url}
+                    alt="Profile"
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -389,7 +389,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ personalData }) => 
               <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.profile_image_url}</p>
             )}
           </div>
-          
+
           {/* Resume Upload */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -397,9 +397,9 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ personalData }) => 
             </label>
             <div className="flex items-center space-x-4">
               {formData.resume_url && (
-                <a 
-                  href={formData.resume_url} 
-                  target="_blank" 
+                <a
+                  href={formData.resume_url}
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="text-indigo-600 dark:text-indigo-400 text-sm hover:underline"
                 >
@@ -430,11 +430,11 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ personalData }) => 
             )}
           </div>
         </div>
-        
+
         {/* Contact Information Section */}
         <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-md">
           <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Contact Information</h3>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             {/* Email Field */}
             <div>
@@ -448,8 +448,8 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ personalData }) => 
                 value={formData.email}
                 onChange={handleChange}
                 className={`w-full px-4 py-2 rounded-lg border ${
-                  errors.email 
-                    ? 'border-red-500 dark:border-red-500' 
+                  errors.email
+                    ? 'border-red-500 dark:border-red-500'
                     : 'border-gray-300 dark:border-gray-600'
                 } bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400`}
                 placeholder="your.email@example.com"
@@ -458,7 +458,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ personalData }) => 
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email}</p>
               )}
             </div>
-            
+
             {/* Phone Field */}
             <div>
               <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -475,7 +475,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ personalData }) => 
               />
             </div>
           </div>
-          
+
           {/* Location Field */}
           <div className="mb-6">
             <label htmlFor="location" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -492,11 +492,11 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ personalData }) => 
             />
           </div>
         </div>
-        
+
         {/* SEO Section */}
         <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-md">
           <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">SEO Settings</h3>
-          
+
           <div className="mb-6">
             <label htmlFor="meta_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Meta Title
@@ -514,7 +514,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ personalData }) => 
               Recommended length: 50-60 characters
             </p>
           </div>
-          
+
           <div className="mb-6">
             <label htmlFor="meta_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Meta Description
@@ -532,7 +532,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ personalData }) => 
               Recommended length: 150-160 characters
             </p>
           </div>
-          
+
           <div className="mb-6">
             <label htmlFor="meta_keywords" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Meta Keywords
@@ -550,7 +550,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ personalData }) => 
               Comma-separated list of keywords
             </p>
           </div>
-          
+
           <div className="mb-6">
             <label htmlFor="seo_slug" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               SEO Slug
@@ -574,11 +574,11 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ personalData }) => 
             </p>
           </div>
         </div>
-        
+
         {/* Publishing Section */}
         <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-md">
           <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Publishing</h3>
-          
+
           <div className="flex items-center">
             <input
               type="checkbox"
@@ -596,7 +596,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ personalData }) => 
             When checked, this information will be visible on your website
           </p>
         </div>
-        
+
         {/* Form Actions */}
         <div className="flex justify-end space-x-3">
           <Button

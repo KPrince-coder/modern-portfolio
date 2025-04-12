@@ -58,26 +58,26 @@ const BlogPostBasicInfo: React.FC<BlogPostBasicInfoProps> = ({
 
     try {
       setIsUploading(true);
-      
+
       // Create a unique file name
       const fileExt = file.name.split('.').pop();
       const fileName = `blog_${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
       const filePath = `blog_images/${fileName}`;
-      
+
       // Upload file to Supabase Storage
       const { error: uploadError } = await supabase.storage
-        .from('portfolio')
+        .from('blog')
         .upload(filePath, file);
-      
+
       if (uploadError) {
         throw uploadError;
       }
-      
+
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
-        .from('portfolio')
+        .from('blog')
         .getPublicUrl(filePath);
-      
+
       // Update form data with new image URL
       onChange('featured_image_url', publicUrl);
     } catch (error) {
@@ -101,8 +101,8 @@ const BlogPostBasicInfo: React.FC<BlogPostBasicInfoProps> = ({
             value={formData.title}
             onChange={(e) => onTitleChange(e.target.value)}
             className={`w-full px-4 py-2 rounded-lg border ${
-              errors.title 
-                ? 'border-red-500 dark:border-red-500' 
+              errors.title
+                ? 'border-red-500 dark:border-red-500'
                 : 'border-gray-300 dark:border-gray-600'
             } bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400`}
             placeholder="Enter post title"
@@ -127,8 +127,8 @@ const BlogPostBasicInfo: React.FC<BlogPostBasicInfoProps> = ({
               value={formData.slug}
               onChange={(e) => onChange('slug', e.target.value)}
               className={`flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md border ${
-                errors.slug 
-                  ? 'border-red-500 dark:border-red-500' 
+                errors.slug
+                  ? 'border-red-500 dark:border-red-500'
                   : 'border-gray-300 dark:border-gray-600'
               } bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400`}
               placeholder="post-slug"
@@ -206,9 +206,9 @@ const BlogPostBasicInfo: React.FC<BlogPostBasicInfoProps> = ({
         <div className="flex items-center space-x-4">
           {formData.featured_image_url && (
             <div className="w-32 h-32 bg-gray-100 dark:bg-gray-700 rounded-md overflow-hidden">
-              <img 
-                src={formData.featured_image_url} 
-                alt="Featured" 
+              <img
+                src={formData.featured_image_url}
+                alt="Featured"
                 className="w-full h-full object-cover"
               />
             </div>
