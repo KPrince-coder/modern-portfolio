@@ -152,6 +152,16 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
     formInitializedRef.current = true;
   }, [post, getFormKey]);
 
+ // Generate slug from title
+  const generateSlug = useCallback((title: string): string => {
+    return title
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, '') // Remove special characters
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/-+/g, '-') // Replace multiple hyphens with a single hyphen
+      .trim();
+  }, []);
+
 
 
   // Initialize form with existing data if editing or with AI-generated content
@@ -167,17 +177,17 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
         // Prepare form data from AI-generated content
         const newFormData = {
           ...formData,
-          title: parsedData.title || '',
-          slug: generateSlug(parsedData.title || ''),
-          summary: parsedData.summary || '',
-          content: parsedData.content || '',
-          featured_image_url: parsedData.featuredImageUrl || '',
-          category_id: parsedData.suggestedCategory || '',
-          meta_title: parsedData.metaTitle || '',
-          meta_description: parsedData.metaDescription || '',
-          meta_keywords: parsedData.metaKeywords || '',
+          title: parsedData.title ?? '',
+          slug: generateSlug(parsedData.title ?? ''),
+          summary: parsedData.summary ?? '',
+          content: parsedData.content ?? '',
+          featured_image_url: parsedData.featuredImageUrl ?? '',
+          category_id: parsedData.suggestedCategory ?? '',
+          meta_title: parsedData.metaTitle ?? '',
+          meta_description: parsedData.metaDescription ?? '',
+          meta_keywords: parsedData.metaKeywords ?? '',
           ai_generated: true,
-          reading_time_minutes: calculateReadingTime(parsedData.content || ''),
+          reading_time_minutes: calculateReadingTime(parsedData.content ?? ''),
         };
 
         setFormData(newFormData);
@@ -207,20 +217,20 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
       // If no AI data but we have a post, load the post data
       setFormData({
         id: post.id,
-        title: post.title || '',
-        slug: post.slug || '',
-        summary: post.summary || '',
-        content: post.content || '',
-        featured_image_url: post.featured_image_url || '',
-        category_id: post.category_id || '',
-        reading_time_minutes: post.reading_time_minutes || 0,
-        is_featured: post.is_featured || false,
-        status: post.status || 'draft',
+        title: post.title ?? '',
+        slug: post.slug ?? '',
+        summary: post.summary ?? '',
+        content: post.content ?? '',
+        featured_image_url: post.featured_image_url ?? '',
+        category_id: post.category_id ?? '',
+        reading_time_minutes: post.reading_time_minutes ?? 0,
+        is_featured: post.is_featured ?? false,
+        status: post.status ?? 'draft',
         published_at: post.published_at,
-        meta_title: post.meta_title || '',
-        meta_description: post.meta_description || '',
-        meta_keywords: post.meta_keywords || '',
-        ai_generated: post.ai_generated || false,
+        meta_title: post.meta_title ?? '',
+        meta_description: post.meta_description ?? '',
+        meta_keywords: post.meta_keywords ?? '',
+        ai_generated: post.ai_generated ?? false,
         created_at: post.created_at,
         updated_at: post.updated_at,
       });
@@ -303,11 +313,11 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
         summary: post.summary,
         content: post.content,
         featured_image_url: post.featured_image_url,
-        category_id: post.category_id || null,
-        reading_time_minutes: post.reading_time_minutes || null,
+        category_id: post.category_id ?? null,
+        reading_time_minutes: post.reading_time_minutes ?? null,
         is_featured: post.is_featured,
         status: post.status,
-        published_at: post.status === 'published' ? (post.published_at || new Date().toISOString()) : null,
+        published_at: post.status === 'published' ? (post.published_at ?? new Date().toISOString()) : null,
         meta_title: post.meta_title,
         meta_description: post.meta_description,
         meta_keywords: post.meta_keywords,
@@ -386,15 +396,6 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
     },
   });
 
-  // Generate slug from title
-  const generateSlug = useCallback((title: string): string => {
-    return title
-      .toLowerCase()
-      .replace(/[^\w\s-]/g, '') // Remove special characters
-      .replace(/\s+/g, '-') // Replace spaces with hyphens
-      .replace(/-+/g, '-') // Replace multiple hyphens with a single hyphen
-      .trim();
-  }, []);
 
   // Handle title change and auto-generate slug if empty
   const handleTitleChange = (title: string) => {
@@ -732,3 +733,6 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
 };
 
 export default BlogPostForm;
+
+
+
