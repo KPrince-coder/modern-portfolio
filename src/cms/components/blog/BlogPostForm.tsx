@@ -124,9 +124,27 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
     }>(formKey);
 
     // If we have saved data and we're not already editing a post (or it's the same post)
-    if (savedData && (!post || (post && post.id === savedData.data.formData.id))) {
-      setShowRecoveryNotification(true);
-      setAutosaveTimestamp(formatTimestamp(savedData.timestamp));
+    if (savedData?.data && (!post || (post && post.id === savedData.data.formData.id))) {
+      console.log('Found saved data on load:', savedData.data);
+
+      // Check if we have actual content to restore
+      const hasContent = (
+        savedData.data.formData.title?.trim() ||
+        savedData.data.formData.content?.trim() ||
+        savedData.data.formData.summary?.trim()
+      );
+
+      if (hasContent) {
+        // Only show recovery notification if there's actual content
+        setShowRecoveryNotification(true);
+        setAutosaveTimestamp(formatTimestamp(savedData.timestamp));
+
+        // Store the last saved timestamp
+        setLastSaved(savedData.timestamp);
+      } else {
+        // Clear empty saved data
+        clearLocalStorage(formKey);
+      }
     }
 
     // Mark form as initialized
@@ -166,12 +184,28 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
   useEffect(() => {
     if (!formInitializedRef.current) return;
 
+    // Only save if there's actual content to save
+    const hasContent = (
+      formData.title.trim() !== '' ||
+      formData.content.trim() !== '' ||
+      formData.summary?.trim() !== ''
+    );
+
+    if (!hasContent) return;
+
     const formKey = getFormKey();
 
-    // Setup autosave interval
-    const intervalId = window.setInterval(() => {
+    // Save immediately when form data changes
+    const saveData = () => {
       // Show saving indicator
       setIsSaving(true);
+
+      // Log what we're saving
+      console.log('Saving form data:', {
+        title: formData.title,
+        content: formData.content ? `${formData.content.substring(0, 50)}...` : '',
+        selectedTags
+      });
 
       // Save to localStorage
       saveToLocalStorage(formKey, {
@@ -187,7 +221,13 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
       setTimeout(() => {
         setIsSaving(false);
       }, 1000);
-    }, 5000); // Save every 5 seconds
+    };
+
+    // Save immediately when the effect runs (form data changed)
+    saveData();
+
+    // Setup autosave interval for ongoing changes
+    const intervalId = window.setInterval(saveData, 30000); // Also save every 30 seconds as backup
 
     // Store interval ID for cleanup
     autosaveIntervalRef.current = intervalId;
@@ -389,9 +429,50 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
       selectedTags: string[];
     }>(formKey);
 
-    if (savedData) {
-      setFormData(savedData.data.formData);
-      setSelectedTags(savedData.data.selectedTags);
+    if (savedData?.data) {
+      console.log('Restoring saved data:', savedData.data);
+
+      // Check if we have actual content to restore
+      const hasContent = (
+        savedData.data.formData.title?.trim() ||
+        savedData.data.formData.content?.trim() ||
+        savedData.data.formData.summary?.trim()
+      );
+
+      if (!hasContent) {
+        console.warn('No actual content found in saved data');
+        setShowRecoveryNotification(false);
+        return;
+      }
+
+      // Make sure we have all the required fields
+      const restoredFormData = {
+        ...formData, // Keep any default values
+        ...savedData.data.formData, // Override with saved values
+        // Ensure these fields are always present with saved values
+        title: savedData.data.formData.title ?? '',
+        slug: savedData.data.formData.slug ?? '',
+        content: savedData.data.formData.content ?? '',
+        summary: savedData.data.formData.summary ?? '',
+        status: savedData.data.formData.status ?? 'draft',
+        is_featured: typeof savedData.data.formData.is_featured === 'boolean' ? savedData.data.formData.is_featured : false,
+        ai_generated: typeof savedData.data.formData.ai_generated === 'boolean' ? savedData.data.formData.ai_generated : false,
+      };
+
+      console.log('Restored form data:', {
+        title: restoredFormData.title,
+        content: restoredFormData.content ? `${restoredFormData.content.substring(0, 50)}...` : '',
+      });
+
+      // Update form data
+      setFormData(restoredFormData);
+
+      // Update selected tags
+      if (Array.isArray(savedData.data.selectedTags)) {
+        setSelectedTags(savedData.data.selectedTags);
+      }
+
+      // Close the notification
       setShowRecoveryNotification(false);
     }
   };
@@ -534,7 +615,7 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
             <BlogPostContent
               content={formData.content}
               error={errors.content}
-              onChange={(content) => handleChange('content', content)}
+              onChange={(content: string) => handleChange('content', content)}
             />
           )}
 
