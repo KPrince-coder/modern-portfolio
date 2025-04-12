@@ -30,17 +30,42 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
 
   // Rich text formatting toolbar buttons
   const formatButtons = [
-    { label: 'Bold', icon: '𝐁', format: '**', example: '**bold text**' },
-    { label: 'Italic', icon: '𝐼', format: '*', example: '*italic text*' },
-    { label: 'Heading 1', icon: 'H1', format: '# ', isBlock: true },
-    { label: 'Heading 2', icon: 'H2', format: '## ', isBlock: true },
-    { label: 'Heading 3', icon: 'H3', format: '### ', isBlock: true },
-    { label: 'Quote', icon: '❝', format: '> ', isBlock: true },
-    { label: 'Code', icon: '`', format: '`', example: '`code`' },
-    { label: 'Link', icon: '🔗', format: '[](url)', handler: insertLink },
-    { label: 'Image', icon: '🖼️', format: '![](url)', handler: insertImage },
-    { label: 'List', icon: '•', format: '- ', isBlock: true },
-    { label: 'Numbered List', icon: '1.', format: '1. ', isBlock: true },
+    // Text formatting
+    { label: 'Bold', icon: '𝐁', format: '**', example: '**bold text**', group: 'format' },
+    { label: 'Italic', icon: '𝐼', format: '*', example: '*italic text*', group: 'format' },
+    { label: 'Strikethrough', icon: '𝐒̶', format: '~~', example: '~~strikethrough~~', group: 'format' },
+    { label: 'Underline', icon: '𝐔', format: '<u>', closeFormat: '</u>', example: '<u>underlined text</u>', group: 'format' },
+    { label: 'Superscript', icon: 'ˣ', format: '<sup>', closeFormat: '</sup>', example: '<sup>superscript</sup>', group: 'format' },
+    { label: 'Subscript', icon: 'ₓ', format: '<sub>', closeFormat: '</sub>', example: '<sub>subscript</sub>', group: 'format' },
+    { label: 'Highlight', icon: '🖌️', format: '<mark>', closeFormat: '</mark>', example: '<mark>highlighted text</mark>', group: 'format' },
+
+    // Headings
+    { label: 'Heading 1', icon: 'H1', format: '# ', isBlock: true, group: 'heading' },
+    { label: 'Heading 2', icon: 'H2', format: '## ', isBlock: true, group: 'heading' },
+    { label: 'Heading 3', icon: 'H3', format: '### ', isBlock: true, group: 'heading' },
+    { label: 'Heading 4', icon: 'H4', format: '#### ', isBlock: true, group: 'heading' },
+
+    // Block elements
+    { label: 'Quote', icon: '❝', format: '> ', isBlock: true, group: 'block' },
+    { label: 'Code Block', icon: '{ }', format: '```\n', closeFormat: '\n```', example: '```\ncode block\n```', group: 'block' },
+    { label: 'Horizontal Rule', icon: '―', format: '\n---\n', isBlock: true, group: 'block' },
+
+    // Lists
+    { label: 'Bullet List', icon: '•', format: '- ', isBlock: true, group: 'list' },
+    { label: 'Numbered List', icon: '1.', format: '1. ', isBlock: true, group: 'list' },
+    { label: 'Task List', icon: '☑️', format: '- [ ] ', isBlock: true, group: 'list' },
+
+    // Media
+    { label: 'Link', icon: '🔗', format: '[](url)', handler: insertLink, group: 'media' },
+    { label: 'Image', icon: '🖼️', format: '![](url)', handler: insertImage, group: 'media' },
+    { label: 'YouTube Video', icon: '▶️', handler: insertYouTubeVideo, group: 'media' },
+
+    // Tables
+    { label: 'Table', icon: '⊞', handler: insertTable, group: 'table' },
+
+    // Advanced
+    { label: 'HTML', icon: '</>', handler: insertHTML, group: 'advanced' },
+    { label: 'Clear Formatting', icon: 'Aa', handler: clearFormatting, group: 'advanced' },
   ];
 
   // Function to handle inserting a link
@@ -206,7 +231,7 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
   // Function to apply formatting to selected text
-  const applyFormatting = (format: string, example?: string, isBlock = false) => {
+  const applyFormatting = (format: string, example?: string, isBlock = false, closeFormat?: string) => {
     if (!textAreaRef.current) return;
 
     const textarea = textAreaRef.current;
@@ -231,12 +256,20 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
       newCursorPos = lineStart + format.length + currentLine.length;
     } else if (selectedText) {
       // For inline formatting with selected text
-      if (format === '`' || format === '**' || format === '*') {
+      if (closeFormat) {
+        // For formats with different opening and closing tags (like HTML)
+        newText = textarea.value.substring(0, start) +
+                 format + selectedText + closeFormat +
+                 textarea.value.substring(end);
+        newCursorPos = end + format.length + closeFormat.length;
+      } else if (format === '`' || format === '**' || format === '*' || format === '~~') {
+        // For symmetric markdown formatting
         newText = textarea.value.substring(0, start) +
                  format + selectedText + format +
                  textarea.value.substring(end);
         newCursorPos = end + 2 * format.length;
       } else {
+        // For other formats like links
         newText = textarea.value.substring(0, start) +
                  format.replace('(url)', `(https://example.com)`) +
                  textarea.value.substring(end);
@@ -248,6 +281,18 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
                example +
                textarea.value.substring(end);
       newCursorPos = start + example.length;
+    } else if (closeFormat) {
+      // For block elements with opening and closing tags but no selection
+      newText = textarea.value.substring(0, start) +
+               format + '\n' + closeFormat +
+               textarea.value.substring(end);
+      newCursorPos = start + format.length + 1; // Position cursor after opening tag and newline
+    } else {
+      // Default case
+      newText = textarea.value.substring(0, start) +
+               format +
+               textarea.value.substring(end);
+      newCursorPos = start + format.length;
     }
 
     if (newText) {
@@ -262,6 +307,181 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
   };
 
 
+
+  // Function to insert a YouTube video
+  function insertYouTubeVideo(textAreaRef: React.RefObject<HTMLTextAreaElement | null>) {
+    if (!textAreaRef.current) return;
+
+    const textarea = textAreaRef.current;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+
+    const videoUrl = prompt('Enter YouTube video URL:', 'https://www.youtube.com/watch?v=');
+    if (!videoUrl) return;
+
+    // Extract video ID from various YouTube URL formats
+    let videoId = '';
+    const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})/i;
+    const match = videoUrl.match(youtubeRegex);
+
+    if (match && match[1]) {
+      videoId = match[1];
+    } else {
+      alert('Invalid YouTube URL. Please enter a valid YouTube video URL.');
+      return;
+    }
+
+    // Create markdown for embedding YouTube video
+    const embedCode = `<div class="video-container">
+  <iframe
+    width="560"
+    height="315"
+    src="https://www.youtube.com/embed/${videoId}"
+    title="YouTube video player"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen>
+  </iframe>
+</div>`;
+
+    const newValue = textarea.value.substring(0, start) + embedCode + textarea.value.substring(end);
+    onChange(newValue);
+
+    // Set cursor position after the inserted video
+    setTimeout(() => {
+      textarea.focus();
+      const newCursorPos = start + embedCode.length;
+      textarea.setSelectionRange(newCursorPos, newCursorPos);
+    }, 0);
+  }
+
+  // Function to insert a table
+  function insertTable(textAreaRef: React.RefObject<HTMLTextAreaElement | null>) {
+    if (!textAreaRef.current) return;
+
+    const textarea = textAreaRef.current;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+
+    // Prompt for table dimensions
+    const rows = parseInt(prompt('Enter number of rows:', '3') || '3');
+    const cols = parseInt(prompt('Enter number of columns:', '3') || '3');
+
+    if (isNaN(rows) || isNaN(cols) || rows < 1 || cols < 1) {
+      alert('Please enter valid numbers for rows and columns.');
+      return;
+    }
+
+    // Create markdown table
+    let tableMarkdown = '\n';
+
+    // Header row
+    tableMarkdown += '| ';
+    for (let i = 0; i < cols; i++) {
+      tableMarkdown += `Header ${i+1} | `;
+    }
+    tableMarkdown += '\n';
+
+    // Separator row
+    tableMarkdown += '| ';
+    for (let i = 0; i < cols; i++) {
+      tableMarkdown += '--- | ';
+    }
+    tableMarkdown += '\n';
+
+    // Data rows
+    for (let i = 0; i < rows; i++) {
+      tableMarkdown += '| ';
+      for (let j = 0; j < cols; j++) {
+        tableMarkdown += `Cell ${i+1},${j+1} | `;
+      }
+      tableMarkdown += '\n';
+    }
+
+    const newValue = textarea.value.substring(0, start) + tableMarkdown + textarea.value.substring(end);
+    onChange(newValue);
+
+    // Set cursor position after the inserted table
+    setTimeout(() => {
+      textarea.focus();
+      const newCursorPos = start + tableMarkdown.length;
+      textarea.setSelectionRange(newCursorPos, newCursorPos);
+    }, 0);
+  }
+
+  // Function to insert HTML
+  function insertHTML(textAreaRef: React.RefObject<HTMLTextAreaElement | null>) {
+    if (!textAreaRef.current) return;
+
+    const textarea = textAreaRef.current;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = textarea.value.substring(start, end);
+
+    const htmlCode = prompt('Enter HTML code:', selectedText || '<div class="custom-element">\n  Your content here\n</div>');
+    if (!htmlCode) return;
+
+    const newValue = textarea.value.substring(0, start) + htmlCode + textarea.value.substring(end);
+    onChange(newValue);
+
+    // Set cursor position after the inserted HTML
+    setTimeout(() => {
+      textarea.focus();
+      const newCursorPos = start + htmlCode.length;
+      textarea.setSelectionRange(newCursorPos, newCursorPos);
+    }, 0);
+  }
+
+  // Function to clear formatting
+  function clearFormatting(textAreaRef: React.RefObject<HTMLTextAreaElement | null>) {
+    if (!textAreaRef.current) return;
+
+    const textarea = textAreaRef.current;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+
+    if (start === end) {
+      alert('Please select text to clear formatting.');
+      return;
+    }
+
+    const selectedText = textarea.value.substring(start, end);
+
+    // Remove markdown and HTML formatting
+    let plainText = selectedText
+      // Remove HTML tags
+      .replace(/<[^>]*>/g, '')
+      // Remove markdown headings
+      .replace(/^#+\s+/gm, '')
+      // Remove markdown bold/italic
+      .replace(/\*\*(.+?)\*\*/g, '$1')
+      .replace(/\*(.+?)\*/g, '$1')
+      .replace(/__(.+?)__/g, '$1')
+      .replace(/_(.+?)_/g, '$1')
+      // Remove markdown links
+      .replace(/\[(.+?)\]\(.+?\)/g, '$1')
+      // Remove markdown images
+      .replace(/!\[(.+?)\]\(.+?\)/g, '$1')
+      // Remove markdown code
+      .replace(/`(.+?)`/g, '$1')
+      // Remove markdown blockquotes
+      .replace(/^>\s+/gm, '')
+      // Remove markdown lists
+      .replace(/^\s*[\*\-+]\s+/gm, '')
+      .replace(/^\s*\d+\.\s+/gm, '')
+      // Remove markdown strikethrough
+      .replace(/~~(.+?)~~/g, '$1');
+
+    const newValue = textarea.value.substring(0, start) + plainText + textarea.value.substring(end);
+    onChange(newValue);
+
+    // Set cursor position after the cleared text
+    setTimeout(() => {
+      textarea.focus();
+      const newCursorPos = start + plainText.length;
+      textarea.setSelectionRange(newCursorPos, newCursorPos);
+    }, 0);
+  }
 
   // Simple PDF text extraction function
   // Note: This is a fallback and won't work well for all PDFs
@@ -383,18 +603,108 @@ For now, please manually copy and paste the content or use a TXT/DOCX file inste
 
               <div className="space-y-2">
                 {editorMode === 'rich' && (
-                  <div className="flex flex-wrap gap-2 p-2 bg-gray-100 dark:bg-gray-800 rounded-t-lg border border-gray-300 dark:border-gray-600">
-                    {formatButtons.map((button, index) => (
-                      <button
-                        key={index}
-                        type="button"
-                        onClick={() => button.handler ? button.handler(textAreaRef) : applyFormatting(button.format, button.example, button.isBlock)}
-                        className="px-2 py-1 text-sm font-medium rounded hover:bg-gray-200 dark:hover:bg-gray-700"
-                        title={button.label}
-                      >
-                        {button.icon}
-                      </button>
-                    ))}
+                  <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-t-lg border border-gray-300 dark:border-gray-600 space-y-2">
+                    {/* Group buttons by category */}
+                    <div className="flex flex-wrap gap-1 border-b border-gray-300 dark:border-gray-600 pb-2">
+                      <span className="text-xs text-gray-500 dark:text-gray-400 mr-2 self-center">Format:</span>
+                      {formatButtons.filter(button => button.group === 'format').map((button, index) => (
+                        <button
+                          key={`format-${index}`}
+                          type="button"
+                          onClick={() => button.handler ? button.handler(textAreaRef) : applyFormatting(button.format, button.example, button.isBlock, button.closeFormat)}
+                          className="px-2 py-1 text-sm font-medium rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+                          title={button.label}
+                        >
+                          {button.icon}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="flex flex-wrap gap-1 border-b border-gray-300 dark:border-gray-600 pb-2">
+                      <span className="text-xs text-gray-500 dark:text-gray-400 mr-2 self-center">Headings:</span>
+                      {formatButtons.filter(button => button.group === 'heading').map((button, index) => (
+                        <button
+                          key={`heading-${index}`}
+                          type="button"
+                          onClick={() => button.handler ? button.handler(textAreaRef) : applyFormatting(button.format, button.example, button.isBlock, button.closeFormat)}
+                          className="px-2 py-1 text-sm font-medium rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+                          title={button.label}
+                        >
+                          {button.icon}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="flex flex-wrap gap-1 border-b border-gray-300 dark:border-gray-600 pb-2">
+                      <span className="text-xs text-gray-500 dark:text-gray-400 mr-2 self-center">Lists:</span>
+                      {formatButtons.filter(button => button.group === 'list').map((button, index) => (
+                        <button
+                          key={`list-${index}`}
+                          type="button"
+                          onClick={() => button.handler ? button.handler(textAreaRef) : applyFormatting(button.format, button.example, button.isBlock, button.closeFormat)}
+                          className="px-2 py-1 text-sm font-medium rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+                          title={button.label}
+                        >
+                          {button.icon}
+                        </button>
+                      ))}
+
+                      <span className="text-xs text-gray-500 dark:text-gray-400 mx-2 self-center">|</span>
+
+                      <span className="text-xs text-gray-500 dark:text-gray-400 mr-2 self-center">Blocks:</span>
+                      {formatButtons.filter(button => button.group === 'block').map((button, index) => (
+                        <button
+                          key={`block-${index}`}
+                          type="button"
+                          onClick={() => button.handler ? button.handler(textAreaRef) : applyFormatting(button.format, button.example, button.isBlock, button.closeFormat)}
+                          className="px-2 py-1 text-sm font-medium rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+                          title={button.label}
+                        >
+                          {button.icon}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="flex flex-wrap gap-1">
+                      <span className="text-xs text-gray-500 dark:text-gray-400 mr-2 self-center">Insert:</span>
+                      {formatButtons.filter(button => button.group === 'media').map((button, index) => (
+                        <button
+                          key={`media-${index}`}
+                          type="button"
+                          onClick={() => button.handler ? button.handler(textAreaRef) : applyFormatting(button.format, button.example, button.isBlock, button.closeFormat)}
+                          className="px-2 py-1 text-sm font-medium rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+                          title={button.label}
+                        >
+                          {button.icon}
+                        </button>
+                      ))}
+
+                      {formatButtons.filter(button => button.group === 'table').map((button, index) => (
+                        <button
+                          key={`table-${index}`}
+                          type="button"
+                          onClick={() => button.handler ? button.handler(textAreaRef) : applyFormatting(button.format, button.example, button.isBlock, button.closeFormat)}
+                          className="px-2 py-1 text-sm font-medium rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+                          title={button.label}
+                        >
+                          {button.icon}
+                        </button>
+                      ))}
+
+                      <span className="text-xs text-gray-500 dark:text-gray-400 mx-2 self-center">|</span>
+
+                      {formatButtons.filter(button => button.group === 'advanced').map((button, index) => (
+                        <button
+                          key={`advanced-${index}`}
+                          type="button"
+                          onClick={() => button.handler ? button.handler(textAreaRef) : applyFormatting(button.format, button.example, button.isBlock, button.closeFormat)}
+                          className="px-2 py-1 text-sm font-medium rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+                          title={button.label}
+                        >
+                          {button.icon}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 )}
                 <textarea
@@ -467,18 +777,30 @@ For now, please manually copy and paste the content or use a TXT/DOCX file inste
           <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Rich Text Editor Tips
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-gray-600 dark:text-gray-400">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-gray-600 dark:text-gray-400">
             <div>
-              <p>Use the toolbar above to format your text</p>
-              <p>Select text and click B for bold formatting</p>
-              <p>Select text and click I for italic formatting</p>
-              <p>Click H1, H2, or H3 to create headings</p>
+              <h4 className="font-medium mb-1">Text Formatting</h4>
+              <p>• Select text and click B for bold</p>
+              <p>• Select text and click I for italic</p>
+              <p>• Use strikethrough for deleted text</p>
+              <p>• Add highlights to emphasize text</p>
+              <p>• Create superscript and subscript text</p>
             </div>
             <div>
-              <p>Click the link icon to insert a link</p>
-              <p>Click the image icon to upload and insert an image</p>
-              <p>Click the list icons to create bulleted or numbered lists</p>
-              <p>All formatting is done using Markdown syntax</p>
+              <h4 className="font-medium mb-1">Media & Tables</h4>
+              <p>• Insert images by clicking the image icon</p>
+              <p>• Embed YouTube videos with the video icon</p>
+              <p>• Create tables with custom dimensions</p>
+              <p>• Add links to external resources</p>
+              <p>• Insert HTML for advanced formatting</p>
+            </div>
+            <div>
+              <h4 className="font-medium mb-1">Structure</h4>
+              <p>• Use H1-H4 for section headings</p>
+              <p>• Create bulleted and numbered lists</p>
+              <p>• Add task lists with checkboxes</p>
+              <p>• Use blockquotes for citations</p>
+              <p>• Insert code blocks for code snippets</p>
             </div>
           </div>
         </div>

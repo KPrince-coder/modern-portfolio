@@ -277,8 +277,10 @@ const BlogPage: React.FC = () => {
       navigate(`/admin/blog/${postId}`);
     } else if (newView === 'form' && !postId) {
       navigate('/admin/blog/new');
-    } else if (newView === 'posts' && id) {
+    } else if (newView === 'posts') {
       navigate('/admin/blog');
+      // Clear selected post ID when going back to posts view
+      setSelectedPostId(null);
     } else if (newView === 'comments' && postId) {
       setSelectedPostId(postId);
     }
@@ -364,8 +366,8 @@ const BlogPage: React.FC = () => {
               categories={categories || []}
               isLoading={postsLoading || categoriesLoading}
               onDelete={handleDeletePost}
-              onEdit={(postId) => handleViewChange('form', postId)}
-              onViewComments={(postId) => handleViewChange('comments', postId)}
+              onEdit={(postId: string) => handleViewChange('form', postId)}
+              onViewComments={(postId: string) => handleViewChange('comments', postId)}
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
               statusFilter={statusFilter}
