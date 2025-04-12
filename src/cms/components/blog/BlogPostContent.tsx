@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Tab } from '@headlessui/react';
+// Using a custom tabs implementation instead of headlessui
+import SimpleTabs from '../../../components/ui/SimpleTabs';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import rehypeSanitize from 'rehype-sanitize';
@@ -634,9 +635,9 @@ For now, please manually copy and paste the content or use a TXT/DOCX file inste
         </div>
       </div>
 
-      <Tab.Group selectedIndex={activeTab} onChange={setActiveTab}>
-        <Tab.List className="flex space-x-1 rounded-xl bg-gray-100 dark:bg-gray-700 p-1">
-          <Tab
+      <SimpleTabs.Group selectedIndex={activeTab} onChange={setActiveTab}>
+        <SimpleTabs.List className="flex space-x-1 rounded-xl bg-gray-100 dark:bg-gray-700 p-1">
+          <SimpleTabs.Tab
             className={({ selected }) =>
               `w-full rounded-lg py-2.5 text-sm font-medium leading-5
               ${
@@ -647,8 +648,8 @@ For now, please manually copy and paste the content or use a TXT/DOCX file inste
             }
           >
             Write
-          </Tab>
-          <Tab
+          </SimpleTabs.Tab>
+          <SimpleTabs.Tab
             className={({ selected }) =>
               `w-full rounded-lg py-2.5 text-sm font-medium leading-5
               ${
@@ -659,10 +660,10 @@ For now, please manually copy and paste the content or use a TXT/DOCX file inste
             }
           >
             Preview
-          </Tab>
-        </Tab.List>
-        <Tab.Panels className="mt-2">
-          <Tab.Panel>
+          </SimpleTabs.Tab>
+        </SimpleTabs.List>
+        <SimpleTabs.Panels className="mt-2">
+          <SimpleTabs.Panel>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
                 <label htmlFor="content" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -798,8 +799,8 @@ For now, please manually copy and paste the content or use a TXT/DOCX file inste
                 <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
               )}
             </div>
-          </Tab.Panel>
-          <Tab.Panel>
+          </SimpleTabs.Panel>
+          <SimpleTabs.Panel>
             <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-white dark:bg-gray-700 min-h-[500px] prose dark:prose-invert max-w-none overflow-auto">
               {content ? (
                 <ReactMarkdown
@@ -814,9 +815,9 @@ For now, please manually copy and paste the content or use a TXT/DOCX file inste
                 </div>
               )}
             </div>
-          </Tab.Panel>
-        </Tab.Panels>
-      </Tab.Group>
+          </SimpleTabs.Panel>
+        </SimpleTabs.Panels>
+      </SimpleTabs.Group>
 
       {editorMode === 'markdown' && (
         <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">

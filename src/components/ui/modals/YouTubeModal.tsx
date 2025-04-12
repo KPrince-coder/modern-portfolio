@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Modal from '../Modal';
+import SimpleModal from '../SimpleModal';
 
 interface YouTubeModalProps {
   isOpen: boolean;
@@ -48,7 +48,7 @@ const YouTubeModal: React.FC<YouTubeModalProps> = ({
   };
 
   return (
-    <Modal
+    <SimpleModal
       isOpen={isOpen}
       onClose={onClose}
       title="Embed YouTube Video"
@@ -110,7 +110,7 @@ const YouTubeModal: React.FC<YouTubeModalProps> = ({
           </p>
         </div>
       </div>
-    </Modal>
+    </SimpleModal>
   );
 };
 

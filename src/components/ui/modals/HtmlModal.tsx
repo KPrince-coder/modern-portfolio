@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Modal from '../Modal';
+import SimpleModal from '../SimpleModal';
 
 interface HtmlModalProps {
   isOpen: boolean;
@@ -16,7 +16,7 @@ const HtmlModal: React.FC<HtmlModalProps> = ({
 }) => {
   const [html, setHtml] = useState(initialHtml);
   const [previewMode, setPreviewMode] = useState(false);
-  
+
   const handleConfirm = () => {
     onConfirm(html);
     onClose();
@@ -43,7 +43,7 @@ const HtmlModal: React.FC<HtmlModalProps> = ({
   ];
 
   return (
-    <Modal
+    <SimpleModal
       isOpen={isOpen}
       onClose={onClose}
       title="Insert HTML"
@@ -75,7 +75,7 @@ const HtmlModal: React.FC<HtmlModalProps> = ({
             Preview
           </button>
         </div>
-        
+
         {!previewMode ? (
           <div>
             <label htmlFor="html-code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -96,13 +96,13 @@ const HtmlModal: React.FC<HtmlModalProps> = ({
             <p className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Preview
             </p>
-            <div 
+            <div
               className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-white dark:bg-gray-700 min-h-[200px] overflow-auto"
               dangerouslySetInnerHTML={{ __html: html }}
             />
           </div>
         )}
-        
+
         <div>
           <p className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Common Snippets
@@ -120,14 +120,14 @@ const HtmlModal: React.FC<HtmlModalProps> = ({
             ))}
           </div>
         </div>
-        
+
         <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
           <p className="text-xs text-gray-600 dark:text-gray-400">
             HTML will be sanitized for security. Some attributes and tags may be removed.
           </p>
         </div>
       </div>
-    </Modal>
+    </SimpleModal>
   );
 };
 
