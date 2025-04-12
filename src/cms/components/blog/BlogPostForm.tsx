@@ -397,6 +397,13 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
       const message = post?.id ? 'Blog post updated successfully!' : 'Blog post created successfully!';
       alert(message);
 
+      // Check if we should redirect to the blog list (from AI generation)
+      const shouldRedirect = sessionStorage.getItem('redirect_to_blog_list_after_save');
+      if (shouldRedirect) {
+        // Remove the flag
+        sessionStorage.removeItem('redirect_to_blog_list_after_save');
+      }
+
       // Navigate back to the blog list
       navigate('/admin/blog');
     },

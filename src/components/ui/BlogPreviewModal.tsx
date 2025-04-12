@@ -33,6 +33,9 @@ const BlogPreviewModal: React.FC<BlogPreviewModalProps> = ({
       // Store the extracted data in sessionStorage for the blog form to use
       sessionStorage.setItem('ai_generated_blog_data', JSON.stringify(blogData));
 
+      // Store a flag to indicate we should redirect to the blog list after saving
+      sessionStorage.setItem('redirect_to_blog_list_after_save', 'true');
+
       // Close the modal
       onClose();
 
@@ -110,7 +113,7 @@ const BlogPreviewModal: React.FC<BlogPreviewModalProps> = ({
               </div>
             </div>
 
-            <div className="overflow-y-auto p-6" style={{ maxHeight: 'calc(90vh - 200px)' }}>
+            <div className="overflow-y-auto p-6 max-h-[calc(90vh-200px)]">
               {activeTab === 'preview' && (
                 <div>
                   <div className="mb-6">
