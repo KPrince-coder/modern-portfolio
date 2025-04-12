@@ -7,11 +7,15 @@ import LoadingSpinner from './LoadingSpinner';
 interface AIGeneration {
   id: string;
   created_at: string;
-  prompt: string;
-  task: string;
-  result: string;
-  user_id: string;
-  metadata: any;
+  prompt_text: string;
+  response: string;
+  model: string;
+  parameters: Record<string, unknown>;
+  tokens_used?: number;
+  generation_time_ms?: number;
+  user_id?: string;
+  prompt_id?: string;
+  prompt_type?: string;
 }
 
 interface AIGenerationHistoryProps {
@@ -44,7 +48,7 @@ const AIGenerationHistory: React.FC<AIGenerationHistoryProps> = ({
         const { data, error } = await supabase
           .from('ai_generations')
           .select('*')
-          .eq('task', 'blog')
+          .eq('prompt_type', 'blog_post')
           .order('created_at', { ascending: false })
           .limit(10);
 
@@ -52,7 +56,21 @@ const AIGenerationHistory: React.FC<AIGenerationHistoryProps> = ({
           throw new Error(error.message);
         }
 
-        setGenerations(data || []);
+        // Transform the data to match our interface
+        const transformedData = data?.map(item => ({
+          id: item.id,
+          created_at: item.created_at,
+          prompt_text: item.prompt_text,
+          response: item.response,
+          model: item.model,
+          parameters: item.parameters,
+          tokens_used: item.tokens_used,
+          generation_time_ms: item.generation_time_ms,
+          user_id: item.user_id,
+          prompt_id: item.prompt_id
+        })) || [];
+
+        setGenerations(transformedData);
       } catch (error) {
         console.error('Error fetching AI generations:', error);
         setError(error instanceof Error ? error.message : 'An error occurred');
@@ -67,9 +85,9 @@ const AIGenerationHistory: React.FC<AIGenerationHistoryProps> = ({
   // Handle generation selection
   const handleSelectGeneration = (generation: AIGeneration) => {
     setSelectedGeneration(generation.id);
-    
+
     if (onSelectGeneration) {
-      onSelectGeneration(generation.result);
+      onSelectGeneration(generation.response);
     }
   };
 
@@ -85,11 +103,7 @@ const AIGenerationHistory: React.FC<AIGenerationHistoryProps> = ({
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
   };
 
-  // Truncate text
-  const truncateText = (text: string, maxLength: number = 100) => {
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength) + '...';
-  };
+
 
   return (
     <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm ${className}`}>
@@ -130,9 +144,10 @@ const AIGenerationHistory: React.FC<AIGenerationHistoryProps> = ({
         return (
           <div className="divide-y divide-gray-200 dark:divide-gray-700">
             {generations.map((generation) => {
-              const prompt = typeof generation.prompt === 'string' 
-                ? JSON.parse(generation.prompt) 
-                : generation.prompt;
+              // Parse parameters to get prompt details
+              const parameters = typeof generation.parameters === 'string'
+                ? JSON.parse(generation.parameters)
+                : generation.parameters;
 
               return (
                 <motion.div
@@ -146,7 +161,7 @@ const AIGenerationHistory: React.FC<AIGenerationHistoryProps> = ({
                   <div className="flex justify-between items-start">
                     <div>
                       <h4 className="text-sm font-medium text-gray-900 dark:text-white">
-                        {prompt?.title || 'Untitled Generation'}
+                        {parameters?.title || 'Untitled Generation'}
                       </h4>
                       <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                         {formatDate(generation.created_at)}
@@ -155,7 +170,7 @@ const AIGenerationHistory: React.FC<AIGenerationHistoryProps> = ({
                     <div className="flex space-x-2">
                       <button
                         type="button"
-                        onClick={() => handlePreview(generation.result)}
+                        onClick={() => handlePreview(generation.response)}
                         className="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300"
                       >
                         Preview
@@ -172,11 +187,15 @@ const AIGenerationHistory: React.FC<AIGenerationHistoryProps> = ({
                   <div className="mt-2 text-xs text-gray-600 dark:text-gray-300">
                     <p>
                       <span className="font-medium">Topic:</span>{' '}
-                      {prompt?.topic || 'N/A'}
+                      {parameters?.topic || 'N/A'}
                     </p>
                     <p className="mt-1">
                       <span className="font-medium">Keywords:</span>{' '}
-                      {prompt?.keywords?.join(', ') || 'N/A'}
+                      {parameters?.keywords?.join(', ') || 'N/A'}
+                    </p>
+                    <p className="mt-1">
+                      <span className="font-medium">Model:</span>{' '}
+                      {generation.model || 'N/A'}
                     </p>
                   </div>
                 </motion.div>
@@ -218,15 +237,15 @@ const AIGenerationHistory: React.FC<AIGenerationHistoryProps> = ({
                   </svg>
                 </button>
               </div>
-              
-              <div className="overflow-y-auto p-6" style={{ maxHeight: 'calc(90vh - 140px)' }}>
+
+              <div className="overflow-y-auto p-6 max-h-[calc(90vh-140px)]">
                 <div className="prose dark:prose-invert max-w-none">
                   <pre className="whitespace-pre-wrap text-sm">
                     {previewContent}
                   </pre>
                 </div>
               </div>
-              
+
               <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 flex justify-end">
                 <Button
                   variant="primary"
@@ -249,4 +268,3 @@ const AIGenerationHistory: React.FC<AIGenerationHistoryProps> = ({
 };
 
 export default AIGenerationHistory;
-
