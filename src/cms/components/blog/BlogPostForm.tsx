@@ -152,6 +152,8 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
     formInitializedRef.current = true;
   }, [post, getFormKey]);
 
+
+
   // Initialize form with existing data if editing or with AI-generated content
   useEffect(() => {
     // Check for AI-generated content in sessionStorage
@@ -227,7 +229,7 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
         setSelectedTags(post.tags.map(tag => tag.id));
       }
     }
-  }, [post, tags, generateSlug, formData, setActiveTab]);
+  }, [post, tags, formData, setActiveTab, generateSlug]);
 
   // Setup autosave
   useEffect(() => {
