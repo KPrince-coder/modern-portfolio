@@ -1,14 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../../lib/supabase';
 import Button from '../../../components/ui/Button';
 import LoadingSpinner from '../../../components/ui/LoadingSpinner';
+import AutosaveNotification from '../../../components/ui/AutosaveNotification';
 import BlogPostBasicInfo from './BlogPostBasicInfo';
 import BlogPostContent from './BlogPostContent';
 import BlogPostSEO from './BlogPostSEO';
 import BlogPostPublishing from './BlogPostPublishing';
+import {
+  saveToLocalStorage,
+  loadFromLocalStorage,
+  clearLocalStorage,
+  setupAutosave,
+  formatTimestamp
+} from '../../../utils/autosave';
 
 // Types
 interface BlogPost {
@@ -94,6 +102,35 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isUploading, setIsUploading] = useState(false);
 
+  // Autosave states
+  const [showRecoveryNotification, setShowRecoveryNotification] = useState(false);
+  const [autosaveTimestamp, setAutosaveTimestamp] = useState<string | null>(null);
+  const autosaveIntervalRef = useRef<number | null>(null);
+  const formInitializedRef = useRef(false);
+
+  // Generate a unique key for this form session
+  const getFormKey = useCallback((): string => {
+    return post?.id ? `blog_post_${post.id}` : 'blog_post_new';
+  }, [post]);
+
+  // Check for saved data on initial load
+  useEffect(() => {
+    const formKey = getFormKey();
+    const savedData = loadFromLocalStorage<{
+      formData: BlogPost;
+      selectedTags: string[];
+    }>(formKey);
+
+    // If we have saved data and we're not already editing a post (or it's the same post)
+    if (savedData && (!post || (post && post.id === savedData.data.formData.id))) {
+      setShowRecoveryNotification(true);
+      setAutosaveTimestamp(formatTimestamp(savedData.timestamp));
+    }
+
+    // Mark form as initialized
+    formInitializedRef.current = true;
+  }, [post, getFormKey]);
+
   // Initialize form with existing data if editing
   useEffect(() => {
     if (post) {
@@ -123,11 +160,36 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
     }
   }, [post]);
 
+  // Setup autosave
+  useEffect(() => {
+    if (!formInitializedRef.current) return;
+
+    const formKey = getFormKey();
+
+    // Setup autosave interval
+    const intervalId = window.setInterval(() => {
+      saveToLocalStorage(formKey, {
+        formData,
+        selectedTags,
+      });
+    }, 5000); // Save every 5 seconds
+
+    // Store interval ID for cleanup
+    autosaveIntervalRef.current = intervalId;
+
+    // Cleanup function
+    return () => {
+      if (autosaveIntervalRef.current) {
+        window.clearInterval(autosaveIntervalRef.current);
+      }
+    };
+  }, [formData, selectedTags, getFormKey]);
+
   // Save blog post mutation
   const savePostMutation = useMutation({
     mutationFn: async (data: { post: BlogPost; tags: string[] }) => {
       const { post, tags } = data;
-      
+
       // Format the post data
       const postData = {
         title: post.title,
@@ -145,9 +207,9 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
         meta_keywords: post.meta_keywords,
         ai_generated: post.ai_generated,
       };
-      
+
       let postId = post.id;
-      
+
       if (postId) {
         // Update existing post
         const { error } = await supabase
@@ -176,10 +238,10 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
         if (error) {
           throw new Error(error.message);
         }
-        
+
         postId = newPost.id;
       }
-      
+
       // Handle tags
       if (postId) {
         // First, remove all existing tag associations
@@ -187,28 +249,28 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
           .from('blog_post_tags')
           .delete()
           .eq('post_id', postId);
-        
+
         if (deleteError) {
           throw new Error(deleteError.message);
         }
-        
+
         // Then, add the new tag associations
         if (tags.length > 0) {
           const tagAssociations = tags.map(tagId => ({
             post_id: postId,
             tag_id: tagId,
           }));
-          
+
           const { error: insertError } = await supabase
             .from('blog_post_tags')
             .insert(tagAssociations);
-          
+
           if (insertError) {
             throw new Error(insertError.message);
           }
         }
       }
-      
+
       return postId;
     },
     onSuccess: (postId) => {
@@ -236,7 +298,7 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
       // Only auto-generate slug if it's empty or matches the previous auto-generated slug
       slug: !prev.slug || prev.slug === generateSlug(prev.title) ? generateSlug(title) : prev.slug,
     }));
-    
+
     // Clear error when field is edited
     if (errors.title) {
       setErrors(prev => {
@@ -248,9 +310,9 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
   };
 
   // Handle form input changes
-  const handleChange = (name: string, value: any) => {
+  const handleChange = (name: string, value: string | number | boolean) => {
     setFormData(prev => ({ ...prev, [name]: value }));
-    
+
     // Clear error when field is edited
     if (errors[name]) {
       setErrors(prev => {
@@ -280,45 +342,86 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
   // Validate form
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!formData.title.trim()) {
       newErrors.title = 'Title is required';
     }
-    
+
+    // Auto-generate slug if empty
     if (!formData.slug.trim()) {
-      newErrors.slug = 'Slug is required';
+      if (formData.title.trim()) {
+        // If title exists but slug is empty, generate it automatically
+        const generatedSlug = generateSlug(formData.title);
+        setFormData(prev => ({ ...prev, slug: generatedSlug }));
+      } else {
+        newErrors.slug = 'Slug is required';
+      }
     }
-    
+
     if (!formData.content.trim()) {
       newErrors.content = 'Content is required';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  // Handle restoring saved data
+  const handleRestoreSavedData = () => {
+    const formKey = getFormKey();
+    const savedData = loadFromLocalStorage<{
+      formData: BlogPost;
+      selectedTags: string[];
+    }>(formKey);
+
+    if (savedData) {
+      setFormData(savedData.data.formData);
+      setSelectedTags(savedData.data.selectedTags);
+      setShowRecoveryNotification(false);
+    }
+  };
+
+  // Handle discarding saved data
+  const handleDiscardSavedData = () => {
+    const formKey = getFormKey();
+    clearLocalStorage(formKey);
+    setShowRecoveryNotification(false);
   };
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
-    
+
     // Update reading time based on content
     const updatedFormData = {
       ...formData,
       reading_time_minutes: calculateReadingTime(formData.content),
     };
-    
+
     try {
       await savePostMutation.mutateAsync({
         post: updatedFormData,
         tags: selectedTags,
       });
+
+      // Clear autosaved data after successful submission
+      const formKey = getFormKey();
+      clearLocalStorage(formKey);
     } catch (error) {
       console.error('Error saving blog post:', error);
     }
+  };
+
+  // Handle cancel button click
+  const handleCancel = () => {
+    // Clear autosaved data when canceling
+    const formKey = getFormKey();
+    clearLocalStorage(formKey);
+    onCancel();
   };
 
   // Loading state
@@ -343,7 +446,7 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
         </h2>
         <Button
           variant="secondary"
-          onClick={onCancel}
+          onClick={handleCancel}
         >
           Cancel
         </Button>
@@ -442,7 +545,7 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
           <Button
             type="button"
             variant="secondary"
-            onClick={onCancel}
+            onClick={handleCancel}
           >
             Cancel
           </Button>
@@ -455,6 +558,14 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
           </Button>
         </div>
       </form>
+
+      {/* Autosave notification */}
+      <AutosaveNotification
+        isVisible={showRecoveryNotification}
+        timestamp={autosaveTimestamp}
+        onRestore={handleRestoreSavedData}
+        onDiscard={handleDiscardSavedData}
+      />
     </motion.div>
   );
 };
