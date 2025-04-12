@@ -8,7 +8,7 @@ import rehypeSanitize from 'rehype-sanitize';
 import { supabase } from '../../../lib/supabase';
 import Button from '../../../components/ui/Button';
 import LoadingSpinner from '../../../components/ui/LoadingSpinner';
-import { LinkModal, YouTubeModal, TableModal, HtmlModal, ConfirmModal } from '../../../components/ui/modals';
+import { LinkModal, YouTubeModal, TableModal, HtmlModal, ConfirmModal, ImageLinkModal } from '../../../components/ui/modals';
 
 // We'll use dynamic imports for file processing libraries
 // These will be imported only when needed
@@ -36,6 +36,7 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
   const [tableModalOpen, setTableModalOpen] = useState(false);
   const [htmlModalOpen, setHtmlModalOpen] = useState(false);
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [imageLinkModalOpen, setImageLinkModalOpen] = useState(false);
 
   // Selected text state for modals
   const [selectedText, setSelectedText] = useState({ text: '', start: 0, end: 0 });
@@ -129,6 +130,31 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
     const end = textarea.selectionEnd;
     const altText = textarea.value.substring(start, end) || 'image';
 
+    // Show options for image insertion
+    setSelectedText({ text: altText, start, end });
+    setConfirmModalOpen(true);
+    setSelectedText({
+      text: 'How would you like to add an image?',
+      start,
+      end
+    });
+  }
+
+  // Handle image from URL
+  const handleImageFromUrl = () => {
+    setConfirmModalOpen(false);
+    setImageLinkModalOpen(true);
+  }
+
+  // Handle image from local file
+  const handleImageFromFile = () => {
+    setConfirmModalOpen(false);
+
+    if (!textAreaRef.current) return;
+    const textarea = textAreaRef.current;
+    const { start, end } = selectedText;
+    const altText = selectedText.text || 'image';
+
     // Open file picker
     const input = document.createElement('input');
     input.type = 'file';
@@ -185,6 +211,29 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
         setIsUploading(false);
       }
     };
+  }
+
+  // Handle image link confirmation from modal
+  const handleImageLinkConfirm = (imageUrl: string, altText: string) => {
+    if (!textAreaRef.current) return;
+
+    const textarea = textAreaRef.current;
+    const { start, end } = selectedText;
+
+    // Insert image markdown
+    const imageMarkdown = `![${altText}](${imageUrl})`;
+    const newValue = textarea.value.substring(0, start) + imageMarkdown + textarea.value.substring(end);
+    onChange(newValue);
+
+    // Close the modal
+    setImageLinkModalOpen(false);
+
+    // Set cursor position after the inserted image
+    setTimeout(() => {
+      textarea.focus();
+      const newCursorPos = start + imageMarkdown.length;
+      textarea.setSelectionRange(newCursorPos, newCursorPos);
+    }, 0);
   }
 
   // Handle file upload for content extraction
@@ -817,10 +866,42 @@ For now, please manually copy and paste the content or use a TXT/DOCX file inste
           </SimpleTabs.Panel>
           <SimpleTabs.Panel>
             <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-white dark:bg-gray-700 min-h-[500px] prose dark:prose-invert max-w-none overflow-auto">
+              {/* Add CSS for responsive video container */}
+              <style>
+                {`
+                  .video-container {
+                    position: relative;
+                    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+                    height: 0;
+                    overflow: hidden;
+                    max-width: 100%;
+                    margin: 1.5rem 0;
+                  }
+                  .video-container iframe {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    border: 0;
+                  }
+                `}
+              </style>
               {content ? (
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
                   rehypePlugins={[rehypeRaw, rehypeSanitize]}
+                  components={{
+                    // Custom renderer for div elements to handle YouTube embeds
+                    div: ({ node, className, children, ...props }) => {
+                      if (className === 'video-container') {
+                        return <div className="video-container" {...props}>{children}</div>;
+                      }
+                      return <div className={className} {...props}>{children}</div>;
+                    },
+                    // Pass iframe elements through without modification
+                    iframe: ({ node, ...props }) => <iframe {...props} />
+                  }}
                 >
                   {content}
                 </ReactMarkdown>
@@ -925,21 +1006,53 @@ For now, please manually copy and paste the content or use a TXT/DOCX file inste
       <ConfirmModal
         isOpen={confirmModalOpen}
         onClose={() => setConfirmModalOpen(false)}
-        onConfirm={handleClearFormattingConfirm}
-        title={selectedText.start === selectedText.end ? "Error" : "Clear Formatting"}
-        message={selectedText.start === selectedText.end
-          ? "Please select text to clear formatting."
-          : "Are you sure you want to remove all formatting from the selected text? This will remove bold, italic, links, and other formatting."}
-        confirmLabel={selectedText.start === selectedText.end ? "OK" : "Clear Formatting"}
-        variant={selectedText.start === selectedText.end ? "primary" : "danger"}
+        onConfirm={selectedText.text === 'How would you like to add an image?'
+          ? handleImageFromFile
+          : handleClearFormattingConfirm}
+        title={selectedText.text === 'How would you like to add an image?'
+          ? "Insert Image"
+          : selectedText.start === selectedText.end
+            ? "Error"
+            : "Clear Formatting"}
+        message={selectedText.text === 'How would you like to add an image?'
+          ? "How would you like to add an image?"
+          : selectedText.start === selectedText.end
+            ? "Please select text to clear formatting."
+            : "Are you sure you want to remove all formatting from the selected text? This will remove bold, italic, links, and other formatting."}
+        confirmLabel={selectedText.text === 'How would you like to add an image?'
+          ? "Upload from Device"
+          : selectedText.start === selectedText.end
+            ? "OK"
+            : "Clear Formatting"}
+        secondaryAction={selectedText.text === 'How would you like to add an image?'
+          ? {
+              label: "Insert from URL",
+              onClick: handleImageFromUrl
+            }
+          : undefined}
+        variant={selectedText.text === 'How would you like to add an image?'
+          ? "primary"
+          : selectedText.start === selectedText.end
+            ? "primary"
+            : "danger"}
         icon={
           <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            {selectedText.start === selectedText.end
-              ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            {selectedText.text === 'How would you like to add an image?'
+              ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              : selectedText.start === selectedText.end
+                ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             }
           </svg>
         }
+      />
+
+      <ImageLinkModal
+        isOpen={imageLinkModalOpen}
+        onClose={() => setImageLinkModalOpen(false)}
+        onConfirm={handleImageLinkConfirm}
+        initialAltText={selectedText.text !== 'How would you like to add an image?' ? selectedText.text : ''}
+        initialUrl="https://"
       />
     </div>
   );
