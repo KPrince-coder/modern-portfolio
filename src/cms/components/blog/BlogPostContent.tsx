@@ -39,7 +39,12 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
   const [imageLinkModalOpen, setImageLinkModalOpen] = useState(false);
 
   // Selected text state for modals
-  const [selectedText, setSelectedText] = useState({ text: '', start: 0, end: 0 });
+  const [selectedText, setSelectedText] = useState({
+    text: '',
+    start: 0,
+    end: 0,
+    originalAltText: ''
+  });
 
   // Rich text formatting toolbar buttons
   const formatButtons = [
@@ -91,7 +96,7 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
     const text = textarea.value.substring(start, end);
 
     // Save selected text info for the modal
-    setSelectedText({ text, start, end });
+    setSelectedText({ text, start, end, originalAltText: text });
 
     // Open the link modal
     setLinkModalOpen(true);
@@ -131,13 +136,19 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
     const altText = textarea.value.substring(start, end) || 'image';
 
     // Show options for image insertion
-    setSelectedText({ text: altText, start, end });
-    setConfirmModalOpen(true);
+    // Store the original alt text and cursor position
+    const originalAltText = altText;
+
+    // Set the selected text for the modal
     setSelectedText({
       text: 'How would you like to add an image?',
       start,
-      end
+      end,
+      originalAltText // Store the original alt text as a property
     });
+
+    // Open the modal
+    setConfirmModalOpen(true);
   }
 
   // Handle image from URL
@@ -204,7 +215,8 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
         setSelectedText({
           text: 'Failed to upload image. Please try again.',
           start: 0,
-          end: 0
+          end: 0,
+          originalAltText: ''
         });
         setConfirmModalOpen(true);
       } finally {
@@ -297,7 +309,8 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
             setSelectedText({
               text: 'PDF extraction failed. This feature works best with server-side processing. Please try a TXT or DOCX file instead.',
               start: 0,
-              end: 0
+              end: 0,
+              originalAltText: ''
             });
             setConfirmModalOpen(true);
             setIsUploading(false);
@@ -309,7 +322,8 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
         setSelectedText({
           text: 'Unsupported file type. Please upload a TXT, DOCX, or PDF file.',
           start: 0,
-          end: 0
+          end: 0,
+          originalAltText: ''
         });
         setConfirmModalOpen(true);
         setIsUploading(false);
@@ -410,7 +424,7 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
     const end = textarea.selectionEnd;
 
     // Save selected text info for the modal
-    setSelectedText({ text: '', start, end });
+    setSelectedText({ text: '', start, end, originalAltText: '' });
 
     // Open the YouTube modal
     setYoutubeModalOpen(true);
@@ -459,7 +473,7 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
     const end = textarea.selectionEnd;
 
     // Save selected text info for the modal
-    setSelectedText({ text: '', start, end });
+    setSelectedText({ text: '', start, end, originalAltText: '' });
 
     // Open the table modal
     setTableModalOpen(true);
@@ -522,7 +536,7 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
     const text = textarea.value.substring(start, end);
 
     // Save selected text info for the modal
-    setSelectedText({ text, start, end });
+    setSelectedText({ text, start, end, originalAltText: text });
 
     // Open the HTML modal
     setHtmlModalOpen(true);
@@ -566,7 +580,7 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
     const text = textarea.value.substring(start, end);
 
     // Save selected text info for the modal
-    setSelectedText({ text, start, end });
+    setSelectedText({ text, start, end, originalAltText: text });
 
     // Open the confirm modal
     setConfirmModalOpen(true);
@@ -1051,7 +1065,7 @@ For now, please manually copy and paste the content or use a TXT/DOCX file inste
         isOpen={imageLinkModalOpen}
         onClose={() => setImageLinkModalOpen(false)}
         onConfirm={handleImageLinkConfirm}
-        initialAltText={selectedText.text !== 'How would you like to add an image?' ? selectedText.text : ''}
+        initialAltText={selectedText.originalAltText || ''}
         initialUrl="https://"
       />
     </div>

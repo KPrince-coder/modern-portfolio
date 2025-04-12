@@ -11,6 +11,10 @@ interface ConfirmModalProps {
   cancelLabel?: string;
   variant?: 'primary' | 'danger';
   icon?: React.ReactNode;
+  secondaryAction?: {
+    label: string;
+    onClick: () => void;
+  };
 }
 
 const ConfirmModal: React.FC<ConfirmModalProps> = ({
@@ -23,6 +27,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
   cancelLabel = 'Cancel',
   variant = 'primary',
   icon,
+  secondaryAction,
 }) => {
   return (
     <BasicModal
@@ -34,7 +39,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
         onClick: onConfirm,
         variant: variant,
       }}
-      secondaryAction={{
+      secondaryAction={secondaryAction || {
         label: cancelLabel,
         onClick: onClose,
       }}
