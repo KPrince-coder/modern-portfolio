@@ -3,6 +3,7 @@ import { useMutation } from '@tanstack/react-query';
 import { supabase } from '../../../lib/supabase';
 import Button from '../../../components/ui/Button';
 import LoadingSpinner from '../../../components/ui/LoadingSpinner';
+import { groqAPI, EmailResponsePrompt } from '../../../lib/groq';
 
 // Types
 interface ContactMessage {
@@ -45,27 +46,23 @@ const AIResponseGenerator: React.FC<AIResponseGeneratorProps> = ({
     mutationFn: async () => {
       setIsGenerating(true);
       setError(null);
-      
+
       try {
-        // In a real implementation, this would call the Groq API
-        // For now, we'll simulate a response
-        
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        // Generate a response based on the message content
-        const aiResponse = `Dear ${message.name},
+        // Create an email response prompt
+        const emailPrompt: EmailResponsePrompt = {
+          originalMessage: message.message,
+          context: `I am a professional web developer and designer. The message is from ${message.name} (${message.email}) who contacted me through my portfolio website.`,
+          tone: 'professional',
+        };
 
-Thank you for reaching out to me. I appreciate you taking the time to contact me.
+        // Generate the response using Groq API
+        const response = await groqAPI.generateEmailResponse(emailPrompt);
 
-${generateContextAwareResponse(message.message)}
+        if (response.status === 'error') {
+          throw new Error(response.error || 'Failed to generate response');
+        }
 
-If you have any further questions or need additional information, please don't hesitate to ask.
-
-Best regards,
-[Your Name]`;
-        
-        return aiResponse;
+        return response.text;
       } catch (error) {
         console.error('Error generating AI response:', error);
         throw new Error('Failed to generate AI response. Please try again later.');
@@ -81,20 +78,7 @@ Best regards,
     },
   });
 
-  // Generate a context-aware response based on the message content
-  const generateContextAwareResponse = (messageContent: string) => {
-    const lowerCaseMessage = messageContent.toLowerCase();
-    
-    if (lowerCaseMessage.includes('project') || lowerCaseMessage.includes('work')) {
-      return "Regarding your inquiry about my projects, I'd be happy to discuss my work in more detail. My portfolio showcases a variety of projects that demonstrate my skills and experience in web development and design.";
-    } else if (lowerCaseMessage.includes('hire') || lowerCaseMessage.includes('job') || lowerCaseMessage.includes('opportunity')) {
-      return "I'm always open to discussing new opportunities and potential collaborations. I'd be interested in learning more about what you have in mind. Could you provide more details about the project or position you're considering?";
-    } else if (lowerCaseMessage.includes('contact') || lowerCaseMessage.includes('call') || lowerCaseMessage.includes('meet')) {
-      return "I'd be happy to schedule a call or meeting to discuss this further. Please let me know what times work best for you, and we can arrange a conversation.";
-    } else {
-      return "I've received your message and will consider your inquiry carefully. I strive to provide thoughtful responses to all communications.";
-    }
-  };
+
 
   // Handle generating AI response
   const handleGenerateResponse = async () => {
@@ -128,14 +112,14 @@ Best regards,
             placeholder="AI-generated response will appear here..."
           />
         )}
-        
+
         {error && (
           <div className="mt-2 text-sm text-red-600 dark:text-red-400">
             {error}
           </div>
         )}
       </div>
-      
+
       <div className="flex justify-between">
         <Button
           variant="secondary"
@@ -150,7 +134,7 @@ Best regards,
         >
           {initialResponse ? 'Regenerate Response' : 'Generate Response'}
         </Button>
-        
+
         <div className="space-x-2">
           <Button
             variant="secondary"

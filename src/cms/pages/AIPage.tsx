@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase';
 import { useCMS } from '../CMSProvider';
 import Button from '../../components/ui/Button';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import { groqAPI, BlogPostPrompt, EmailResponsePrompt } from '../../lib/groq';
 
 type AITask = 'blog' | 'email' | 'seo';
 
@@ -31,97 +32,101 @@ const AIPage: React.FC = () => {
         prompt: data.prompt,
         status: 'loading',
       };
-      
-      const promptId = Date.now().toString();
+
       setAiResults(prev => [newPrompt, ...prev]);
-      
+
       try {
-        // In a real implementation, this would call the Groq API
-        // For now, we'll simulate a response
-        
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 3000));
-        
         let result = '';
-        
+
         // Generate different responses based on the task
         switch (data.task) {
-          case 'blog':
-            result = generateBlogPost(data.prompt);
+          case 'blog': {
+            // Create a blog post prompt
+            const blogPrompt: BlogPostPrompt = {
+              title: data.prompt,
+              topic: data.prompt,
+              keywords: extractKeywords(data.prompt),
+              tone: 'professional',
+              length: 'medium',
+            };
+
+            // Generate the blog post using Groq API
+            const response = await groqAPI.generateBlogPost(blogPrompt);
+
+            if (response.status === 'error') {
+              throw new Error(response.error || 'Failed to generate blog post');
+            }
+
+            result = response.text;
             break;
-          case 'email':
-            result = generateEmailResponse(data.prompt);
+          }
+          case 'email': {
+            // Create an email response prompt
+            const emailPrompt: EmailResponsePrompt = {
+              originalMessage: data.prompt,
+              context: 'I am a professional web developer with expertise in React, Node.js, and modern web technologies.',
+              tone: 'professional',
+            };
+
+            // Generate the email response using Groq API
+            const response = await groqAPI.generateEmailResponse(emailPrompt);
+
+            if (response.status === 'error') {
+              throw new Error(response.error || 'Failed to generate email response');
+            }
+
+            result = response.text;
             break;
+          }
           case 'seo':
+            // For SEO content, we'll still use the local function for now
             result = generateSEOContent(data.prompt);
             break;
         }
-        
+
         // Update the result in the state
-        setAiResults(prev => 
-          prev.map((item, index) => 
+        setAiResults(prev =>
+          prev.map((item, index) =>
             index === 0 ? { ...item, result, status: 'success' } : item
           )
         );
-        
+
         return result;
       } catch (error) {
         console.error('Error generating AI content:', error);
-        
+
         // Update the error in the state
-        setAiResults(prev => 
-          prev.map((item, index) => 
+        setAiResults(prev =>
+          prev.map((item, index) =>
             index === 0 ? { ...item, status: 'error', error: (error as Error).message } : item
           )
         );
-        
+
         throw error;
       }
     },
   });
 
-  // Generate a blog post based on the prompt
-  const generateBlogPost = (prompt: string): string => {
-    return `# ${prompt}
+  // Extract keywords from the prompt
+  const extractKeywords = (prompt: string): string[] => {
+    // Remove common words and extract potential keywords
+    const words = prompt.toLowerCase().split(/\s+/);
+    const commonWords = ['a', 'an', 'the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'with', 'about'];
 
-## Introduction
+    // Filter out common words and short words
+    const keywords = words
+      .filter(word => word.length > 3 && !commonWords.includes(word))
+      // Remove punctuation
+      .map(word => word.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, ''))
+      // Remove duplicates
+      .filter((word, index, self) => self.indexOf(word) === index)
+      // Limit to 5 keywords
+      .slice(0, 5);
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam auctor, nisl eget ultricies tincidunt, nisl nisl aliquam nisl, eget ultricies nisl nisl eget nisl. Nullam auctor, nisl eget ultricies tincidunt, nisl nisl aliquam nisl, eget ultricies nisl nisl eget nisl.
-
-## Main Points
-
-### First Point
-
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam auctor, nisl eget ultricies tincidunt, nisl nisl aliquam nisl, eget ultricies nisl nisl eget nisl.
-
-### Second Point
-
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam auctor, nisl eget ultricies tincidunt, nisl nisl aliquam nisl, eget ultricies nisl nisl eget nisl.
-
-### Third Point
-
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam auctor, nisl eget ultricies tincidunt, nisl nisl aliquam nisl, eget ultricies nisl nisl eget nisl.
-
-## Conclusion
-
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam auctor, nisl eget ultricies tincidunt, nisl nisl aliquam nisl, eget ultricies nisl nisl eget nisl.`;
+    return keywords;
   };
 
-  // Generate an email response based on the prompt
-  const generateEmailResponse = (prompt: string): string => {
-    return `Dear [Recipient],
 
-Thank you for your message regarding "${prompt}".
-
-I appreciate you taking the time to reach out. I've carefully considered your inquiry and would like to provide the following response:
-
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam auctor, nisl eget ultricies tincidunt, nisl nisl aliquam nisl, eget ultricies nisl nisl eget nisl.
-
-If you have any further questions or need additional information, please don't hesitate to ask.
-
-Best regards,
-[Your Name]`;
-  };
 
   // Generate SEO content based on the prompt
   const generateSEOContent = (prompt: string): string => {
@@ -155,14 +160,14 @@ Complete Guide to ${prompt}: Expert Tips & Best Practices
   // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!prompt.trim()) return;
-    
+
     generateContentMutation.mutateAsync({
       task: activeTask,
       prompt: prompt.trim(),
     });
-    
+
     setPrompt('');
   };
 
@@ -209,7 +214,7 @@ Complete Guide to ${prompt}: Expert Tips & Best Practices
                   Use AI to generate various types of content
                 </p>
               </div>
-              
+
               <div className="p-4">
                 {/* Task Selection */}
                 <div className="mb-4">
@@ -252,7 +257,7 @@ Complete Guide to ${prompt}: Expert Tips & Best Practices
                     </button>
                   </div>
                 </div>
-                
+
                 {/* Prompt Input */}
                 <form onSubmit={handleSubmit}>
                   <div className="mb-4">
@@ -268,7 +273,7 @@ Complete Guide to ${prompt}: Expert Tips & Best Practices
                       rows={4}
                       className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400"
                       placeholder={
-                        activeTask === 'blog' 
+                        activeTask === 'blog'
                           ? 'e.g. 10 Essential React Hooks Every Developer Should Know'
                           : activeTask === 'email'
                           ? 'e.g. Response to client inquiry about project timeline'
@@ -276,7 +281,7 @@ Complete Guide to ${prompt}: Expert Tips & Best Practices
                       }
                     />
                   </div>
-                  
+
                   <Button
                     type="submit"
                     variant="primary"
@@ -287,7 +292,7 @@ Complete Guide to ${prompt}: Expert Tips & Best Practices
                     Generate Content
                   </Button>
                 </form>
-                
+
                 {/* Task Description */}
                 <div className="mt-4 bg-gray-50 dark:bg-gray-700 p-3 rounded-md">
                   <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -304,7 +309,7 @@ Complete Guide to ${prompt}: Expert Tips & Best Practices
               </div>
             </div>
           </div>
-          
+
           {/* AI Results */}
           <div className="lg:col-span-2">
             <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
@@ -313,7 +318,7 @@ Complete Guide to ${prompt}: Expert Tips & Best Practices
                   Generated Content
                 </h2>
               </div>
-              
+
               <div className="divide-y divide-gray-200 dark:divide-gray-700">
                 {aiResults.length === 0 ? (
                   <div className="p-6 text-center">
@@ -341,6 +346,7 @@ Complete Guide to ${prompt}: Expert Tips & Best Practices
                         </div>
                         {result.status === 'success' && result.result && (
                           <button
+                            type="button"
                             onClick={() => handleCopyContent(result.result!)}
                             className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 text-sm"
                           >
@@ -348,13 +354,13 @@ Complete Guide to ${prompt}: Expert Tips & Best Practices
                           </button>
                         )}
                       </div>
-                      
+
                       {result.status === 'loading' && (
                         <div className="flex items-center justify-center py-8">
                           <LoadingSpinner size="md" text="Generating content..." />
                         </div>
                       )}
-                      
+
                       {result.status === 'error' && (
                         <div className="bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 p-4 rounded">
                           <h3 className="text-sm font-medium text-red-800 dark:text-red-200">Error</h3>
@@ -363,7 +369,7 @@ Complete Guide to ${prompt}: Expert Tips & Best Practices
                           </p>
                         </div>
                       )}
-                      
+
                       {result.status === 'success' && result.result && (
                         <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg mt-2">
                           <pre className="whitespace-pre-wrap text-sm text-gray-800 dark:text-gray-200 font-mono">
