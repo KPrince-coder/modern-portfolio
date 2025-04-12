@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '../../lib/supabase';
+import { useParams, useNavigate } from 'react-router-dom';
+
 import { useCMS } from '../CMSProvider';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import AnalyticsDashboard from '../components/analytics/AnalyticsDashboard';
@@ -9,12 +10,16 @@ import AnalyticsPageViews from '../components/analytics/AnalyticsPageViews';
 import AnalyticsReferrers from '../components/analytics/AnalyticsReferrers';
 import AnalyticsDevices from '../components/analytics/AnalyticsDevices';
 import AnalyticsSettings from '../components/analytics/AnalyticsSettings';
+import BlogAnalyticsDashboard from '../components/analytics/BlogAnalyticsDashboard';
+import BlogPostAnalyticsDetail from '../components/analytics/BlogPostAnalyticsDetail';
 
 // Types
-type AnalyticsTab = 'dashboard' | 'pageViews' | 'referrers' | 'devices' | 'settings';
+type AnalyticsTab = 'dashboard' | 'pageViews' | 'referrers' | 'devices' | 'settings' | 'blog';
 type TimeRange = '7d' | '30d' | '90d' | 'all';
 
 const AnalyticsPage: React.FC = () => {
+  const { postId } = useParams<{ postId?: string }>();
+  const navigate = useNavigate();
   const { isAuthenticated, isLoading: authLoading } = useCMS();
   const [activeTab, setActiveTab] = useState<AnalyticsTab>('dashboard');
   const [timeRange, setTimeRange] = useState<TimeRange>('30d');
@@ -23,7 +28,7 @@ const AnalyticsPage: React.FC = () => {
   const getDateRange = () => {
     const endDate = new Date();
     let startDate = new Date();
-    
+
     switch (timeRange) {
       case '7d':
         startDate.setDate(endDate.getDate() - 7);
@@ -38,14 +43,15 @@ const AnalyticsPage: React.FC = () => {
         startDate = new Date(0); // Beginning of time
         break;
     }
-    
+
     return {
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString(),
     };
   };
 
-  const { startDate, endDate } = getDateRange();
+  // Get date range (not used in this implementation but would be used in a real API call)
+  getDateRange();
 
   // Fetch analytics summary data
   const {
@@ -57,10 +63,10 @@ const AnalyticsPage: React.FC = () => {
     queryFn: async () => {
       // In a real implementation, this would fetch actual analytics data from Supabase
       // For now, we'll return mock data
-      
+
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       return {
         totalPageViews: 12458,
         uniqueVisitors: 4872,
@@ -126,7 +132,7 @@ const AnalyticsPage: React.FC = () => {
           className="flex flex-col sm:flex-row sm:items-center sm:justify-between"
         >
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Analytics</h1>
-          
+
           {/* Time Range Selector */}
           <div className="mt-4 sm:mt-0">
             <div className="inline-flex rounded-md shadow-sm">
@@ -180,9 +186,13 @@ const AnalyticsPage: React.FC = () => {
 
         {/* Tabs */}
         <div className="mt-6 border-b border-gray-200 dark:border-gray-700">
-          <nav className="-mb-px flex space-x-8">
+          <nav className="-mb-px flex space-x-8 overflow-x-auto">
             <button
-              onClick={() => setActiveTab('dashboard')}
+              type="button"
+              onClick={() => {
+                setActiveTab('dashboard');
+                if (postId) navigate('/cms/analytics');
+              }}
               className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'dashboard'
                   ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
@@ -192,7 +202,11 @@ const AnalyticsPage: React.FC = () => {
               Dashboard
             </button>
             <button
-              onClick={() => setActiveTab('pageViews')}
+              type="button"
+              onClick={() => {
+                setActiveTab('pageViews');
+                if (postId) navigate('/cms/analytics');
+              }}
               className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'pageViews'
                   ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
@@ -202,7 +216,11 @@ const AnalyticsPage: React.FC = () => {
               Page Views
             </button>
             <button
-              onClick={() => setActiveTab('referrers')}
+              type="button"
+              onClick={() => {
+                setActiveTab('referrers');
+                if (postId) navigate('/cms/analytics');
+              }}
               className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'referrers'
                   ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
@@ -212,7 +230,11 @@ const AnalyticsPage: React.FC = () => {
               Referrers
             </button>
             <button
-              onClick={() => setActiveTab('devices')}
+              type="button"
+              onClick={() => {
+                setActiveTab('devices');
+                if (postId) navigate('/cms/analytics');
+              }}
               className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'devices'
                   ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
@@ -222,7 +244,25 @@ const AnalyticsPage: React.FC = () => {
               Devices
             </button>
             <button
-              onClick={() => setActiveTab('settings')}
+              type="button"
+              onClick={() => {
+                setActiveTab('blog');
+                if (postId) navigate('/cms/analytics');
+              }}
+              className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'blog' || !!postId
+                  ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:border-gray-600'
+              }`}
+            >
+              Blog Analytics
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab('settings');
+                if (postId) navigate('/cms/analytics');
+              }}
               className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'settings'
                   ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
@@ -236,34 +276,60 @@ const AnalyticsPage: React.FC = () => {
 
         {/* Tab Content */}
         <div className="mt-6">
-          {activeTab === 'dashboard' && analyticsSummary && (
-            <AnalyticsDashboard data={analyticsSummary} timeRange={timeRange} />
-          )}
-          
-          {activeTab === 'pageViews' && analyticsSummary && (
-            <AnalyticsPageViews 
-              pageViews={analyticsSummary.dailyPageViews} 
-              topPages={analyticsSummary.topPages}
-              timeRange={timeRange}
-            />
-          )}
-          
-          {activeTab === 'referrers' && analyticsSummary && (
-            <AnalyticsReferrers 
-              referrers={analyticsSummary.topReferrers}
-              timeRange={timeRange}
-            />
-          )}
-          
-          {activeTab === 'devices' && analyticsSummary && (
-            <AnalyticsDevices 
-              deviceData={analyticsSummary.deviceBreakdown}
-              timeRange={timeRange}
-            />
-          )}
-          
-          {activeTab === 'settings' && (
-            <AnalyticsSettings />
+          {/* If we have a postId, show the blog post detail view */}
+          {postId ? (
+            <div>
+              <div className="mb-6">
+                <button
+                  type="button"
+                  onClick={() => navigate('/cms/analytics')}
+                  className="inline-flex items-center text-indigo-600 dark:text-indigo-400 hover:underline"
+                >
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                  </svg>
+                  Back to Blog Analytics
+                </button>
+              </div>
+
+              <BlogPostAnalyticsDetail postId={postId} />
+            </div>
+          ) : (
+            <>
+              {activeTab === 'dashboard' && analyticsSummary && (
+                <AnalyticsDashboard data={analyticsSummary} timeRange={timeRange} />
+              )}
+
+              {activeTab === 'pageViews' && analyticsSummary && (
+                <AnalyticsPageViews
+                  pageViews={analyticsSummary.dailyPageViews}
+                  topPages={analyticsSummary.topPages}
+                  timeRange={timeRange}
+                />
+              )}
+
+              {activeTab === 'referrers' && analyticsSummary && (
+                <AnalyticsReferrers
+                  referrers={analyticsSummary.topReferrers}
+                  timeRange={timeRange}
+                />
+              )}
+
+              {activeTab === 'devices' && analyticsSummary && (
+                <AnalyticsDevices
+                  deviceData={analyticsSummary.deviceBreakdown}
+                  timeRange={timeRange}
+                />
+              )}
+
+              {activeTab === 'blog' && (
+                <BlogAnalyticsDashboard />
+              )}
+
+              {activeTab === 'settings' && (
+                <AnalyticsSettings />
+              )}
+            </>
           )}
         </div>
       </div>

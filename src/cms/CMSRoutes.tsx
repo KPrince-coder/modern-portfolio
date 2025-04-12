@@ -37,6 +37,7 @@ const CMSRoutes: React.FC = () => {
       <Route path="media" element={<CMSLayout><MediaPage /></CMSLayout>} />
       <Route path="ai" element={<CMSLayout><AIPage /></CMSLayout>} />
       <Route path="analytics" element={<CMSLayout><AnalyticsPage /></CMSLayout>} />
+      <Route path="analytics/blog/:postId" element={<CMSLayout><AnalyticsPage /></CMSLayout>} />
       <Route path="settings" element={<CMSLayout><SettingsPage /></CMSLayout>} />
       <Route path="users" element={<CMSLayout><UsersPage /></CMSLayout>} />
 
