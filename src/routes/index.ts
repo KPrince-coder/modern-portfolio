@@ -1,4 +1,4 @@
-import { lazy } from 'react';
+import { JSX, lazy } from 'react';
 
 // Lazy-loaded page components
 const HomePage = lazy(() => import('../pages/HomePage'));
