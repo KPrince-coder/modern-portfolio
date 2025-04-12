@@ -78,15 +78,15 @@ async function generateCompletion(
   request: GroqCompletionRequest
 ): Promise<GroqCompletionResponse> {
   // In development mode, use a mock response if no API key is available
-  if (process.env.NODE_ENV === 'development' && !process.env.NEXT_PUBLIC_GROQ_API_KEY) {
-    console.warn('GROQ_API_KEY is not defined. Using mock response in development mode.');
+  if (process.env.NODE_ENV === 'development' && !process.env.VITE_GROQ_API_KEY) {
+    console.warn('VITE_GROQ_API_KEY is not defined. Using mock response in development mode.');
     return mockGroqResponse(request);
   }
 
-  const apiKey = process.env.NEXT_PUBLIC_GROQ_API_KEY;
+  const apiKey = process.env.VITE_GROQ_API_KEY;
 
   if (!apiKey) {
-    throw new Error('GROQ_API_KEY is not defined in environment variables');
+    throw new Error('VITE_GROQ_API_KEY is not defined in environment variables');
   }
 
   const response = await fetch(GROQ_API_URL, {
