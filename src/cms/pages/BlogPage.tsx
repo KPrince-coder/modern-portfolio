@@ -197,7 +197,7 @@ const BlogPage: React.FC = () => {
         .select(`
           *,
           category:category_id(id, name),
-          tags:portfolio.blog_post_tags(tag_id(id, name, slug))
+          tags:blog_post_tags(tag_id(id, name, slug))
         `)
         .eq('id', id)
         .single();
