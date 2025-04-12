@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import { useCMS } from '../CMSProvider';
 import Button from '../../components/ui/Button';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import SaveToBlogButton from '../../components/ui/SaveToBlogButton';
 import { groqAPI, BlogPostPrompt, EmailResponsePrompt } from '../../lib/groq';
 
 type AITask = 'blog' | 'email' | 'seo';
@@ -345,13 +346,21 @@ Complete Guide to ${prompt}: Expert Tips & Best Practices
                           </h3>
                         </div>
                         {result.status === 'success' && result.result && (
-                          <button
-                            type="button"
-                            onClick={() => handleCopyContent(result.result!)}
-                            className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 text-sm"
-                          >
-                            Copy
-                          </button>
+                          <div className="flex space-x-2">
+                            <button
+                              type="button"
+                              onClick={() => handleCopyContent(result.result!)}
+                              className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 text-sm"
+                            >
+                              Copy
+                            </button>
+                            {result.task === 'blog' && (
+                              <SaveToBlogButton
+                                content={result.result}
+                                className="ml-2 py-1 px-2 text-xs"
+                              />
+                            )}
+                          </div>
                         )}
                       </div>
 

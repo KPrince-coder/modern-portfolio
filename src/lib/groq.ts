@@ -189,13 +189,24 @@ export const groqAPI = {
       - Include the keywords: ${prompt.keywords.join(', ')}
       - Write approximately ${wordCount} words
       - Format the content in Markdown
-      - Use the title: ${prompt.title}
+      - Create a compelling title if none is provided
       - Include an introduction, several sections with subheadings (H2, H3), and a conclusion
       - Add relevant examples, statistics, or case studies where appropriate
+      - Include code blocks with proper syntax highlighting where relevant (use triple backticks with language specification)
+      - Suggest image placements with descriptive alt text in the format: ![alt text](image_placeholder_N)
+      - Include at least one YouTube video embed suggestion where relevant in the format: <div class="video-container"><iframe src="https://www.youtube.com/embed/VIDEO_ID" frameborder="0" allowfullscreen></iframe></div>
+      - Add a table if data presentation would be helpful (use markdown table format)
+      - Include blockquotes for important points or testimonials
       - Ensure the content is original, informative, and valuable to readers
       - Include a call-to-action at the end
+      - End with a list of 5-7 relevant tags for the blog post
+      - Add a 2-3 sentence summary of the blog post at the very end, prefixed with "SUMMARY:"
+      - Add SEO metadata at the very end in this format:
+        META_TITLE: [SEO-optimized title]
+        META_DESCRIPTION: [Compelling meta description under 160 characters]
+        META_KEYWORDS: [comma-separated keywords]
 
-      The blog post should be ready to publish without requiring additional editing.`;
+      The blog post should be ready to publish with minimal editing.`;
 
       const userPrompt = `Please write a blog post about: ${prompt.topic}`;
 

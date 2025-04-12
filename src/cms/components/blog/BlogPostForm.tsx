@@ -7,6 +7,7 @@ import Button from '../../../components/ui/Button';
 import LoadingSpinner from '../../../components/ui/LoadingSpinner';
 import AutosaveNotification from '../../../components/ui/AutosaveNotification';
 import AutosaveIndicator from '../../../components/ui/AutosaveIndicator';
+import AIGeneratedBadge from '../../../components/ui/AIGeneratedBadge';
 import BlogPostBasicInfo from './BlogPostBasicInfo';
 import BlogPostContent from './BlogPostContent';
 import BlogPostSEO from './BlogPostSEO';
@@ -151,9 +152,55 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
     formInitializedRef.current = true;
   }, [post, getFormKey]);
 
-  // Initialize form with existing data if editing
+  // Initialize form with existing data if editing or with AI-generated content
   useEffect(() => {
-    if (post) {
+    // Check for AI-generated content in sessionStorage
+    const aiGeneratedData = sessionStorage.getItem('ai_generated_blog_data');
+
+    if (aiGeneratedData) {
+      try {
+        const parsedData = JSON.parse(aiGeneratedData);
+        console.log('Loading AI-generated blog data:', parsedData);
+
+        // Prepare form data from AI-generated content
+        const newFormData = {
+          ...formData,
+          title: parsedData.title || '',
+          slug: generateSlug(parsedData.title || ''),
+          summary: parsedData.summary || '',
+          content: parsedData.content || '',
+          meta_title: parsedData.metaTitle || '',
+          meta_description: parsedData.metaDescription || '',
+          meta_keywords: parsedData.metaKeywords || '',
+          ai_generated: true,
+          reading_time_minutes: calculateReadingTime(parsedData.content || ''),
+        };
+
+        setFormData(newFormData);
+
+        // Find matching tags or create new ones
+        if (parsedData.tags && parsedData.tags.length > 0) {
+          const matchingTags = tags.filter(tag =>
+            parsedData.tags.some((aiTag: string) =>
+              tag.name.toLowerCase() === aiTag.toLowerCase()
+            )
+          );
+
+          if (matchingTags.length > 0) {
+            setSelectedTags(matchingTags.map(tag => tag.id));
+          }
+        }
+
+        // Set active tab to content to show the generated content
+        setActiveTab('content');
+
+        // Clear the sessionStorage to prevent reloading on refresh
+        sessionStorage.removeItem('ai_generated_blog_data');
+      } catch (error) {
+        console.error('Error parsing AI-generated blog data:', error);
+      }
+    } else if (post) {
+      // If no AI data but we have a post, load the post data
       setFormData({
         id: post.id,
         title: post.title || '',
@@ -178,7 +225,7 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
         setSelectedTags(post.tags.map(tag => tag.id));
       }
     }
-  }, [post]);
+  }, [post, tags, generateSlug, formData, setActiveTab]);
 
   // Setup autosave
   useEffect(() => {
@@ -336,14 +383,14 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
   });
 
   // Generate slug from title
-  const generateSlug = (title: string): string => {
+  const generateSlug = useCallback((title: string): string => {
     return title
       .toLowerCase()
       .replace(/[^\w\s-]/g, '') // Remove special characters
       .replace(/\s+/g, '-') // Replace spaces with hyphens
       .replace(/-+/g, '-') // Replace multiple hyphens with a single hyphen
       .trim();
-  };
+  }, []);
 
   // Handle title change and auto-generate slug if empty
   const handleTitleChange = (title: string) => {
@@ -537,9 +584,14 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
       className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden"
     >
       <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-        <h2 className="text-lg font-medium text-gray-900 dark:text-white">
-          {post ? 'Edit Blog Post' : 'Create New Blog Post'}
-        </h2>
+        <div className="flex items-center">
+          <h2 className="text-lg font-medium text-gray-900 dark:text-white">
+            {post ? 'Edit Blog Post' : 'Create New Blog Post'}
+          </h2>
+          {formData.ai_generated && (
+            <AIGeneratedBadge className="ml-3" />
+          )}
+        </div>
         <Button
           variant="secondary"
           onClick={handleCancel}
@@ -570,7 +622,12 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
                 : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
             }`}
           >
-            Content
+            <div className="flex items-center">
+              Content
+              {formData.ai_generated && (
+                <AIGeneratedBadge className="ml-2" size="sm" />
+              )}
+            </div>
           </button>
           <button
             type="button"
