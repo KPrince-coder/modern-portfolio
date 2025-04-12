@@ -6,6 +6,7 @@ import { supabase } from '../../../lib/supabase';
 import Button from '../../../components/ui/Button';
 import LoadingSpinner from '../../../components/ui/LoadingSpinner';
 import AutosaveNotification from '../../../components/ui/AutosaveNotification';
+import AutosaveIndicator from '../../../components/ui/AutosaveIndicator';
 import BlogPostBasicInfo from './BlogPostBasicInfo';
 import BlogPostContent from './BlogPostContent';
 import BlogPostSEO from './BlogPostSEO';
@@ -14,7 +15,6 @@ import {
   saveToLocalStorage,
   loadFromLocalStorage,
   clearLocalStorage,
-  setupAutosave,
   formatTimestamp
 } from '../../../utils/autosave';
 
@@ -105,6 +105,8 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
   // Autosave states
   const [showRecoveryNotification, setShowRecoveryNotification] = useState(false);
   const [autosaveTimestamp, setAutosaveTimestamp] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState<string | null>(null);
   const autosaveIntervalRef = useRef<number | null>(null);
   const formInitializedRef = useRef(false);
 
@@ -168,10 +170,23 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
 
     // Setup autosave interval
     const intervalId = window.setInterval(() => {
+      // Show saving indicator
+      setIsSaving(true);
+
+      // Save to localStorage
       saveToLocalStorage(formKey, {
         formData,
         selectedTags,
       });
+
+      // Update last saved time and hide indicator after a delay
+      const now = new Date().toISOString();
+      setLastSaved(now);
+
+      // Hide the saving indicator after 1 second
+      setTimeout(() => {
+        setIsSaving(false);
+      }, 1000);
     }, 5000); // Save every 5 seconds
 
     // Store interval ID for cleanup
@@ -541,7 +556,9 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
           )}
         </div>
 
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 flex justify-end space-x-3">
+        <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 flex justify-between items-center">
+          <AutosaveIndicator isSaving={isSaving} lastSaved={lastSaved} />
+          <div className="flex space-x-3">
           <Button
             type="button"
             variant="secondary"
@@ -556,6 +573,7 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
           >
             {post ? 'Update Post' : 'Create Post'}
           </Button>
+          </div>
         </div>
       </form>
 
