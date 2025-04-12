@@ -10,6 +10,7 @@ interface BlogPreviewModalProps {
   content: string;
   isOpen: boolean;
   onClose: () => void;
+  categories?: Array<{ id: string; name: string }>;
 }
 
 /**
@@ -19,21 +20,22 @@ const BlogPreviewModal: React.FC<BlogPreviewModalProps> = ({
   content,
   isOpen,
   onClose,
+  categories = [],
 }) => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'preview' | 'metadata'>('preview');
-  
+
   // Extract blog data from content
-  const blogData: ExtractedBlogData = extractBlogData(content);
-  
+  const blogData: ExtractedBlogData = extractBlogData(content, categories);
+
   const handleSaveToBlog = () => {
     try {
       // Store the extracted data in sessionStorage for the blog form to use
       sessionStorage.setItem('ai_generated_blog_data', JSON.stringify(blogData));
-      
+
       // Close the modal
       onClose();
-      
+
       // Navigate to the blog post creation form
       navigate('/admin/blog/new');
     } catch (error) {
@@ -41,10 +43,10 @@ const BlogPreviewModal: React.FC<BlogPreviewModalProps> = ({
       alert('There was an error processing the blog content. Please try again.');
     }
   };
-  
+
   // If the modal is not open, don't render anything
   if (!isOpen) return null;
-  
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -80,7 +82,7 @@ const BlogPreviewModal: React.FC<BlogPreviewModalProps> = ({
                 </svg>
               </button>
             </div>
-            
+
             <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
               <div className="flex space-x-4">
                 <button
@@ -107,7 +109,7 @@ const BlogPreviewModal: React.FC<BlogPreviewModalProps> = ({
                 </button>
               </div>
             </div>
-            
+
             <div className="overflow-y-auto p-6" style={{ maxHeight: 'calc(90vh - 200px)' }}>
               {activeTab === 'preview' && (
                 <div>
@@ -115,24 +117,24 @@ const BlogPreviewModal: React.FC<BlogPreviewModalProps> = ({
                     <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
                       {blogData.title}
                     </h1>
-                    
+
                     {blogData.featuredImageUrl && (
                       <div className="mb-6 rounded-lg overflow-hidden">
-                        <img 
-                          src={blogData.featuredImageUrl} 
+                        <img
+                          src={blogData.featuredImageUrl}
                           alt={`Featured image for ${blogData.title}`}
                           className="w-full h-auto object-cover"
                         />
                       </div>
                     )}
-                    
+
                     <div className="text-gray-500 dark:text-gray-400 mb-2">
                       {blogData.summary}
                     </div>
-                    
+
                     <div className="flex flex-wrap gap-2 mb-6">
                       {blogData.tags.map((tag, index) => (
-                        <span 
+                        <span
                           key={index}
                           className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300"
                         >
@@ -141,7 +143,7 @@ const BlogPreviewModal: React.FC<BlogPreviewModalProps> = ({
                       ))}
                     </div>
                   </div>
-                  
+
                   <div className="prose dark:prose-invert max-w-none">
                     <ReactMarkdown>
                       {blogData.content}
@@ -149,7 +151,7 @@ const BlogPreviewModal: React.FC<BlogPreviewModalProps> = ({
                   </div>
                 </div>
               )}
-              
+
               {activeTab === 'metadata' && (
                 <div className="space-y-6">
                   <div>
@@ -160,7 +162,7 @@ const BlogPreviewModal: React.FC<BlogPreviewModalProps> = ({
                       {blogData.metaTitle}
                     </div>
                   </div>
-                  
+
                   <div>
                     <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                       Meta Description
@@ -169,7 +171,7 @@ const BlogPreviewModal: React.FC<BlogPreviewModalProps> = ({
                       {blogData.metaDescription}
                     </div>
                   </div>
-                  
+
                   <div>
                     <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                       Keywords
@@ -178,14 +180,14 @@ const BlogPreviewModal: React.FC<BlogPreviewModalProps> = ({
                       {blogData.metaKeywords}
                     </div>
                   </div>
-                  
+
                   <div>
                     <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                       Tags
                     </h3>
                     <div className="flex flex-wrap gap-2">
                       {blogData.tags.map((tag, index) => (
-                        <span 
+                        <span
                           key={index}
                           className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300"
                         >
@@ -194,15 +196,15 @@ const BlogPreviewModal: React.FC<BlogPreviewModalProps> = ({
                       ))}
                     </div>
                   </div>
-                  
+
                   <div>
                     <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                       Featured Image
                     </h3>
                     {blogData.featuredImageUrl ? (
                       <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-md">
-                        <img 
-                          src={blogData.featuredImageUrl} 
+                        <img
+                          src={blogData.featuredImageUrl}
                           alt={`Featured image for ${blogData.title}`}
                           className="w-full h-auto max-h-48 object-cover rounded"
                         />
@@ -213,7 +215,7 @@ const BlogPreviewModal: React.FC<BlogPreviewModalProps> = ({
                       </div>
                     )}
                   </div>
-                  
+
                   <div>
                     <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                       Suggested Images
@@ -237,7 +239,7 @@ const BlogPreviewModal: React.FC<BlogPreviewModalProps> = ({
                       </div>
                     )}
                   </div>
-                  
+
                   <div>
                     <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                       YouTube Embeds
@@ -259,7 +261,7 @@ const BlogPreviewModal: React.FC<BlogPreviewModalProps> = ({
                 </div>
               )}
             </div>
-            
+
             <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 flex justify-end space-x-3">
               <Button
                 variant="secondary"

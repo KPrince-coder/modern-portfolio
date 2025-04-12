@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { supabase } from '../../lib/supabase';
 import BlogPreviewModal from './BlogPreviewModal';
 
 interface SaveToBlogButtonProps {
@@ -17,6 +18,30 @@ const SaveToBlogButton: React.FC<SaveToBlogButtonProps> = ({
   className = '',
 }) => {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
+
+  // Fetch categories on component mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('blog_categories')
+          .select('id, name')
+          .order('name');
+
+        if (error) {
+          console.error('Error fetching categories:', error);
+          return;
+        }
+
+        setCategories(data || []);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   const handleOpenPreview = () => {
     // Call the optional onSave callback
@@ -62,6 +87,7 @@ const SaveToBlogButton: React.FC<SaveToBlogButtonProps> = ({
         content={content}
         isOpen={isPreviewOpen}
         onClose={handleClosePreview}
+        categories={categories}
       />
     </>
   );

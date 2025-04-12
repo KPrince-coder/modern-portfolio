@@ -170,6 +170,7 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
           summary: parsedData.summary || '',
           content: parsedData.content || '',
           featured_image_url: parsedData.featuredImageUrl || '',
+          category_id: parsedData.suggestedCategory || '',
           meta_title: parsedData.metaTitle || '',
           meta_description: parsedData.metaDescription || '',
           meta_keywords: parsedData.metaKeywords || '',

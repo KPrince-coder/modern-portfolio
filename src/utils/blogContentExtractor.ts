@@ -16,6 +16,7 @@ export interface ExtractedBlogData {
   }>;
   youtubeEmbeds: string[];
   featuredImageUrl?: string;
+  suggestedCategory?: string;
 }
 
 /**
@@ -151,11 +152,92 @@ export const generateFeaturedImageUrl = (title: string, keywords: string): strin
 };
 
 /**
+ * Suggest a category based on the content and tags
+ * @param content Blog content
+ * @param tags Blog tags
+ * @param categories Available categories
+ * @returns Suggested category ID or undefined
+ */
+export const suggestCategory = (
+  content: string,
+  tags: string[],
+  categories: Array<{ id: string; name: string }>
+): string | undefined => {
+  if (!categories || categories.length === 0) return undefined;
+
+  // Common category keywords mapping
+  const categoryKeywords: Record<string, string[]> = {
+    'technology': ['tech', 'technology', 'programming', 'code', 'software', 'hardware', 'developer', 'development', 'app', 'application'],
+    'design': ['design', 'ui', 'ux', 'user interface', 'user experience', 'graphic', 'visual', 'creative'],
+    'business': ['business', 'startup', 'entrepreneur', 'marketing', 'sales', 'finance', 'management', 'leadership'],
+    'lifestyle': ['lifestyle', 'life', 'health', 'fitness', 'wellness', 'travel', 'food', 'fashion'],
+    'education': ['education', 'learning', 'teaching', 'school', 'university', 'college', 'course', 'tutorial'],
+    'news': ['news', 'current events', 'update', 'announcement'],
+  };
+
+  // Score each category based on content and tags
+  const scores: Record<string, number> = {};
+
+  // Initialize scores
+  categories.forEach(category => {
+    scores[category.id] = 0;
+  });
+
+  // Score based on category keywords in content
+  Object.entries(categoryKeywords).forEach(([categoryName, keywords]) => {
+    // Find matching categories by name (case insensitive)
+    const matchingCategories = categories.filter(category =>
+      category.name.toLowerCase().includes(categoryName.toLowerCase())
+    );
+
+    if (matchingCategories.length > 0) {
+      // Check if any keywords appear in the content
+      keywords.forEach(keyword => {
+        const regex = new RegExp(`\\b${keyword}\\b`, 'gi');
+        const matches = content.match(regex);
+        if (matches) {
+          matchingCategories.forEach(category => {
+            scores[category.id] += matches.length;
+          });
+        }
+      });
+    }
+  });
+
+  // Score based on tags matching category names
+  tags.forEach(tag => {
+    categories.forEach(category => {
+      if (category.name.toLowerCase().includes(tag.toLowerCase()) ||
+          tag.toLowerCase().includes(category.name.toLowerCase())) {
+        scores[category.id] += 5; // Higher weight for tag matches
+      }
+    });
+  });
+
+  // Find the category with the highest score
+  let highestScore = 0;
+  let suggestedCategoryId: string | undefined = undefined;
+
+  Object.entries(scores).forEach(([categoryId, score]) => {
+    if (score > highestScore) {
+      highestScore = score;
+      suggestedCategoryId = categoryId;
+    }
+  });
+
+  return suggestedCategoryId;
+};
+
+/**
  * Extract all blog data from AI-generated content
  * @param content Markdown content
+ * @param categories Optional array of available categories
  * @returns Structured blog data
  */
-export const extractBlogData = (content: string): ExtractedBlogData => {
+export const extractBlogData = (
+  content: string,
+  categories?: Array<{ id: string; name: string }>
+): ExtractedBlogData => {
   const title = extractTitle(content);
   const summary = extractSummary(content);
   const metaTitle = extractMetaTitle(content) || title;
@@ -169,6 +251,9 @@ export const extractBlogData = (content: string): ExtractedBlogData => {
   // Generate a featured image URL based on the content
   const featuredImageUrl = generateFeaturedImageUrl(title, metaKeywords);
 
+  // Suggest a category if categories are provided
+  const suggestedCategory = categories ? suggestCategory(content, tags, categories) : undefined;
+
   return {
     title,
     content: cleanedContent,
@@ -180,6 +265,7 @@ export const extractBlogData = (content: string): ExtractedBlogData => {
     suggestedImages,
     youtubeEmbeds,
     featuredImageUrl,
+    suggestedCategory,
   };
 };
 
