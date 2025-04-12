@@ -23,15 +23,27 @@ const BlogTableOfContents: React.FC<BlogTableOfContentsProps> = ({ contentRef })
     const headings = contentRef.current.querySelectorAll('h2, h3, h4');
     const items: TocItem[] = [];
 
+    // Keep track of heading texts to ensure unique IDs
+    const headingCounts: Record<string, number> = {};
+
     headings.forEach((heading) => {
+      const headingText = heading.textContent ?? '';
+      const baseId = headingText.toLowerCase().replace(/\s+/g, '-');
+
+      // Count occurrences of this heading text
+      headingCounts[baseId] = (headingCounts[baseId] || 0) + 1;
+
+      // Create a unique ID by appending a counter if this is a duplicate
+      const uniqueId = headingCounts[baseId] > 1 ? `${baseId}-${headingCounts[baseId]}` : baseId;
+
       // Make sure heading has an id
       if (!heading.id) {
-        heading.id = heading.textContent?.toLowerCase().replace(/\s+/g, '-') ?? '';
+        heading.id = uniqueId;
       }
 
       items.push({
         id: heading.id,
-        text: heading.textContent ?? '',
+        text: headingText,
         level: parseInt(heading.tagName.substring(1), 10),
       });
     });
