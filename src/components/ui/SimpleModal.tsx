@@ -118,7 +118,7 @@ const SimpleModal: React.FC<SimpleModalProps> = ({
         >
           &#8203;
         </span>
-        
+
         {/* Modal content */}
         <AnimatePresence>
           {isOpen && (
@@ -139,7 +139,7 @@ const SimpleModal: React.FC<SimpleModalProps> = ({
               >
                 {title}
               </h3>
-              
+
               <div className="mt-4">
                 {children}
               </div>
@@ -160,7 +160,7 @@ const SimpleModal: React.FC<SimpleModalProps> = ({
                       variant={primaryAction.variant || 'primary'}
                       onClick={primaryAction.onClick}
                       isLoading={primaryAction.isLoading}
-                      ref={!secondaryAction && initialFocusRef}
+                      ref={secondaryAction ? undefined : initialFocusRef}
                     >
                       {primaryAction.label}
                     </Button>
