@@ -1,6 +1,8 @@
 /**
  * Groq API integration for AI features
  */
+import { supabase } from './supabase';
+import { v4 as uuidv4 } from 'uuid';
 
 // Define the API base URL and models
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
@@ -233,9 +235,69 @@ export const groqAPI = {
         max_tokens: 4000,
       });
 
+      const responseText = completion.choices[0].message.content;
+
+      // Save the generation to the database
+      try {
+        // First, get or create the prompt ID
+        const { data: promptData, error: promptError } = await supabase
+          .from('ai_prompts')
+          .select('id')
+          .eq('prompt_type', 'blog_post')
+          .single();
+
+        let promptId;
+        if (promptError || !promptData) {
+          // Create a new prompt type
+          const { data: newPrompt, error: createError } = await supabase
+            .from('ai_prompts')
+            .insert({
+              prompt_type: 'blog_post',
+              description: 'Blog post generation',
+              created_at: new Date().toISOString(),
+            })
+            .select('id')
+            .single();
+
+          if (createError) {
+            console.error('Error creating prompt:', createError);
+          } else {
+            promptId = newPrompt.id;
+          }
+        } else {
+          promptId = promptData.id;
+        }
+
+        // Save the generation
+        if (promptId) {
+          await supabase
+            .from('ai_generations')
+            .insert({
+              prompt_id: promptId,
+              prompt_type: 'blog_post',
+              prompt_text: userPrompt,
+              response: responseText,
+              model: GROQ_MODELS.LLaMA3_70B,
+              parameters: JSON.stringify({
+                title: prompt.title,
+                topic: prompt.topic,
+                keywords: prompt.keywords,
+                tone: prompt.tone,
+                length: prompt.length,
+              }),
+              tokens_used: completion.usage.total_tokens,
+              generation_time_ms: 0, // We don't have this info from the API
+              created_at: new Date().toISOString(),
+            });
+        }
+      } catch (dbError) {
+        console.error('Error saving generation to database:', dbError);
+        // Continue even if saving to DB fails
+      }
+
       return {
         status: 'success',
-        text: completion.choices[0].message.content,
+        text: responseText,
         usage: completion.usage,
       };
     } catch (error) {

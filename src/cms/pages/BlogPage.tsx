@@ -13,6 +13,7 @@ import BlogTagsList from '../components/blog/BlogTagsList';
 import BlogCommentsList from '../components/blog/BlogCommentsList';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import Button from '../../components/ui/Button';
+import ConfirmationDialog from '../../components/ui/ConfirmationDialog';
 
 // Types
 interface BlogPost {
@@ -79,6 +80,8 @@ const BlogPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<'all' | 'draft' | 'published' | 'archived'>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [postToDelete, setPostToDelete] = useState<string | null>(null);
 
   // Redirect to form view if ID is provided or if we're on the 'new' route
   useEffect(() => {
@@ -259,14 +262,28 @@ const BlogPage: React.FC = () => {
   });
 
   // Handle post deletion
-  const handleDeletePost = async (postId: string) => {
-    if (window.confirm('Are you sure you want to delete this blog post? This action cannot be undone.')) {
+  const handleDeletePost = (postId: string) => {
+    setPostToDelete(postId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  // Confirm post deletion
+  const confirmDeletePost = async () => {
+    if (postToDelete) {
       try {
-        await deletePostMutation.mutateAsync(postId);
+        await deletePostMutation.mutateAsync(postToDelete);
+        setIsDeleteDialogOpen(false);
+        setPostToDelete(null);
       } catch (error) {
         console.error('Error deleting blog post:', error);
       }
     }
+  };
+
+  // Cancel post deletion
+  const cancelDeletePost = () => {
+    setIsDeleteDialogOpen(false);
+    setPostToDelete(null);
   };
 
   // Handle view changes
@@ -413,6 +430,23 @@ const BlogPage: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={isDeleteDialogOpen}
+        title="Delete Blog Post"
+        message="Are you sure you want to delete this blog post? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        confirmVariant="primary"
+        onConfirm={confirmDeletePost}
+        onCancel={cancelDeletePost}
+        icon={
+          <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        }
+      />
     </div>
   );
 };
