@@ -282,7 +282,7 @@ const BlogPostsList: React.FC<BlogPostsListProps> = ({
                   </div>
 
                   {/* Actions */}
-                  <div className="mt-4 flex flex-wrap items-center justify-between">
+                  <div className="mt-4 flex flex-wrap items-center justify-between gap-y-3">
                     {/* Left-aligned actions: View Post and Comments */}
                     <div className="flex items-center space-x-4">
                       <a
@@ -311,7 +311,7 @@ const BlogPostsList: React.FC<BlogPostsListProps> = ({
                     </div>
 
                     {/* Right-aligned actions: Edit and Delete */}
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2 ml-auto sm:ml-0 mt-2 sm:mt-0">
                       <Button
                         variant="secondary"
                         size="sm"
