@@ -67,7 +67,8 @@ const AIGenerationHistory: React.FC<AIGenerationHistoryProps> = ({
           tokens_used: item.tokens_used,
           generation_time_ms: item.generation_time_ms,
           user_id: item.user_id,
-          prompt_id: item.prompt_id
+          prompt_id: item.prompt_id,
+          prompt_type: item.prompt_type
         })) || [];
 
         setGenerations(transformedData);
