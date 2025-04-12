@@ -25,24 +25,39 @@ const BlogTableOfContents: React.FC<BlogTableOfContentsProps> = ({ contentRef })
 
     // Keep track of heading texts to ensure unique IDs
     const headingCounts: Record<string, number> = {};
+    const usedIds = new Set<string>();
 
-    headings.forEach((heading) => {
+    headings.forEach((heading, index) => {
       const headingText = heading.textContent ?? '';
-      const baseId = headingText.toLowerCase().replace(/\s+/g, '-');
+      // Create a base ID from the text or use a fallback with index if text is empty
+      let baseId = headingText.toLowerCase().replace(/\s+/g, '-');
+      if (!baseId) baseId = `heading-${index}`;
 
       // Count occurrences of this heading text
       headingCounts[baseId] = (headingCounts[baseId] || 0) + 1;
 
       // Create a unique ID by appending a counter if this is a duplicate
-      const uniqueId = headingCounts[baseId] > 1 ? `${baseId}-${headingCounts[baseId]}` : baseId;
+      let uniqueId = headingCounts[baseId] > 1 ? `${baseId}-${headingCounts[baseId]}` : baseId;
+
+      // If the ID is still not unique (e.g., empty strings or special characters only), add index
+      if (usedIds.has(uniqueId) || !uniqueId) {
+        uniqueId = `${baseId}-${index}`;
+      }
+
+      // Track used IDs
+      usedIds.add(uniqueId);
 
       // Make sure heading has an id
       if (!heading.id) {
         heading.id = uniqueId;
+      } else {
+        // If heading already has an ID, make sure we're using that exact ID
+        uniqueId = heading.id;
+        usedIds.add(uniqueId);
       }
 
       items.push({
-        id: heading.id,
+        id: uniqueId,
         text: headingText,
         level: parseInt(heading.tagName.substring(1), 10),
       });
