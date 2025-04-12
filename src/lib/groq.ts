@@ -77,33 +77,36 @@ interface GroqCompletionResponse {
 async function generateCompletion(
   request: GroqCompletionRequest
 ): Promise<GroqCompletionResponse> {
-  // In development mode, use a mock response if no API key is available
-  if (process.env.NODE_ENV === 'development' && !process.env.VITE_GROQ_API_KEY) {
-    console.warn('VITE_GROQ_API_KEY is not defined. Using mock response in development mode.');
+  try {
+    // Get the API key from the environment variables
+    // For Vite projects, use import.meta.env
+    const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+
+    if (!apiKey) {
+      console.warn('VITE_GROQ_API_KEY is not defined. Using mock response.');
+      return mockGroqResponse(request);
+    }
+
+    const response = await fetch(GROQ_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify(request),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Groq API error: ${response.status} ${errorText}`);
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error('Error calling Groq API:', error);
+    // Fall back to mock response
     return mockGroqResponse(request);
   }
-
-  const apiKey = process.env.VITE_GROQ_API_KEY;
-
-  if (!apiKey) {
-    throw new Error('VITE_GROQ_API_KEY is not defined in environment variables');
-  }
-
-  const response = await fetch(GROQ_API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify(request),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Groq API error: ${response.status} ${errorText}`);
-  }
-
-  return response.json();
 }
 
 /**
