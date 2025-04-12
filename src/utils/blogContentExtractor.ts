@@ -15,6 +15,7 @@ export interface ExtractedBlogData {
     placeholder: string;
   }>;
   youtubeEmbeds: string[];
+  featuredImageUrl?: string;
 }
 
 /**
@@ -39,7 +40,7 @@ export const extractSummary = (content: string): string => {
   if (summaryMatch) {
     return summaryMatch[1].trim();
   }
-  
+
   // If no explicit summary, use the first paragraph
   const firstParagraphMatch = content.match(/^(?:(?!#).+)\n\n(.+?)(?:\n\n|$)/s);
   return firstParagraphMatch ? firstParagraphMatch[1].trim() : '';
@@ -83,18 +84,18 @@ export const extractMetaKeywords = (content: string): string => {
 export const extractTags = (content: string): string[] => {
   // Look for tags at the end of the content, usually in a list
   const tagsSection = content.match(/(?:Tags:|Related topics:|Keywords:)\s*\n(?:\s*[-*]\s*([^\n]+)\n)+/i);
-  
+
   if (tagsSection) {
     const tagMatches = tagsSection[0].matchAll(/[-*]\s*([^\n]+)/g);
     return Array.from(tagMatches, match => match[1].trim());
   }
-  
+
   // If no explicit tags section, extract from META_KEYWORDS
   const keywords = extractMetaKeywords(content);
   if (keywords) {
     return keywords.split(',').map(keyword => keyword.trim());
   }
-  
+
   return [];
 };
 
@@ -136,6 +137,20 @@ export const cleanupContent = (content: string): string => {
 };
 
 /**
+ * Generate a placeholder image URL based on the blog title and keywords
+ * @param title Blog title
+ * @param keywords Keywords for the blog
+ * @returns URL for a placeholder image
+ */
+export const generateFeaturedImageUrl = (title: string, keywords: string): string => {
+  // Use a service like Unsplash Source to generate a relevant image
+  // Format: https://source.unsplash.com/1200x630/?keyword1,keyword2
+  const searchTerms = keywords ? keywords.split(',').slice(0, 3).join(',') : title;
+  const encodedTerms = encodeURIComponent(searchTerms);
+  return `https://source.unsplash.com/1200x630/?${encodedTerms}`;
+};
+
+/**
  * Extract all blog data from AI-generated content
  * @param content Markdown content
  * @returns Structured blog data
@@ -150,7 +165,10 @@ export const extractBlogData = (content: string): ExtractedBlogData => {
   const suggestedImages = extractSuggestedImages(content);
   const youtubeEmbeds = extractYoutubeEmbeds(content);
   const cleanedContent = cleanupContent(content);
-  
+
+  // Generate a featured image URL based on the content
+  const featuredImageUrl = generateFeaturedImageUrl(title, metaKeywords);
+
   return {
     title,
     content: cleanedContent,
@@ -161,6 +179,7 @@ export const extractBlogData = (content: string): ExtractedBlogData => {
     tags,
     suggestedImages,
     youtubeEmbeds,
+    featuredImageUrl,
   };
 };
 
