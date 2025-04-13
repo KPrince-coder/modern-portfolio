@@ -9,7 +9,7 @@ interface Heading {
 }
 
 interface TableOfContentsProps {
-  contentRef: React.RefObject<HTMLElement>;
+  contentRef: React.RefObject<HTMLElement | HTMLDivElement | null>;
   className?: string;
 }
 

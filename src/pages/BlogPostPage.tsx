@@ -5,7 +5,7 @@ import { useTrackBlogReadTime } from '../utils/blogAnalytics';
 import { Helmet } from 'react-helmet-async';
 import BlogLayout from '../layouts/BlogLayout';
 import BlogContent from '../components/blog/BlogContent';
-// BlogComments will be handled by the layout
+import BlogComments from '../components/blog/BlogComments';
 import { format } from 'date-fns';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 
