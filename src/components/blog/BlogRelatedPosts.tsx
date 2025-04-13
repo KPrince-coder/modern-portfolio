@@ -73,9 +73,9 @@ const BlogRelatedPosts: React.FC<BlogRelatedPostsProps> = ({ postId, limit = 3 }
             </div>
             <div>
               <h4 className="font-medium text-gray-900 dark:text-white text-sm line-clamp-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                <Link to={`/blog/${post.slug}`}>
+                <a href={`/blog/${post.slug}`} target="_blank" rel="noopener noreferrer">
                   {post.title}
-                </Link>
+                </a>
               </h4>
               <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
                 {formatDate(post.published_at || post.created_at)}

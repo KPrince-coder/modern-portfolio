@@ -35,7 +35,7 @@ const BlogListItem: React.FC<BlogListItemProps> = ({ post, index }) => {
       transition={{ duration: 0.5, delay: index * 0.05 }}
       className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow mb-6"
     >
-      <Link to={`/blog/${post.slug}`} className="flex flex-col md:flex-row">
+      <a href={`/blog/${post.slug}`} className="flex flex-col md:flex-row" target="_blank" rel="noopener noreferrer">
         <div className="md:w-1/3 lg:w-1/4 bg-gray-200 dark:bg-gray-700 relative">
           {post.featured_image_url ? (
             <img
@@ -91,7 +91,7 @@ const BlogListItem: React.FC<BlogListItemProps> = ({ post, index }) => {
             </span>
           </div>
         </div>
-      </Link>
+      </a>
     </motion.div>
   );
 };

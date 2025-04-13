@@ -35,7 +35,7 @@ const BlogCard: React.FC<BlogCardProps> = ({ post, index }) => {
       transition={{ duration: 0.5, delay: index * 0.1 }}
       className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
     >
-      <Link to={`/blog/${post.slug}`} className="block">
+      <a href={`/blog/${post.slug}`} className="block" target="_blank" rel="noopener noreferrer">
         <div className="aspect-video bg-gray-200 dark:bg-gray-700 relative overflow-hidden">
           {post.featured_image_url ? (
             <img
@@ -94,7 +94,7 @@ const BlogCard: React.FC<BlogCardProps> = ({ post, index }) => {
             </span>
           </div>
         </div>
-      </Link>
+      </a>
     </motion.div>
   );
 };

@@ -1,4 +1,4 @@
-import { Suspense } from 'react';
+import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
@@ -41,6 +41,7 @@ function App() {
 const AppContent = () => {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
+  const isBlogPostRoute = /^\/blog\/[\w-]+$/.test(location.pathname);
 
   return (
     <CMSProvider>
@@ -48,6 +49,12 @@ const AppContent = () => {
         <Suspense fallback={<LoadingSpinner size="lg" text="Loading page..." />}>
           <Routes>
             <Route path="/admin/*" element={<CMSRoutes />} />
+          </Routes>
+        </Suspense>
+      ) : isBlogPostRoute ? (
+        <Suspense fallback={<LoadingSpinner size="lg" text="Loading page..." />}>
+          <Routes>
+            <Route path="/blog/:slug" element={React.createElement(routes.find(r => r.path === '/blog/:slug')?.element || (() => <div>Not found</div>))} />
           </Routes>
         </Suspense>
       ) : (

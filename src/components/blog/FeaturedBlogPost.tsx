@@ -25,7 +25,7 @@ const FeaturedBlogPost: React.FC<FeaturedBlogPostProps> = ({ post }) => {
       className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-md mb-12"
     >
       <div className="relative">
-        <Link to={`/blog/${post.slug}`} className="block">
+        <a href={`/blog/${post.slug}`} className="block" target="_blank" rel="noopener noreferrer">
           <div className="aspect-[21/9] bg-gray-200 dark:bg-gray-700 relative overflow-hidden">
             {post.featured_image_url ? (
               <img
@@ -74,7 +74,7 @@ const FeaturedBlogPost: React.FC<FeaturedBlogPostProps> = ({ post }) => {
               )}
             </div>
           </div>
-        </Link>
+        </a>
       </div>
     </motion.div>
   );
