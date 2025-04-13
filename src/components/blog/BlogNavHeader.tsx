@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiArrowLeft } from 'react-icons/fi';
+import { FiHome } from 'react-icons/fi';
 import BlogThemeToggler from './BlogThemeToggler';
 import ShareWidget from './ShareWidget';
 
@@ -76,13 +76,12 @@ const BlogNavHeader: React.FC<BlogNavHeaderProps> = ({ title, url, imageUrl, sum
       }`}>
         <div className="container mx-auto px-4 md:px-6">
           <div className="flex justify-between items-center">
-            {/* Back button */}
+            {/* Home button */}
             <Link
               to="/blog"
               className="flex items-center text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
             >
-              <FiArrowLeft className="mr-2" />
-              <span className="hidden sm:inline">Back to Blog</span>
+              <FiHome className="w-6 h-6" title="Visit blogs page" aria-label="Visit blogs page" />
             </Link>
 
             {/* Title (visible when scrolled) */}
