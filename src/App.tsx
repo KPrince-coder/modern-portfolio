@@ -7,6 +7,7 @@ import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 import ScrollToTop from './components/utils/ScrollToTop';
+import BlogSuspenseFallback from './components/blog/BlogSuspenseFallback';
 // Theme provider removed
 import { routes } from './routes';
 import CMSRoutes from './cms/CMSRoutes';
@@ -52,7 +53,7 @@ const AppContent = () => {
           </Routes>
         </Suspense>
       ) : isBlogPostRoute ? (
-        <Suspense fallback={<LoadingSpinner size="lg" text="Loading page..." />}>
+        <Suspense fallback={<BlogSuspenseFallback />}>
           <Routes>
             <Route path="/blog/:slug" element={React.createElement(routes.find(r => r.path === '/blog/:slug')?.element || (() => <div>Not found</div>))} />
           </Routes>

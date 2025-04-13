@@ -27,14 +27,36 @@ const BlogNavHeader: React.FC<BlogNavHeaderProps> = ({ title, url, imageUrl, sum
 
   // Handle scroll events for progress bar and header
   useEffect(() => {
+    // Find the blog title element to determine when to show the header title
+    const findTitleElement = () => {
+      // Look for the main h1 title in the blog content
+      const titleElement = document.querySelector('h1.text-3xl.md\\:text-4xl.lg\\:text-5xl.font-bold');
+      return titleElement;
+    };
+
     const handleScroll = () => {
       const scrollTop = window.scrollY;
       const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
       const scrollProgress = scrollTop / scrollHeight;
 
       setProgress(scrollProgress * 100);
-      setIsScrolled(scrollTop > 300); // Show title after scrolling past the main title
+
+      // Get the title element
+      const titleElement = findTitleElement();
+
+      if (titleElement) {
+        // Get the bottom position of the title element plus some extra space
+        const titleBottom = titleElement.getBoundingClientRect().bottom + scrollTop  // + 100;
+        // Show the header title only after scrolling past the main title
+        setIsScrolled(scrollTop > titleBottom);
+      } else {
+        // Fallback if title element not found
+        setIsScrolled(scrollTop > 600);
+      }
     };
+
+    // Initial check
+    handleScroll();
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
