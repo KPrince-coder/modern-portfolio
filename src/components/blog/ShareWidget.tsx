@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiShare2,
@@ -35,6 +35,43 @@ const ShareWidget: React.FC<ShareWidgetProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showMore, setShowMore] = useState(false);
+
+  // Refs for dropdown menus
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const moreDropdownRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const moreButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Handle click outside to close dropdowns
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // Close share dropdown if clicked outside
+      if (isOpen &&
+          dropdownRef.current &&
+          buttonRef.current &&
+          !dropdownRef.current.contains(event.target as Node) &&
+          !buttonRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+
+      // Close more options dropdown if clicked outside
+      if (showMore &&
+          moreDropdownRef.current &&
+          moreButtonRef.current &&
+          !moreDropdownRef.current.contains(event.target as Node) &&
+          !moreButtonRef.current.contains(event.target as Node)) {
+        setShowMore(false);
+      }
+    };
+
+    // Add event listener
+    document.addEventListener('mousedown', handleClickOutside);
+
+    // Clean up
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen, showMore]);
 
   // Encode parameters for sharing
   const encodedUrl = encodeURIComponent(url);
@@ -90,11 +127,12 @@ const ShareWidget: React.FC<ShareWidgetProps> = ({
       <div className={`relative ${className}`}>
         <button
           type="button"
+          ref={buttonRef}
           onClick={() => setIsOpen(!isOpen)}
           className="p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors cursor-pointer"
           aria-label="Share this post"
           aria-haspopup="true"
-          aria-expanded={isOpen}
+          aria-expanded={isOpen ? 'true' : 'false'}
           aria-controls="share-dropdown"
           id="share-button"
           title="Share this post"
@@ -105,6 +143,7 @@ const ShareWidget: React.FC<ShareWidgetProps> = ({
         <AnimatePresence>
           {isOpen && (
             <motion.div
+              ref={dropdownRef}
               initial={{ opacity: 0, y: 10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.95 }}
@@ -226,6 +265,7 @@ const ShareWidget: React.FC<ShareWidgetProps> = ({
           <div className="relative">
             <button
               type="button"
+              ref={moreButtonRef}
               onClick={() => setShowMore(!showMore)}
               className="flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors cursor-pointer"
               aria-expanded={showMore ? 'true' : 'false'}
@@ -238,6 +278,7 @@ const ShareWidget: React.FC<ShareWidgetProps> = ({
             <AnimatePresence>
               {showMore && (
                 <motion.div
+                  ref={moreDropdownRef}
                   initial={{ opacity: 0, y: 10, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 10, scale: 0.95 }}
