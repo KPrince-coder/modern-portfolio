@@ -60,7 +60,8 @@ const SkillForm: React.FC<SkillFormProps> = ({ skill, categories, onCancel, onSu
         level: skill.level || 3,
         type: skill.type || 'technical',
         display_order: skill.display_order || 0,
-        years_experience: skill.years_experience,
+        // Ensure years_experience is undefined, not null
+        years_experience: skill.years_experience === null ? undefined : skill.years_experience,
         is_featured: skill.is_featured || false,
       });
     }
@@ -70,7 +71,7 @@ const SkillForm: React.FC<SkillFormProps> = ({ skill, categories, onCancel, onSu
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    
+
     // Clear error when field is edited
     if (errors[name]) {
       setErrors((prev) => {
@@ -84,9 +85,10 @@ const SkillForm: React.FC<SkillFormProps> = ({ skill, categories, onCancel, onSu
   // Handle number input changes
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    // Convert empty string to undefined, not null
     const numValue = value === '' ? undefined : Number(value);
     setFormData((prev) => ({ ...prev, [name]: numValue }));
-    
+
     // Clear error when field is edited
     if (errors[name]) {
       setErrors((prev) => {
@@ -106,7 +108,7 @@ const SkillForm: React.FC<SkillFormProps> = ({ skill, categories, onCancel, onSu
   // Handle icon selection
   const handleIconSelect = (iconHtml: string) => {
     setFormData((prev) => ({ ...prev, icon: iconHtml }));
-    
+
     // Clear error when icon is selected
     if (errors.icon) {
       setErrors((prev) => {
@@ -120,15 +122,15 @@ const SkillForm: React.FC<SkillFormProps> = ({ skill, categories, onCancel, onSu
   // Validate form
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!formData.name.trim()) {
       newErrors.name = 'Name is required';
     }
-    
+
     if (!formData.description.trim()) {
       newErrors.description = 'Description is required';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -185,11 +187,11 @@ const SkillForm: React.FC<SkillFormProps> = ({ skill, categories, onCancel, onSu
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
-    
+
     try {
       await saveSkillMutation.mutateAsync(formData);
     } catch (error) {
@@ -218,7 +220,7 @@ const SkillForm: React.FC<SkillFormProps> = ({ skill, categories, onCancel, onSu
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-md">
           <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Basic Information</h3>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             {/* Name Field */}
             <div>
@@ -232,8 +234,8 @@ const SkillForm: React.FC<SkillFormProps> = ({ skill, categories, onCancel, onSu
                 value={formData.name}
                 onChange={handleChange}
                 className={`w-full px-4 py-2 rounded-lg border ${
-                  errors.name 
-                    ? 'border-red-500 dark:border-red-500' 
+                  errors.name
+                    ? 'border-red-500 dark:border-red-500'
                     : 'border-gray-300 dark:border-gray-600'
                 } bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400`}
                 placeholder="e.g. React.js"
@@ -242,7 +244,7 @@ const SkillForm: React.FC<SkillFormProps> = ({ skill, categories, onCancel, onSu
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.name}</p>
               )}
             </div>
-            
+
             {/* Type Field */}
             <div>
               <label htmlFor="type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -260,7 +262,7 @@ const SkillForm: React.FC<SkillFormProps> = ({ skill, categories, onCancel, onSu
               </select>
             </div>
           </div>
-          
+
           {/* Description Field */}
           <div className="mb-6">
             <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -273,8 +275,8 @@ const SkillForm: React.FC<SkillFormProps> = ({ skill, categories, onCancel, onSu
               onChange={handleChange}
               rows={3}
               className={`w-full px-4 py-2 rounded-lg border ${
-                errors.description 
-                  ? 'border-red-500 dark:border-red-500' 
+                errors.description
+                  ? 'border-red-500 dark:border-red-500'
                   : 'border-gray-300 dark:border-gray-600'
               } bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400`}
               placeholder="Describe this skill and your proficiency with it"
@@ -283,7 +285,7 @@ const SkillForm: React.FC<SkillFormProps> = ({ skill, categories, onCancel, onSu
               <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.description}</p>
             )}
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             {/* Category Field */}
             <div>
@@ -305,7 +307,7 @@ const SkillForm: React.FC<SkillFormProps> = ({ skill, categories, onCancel, onSu
                 ))}
               </select>
             </div>
-            
+
             {/* Level Field */}
             <div>
               <label htmlFor="level" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -318,17 +320,17 @@ const SkillForm: React.FC<SkillFormProps> = ({ skill, categories, onCancel, onSu
                   name="level"
                   min="1"
                   max="5"
-                  value={formData.level || 3}
+                  value={formData.level === undefined || formData.level === null ? 3 : formData.level}
                   onChange={handleNumberChange}
                   className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer"
                 />
                 <span className="ml-2 text-gray-700 dark:text-gray-300 min-w-[30px] text-center">
-                  {formData.level || 3}
+                  {formData.level === undefined || formData.level === null ? 3 : formData.level}
                 </span>
               </div>
             </div>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             {/* Years Experience Field */}
             <div>
@@ -339,7 +341,7 @@ const SkillForm: React.FC<SkillFormProps> = ({ skill, categories, onCancel, onSu
                 type="number"
                 id="years_experience"
                 name="years_experience"
-                value={formData.years_experience === undefined ? '' : formData.years_experience}
+                value={formData.years_experience === undefined || formData.years_experience === null ? '' : formData.years_experience}
                 onChange={handleNumberChange}
                 min="0"
                 step="0.5"
@@ -347,7 +349,7 @@ const SkillForm: React.FC<SkillFormProps> = ({ skill, categories, onCancel, onSu
                 placeholder="e.g. 3.5"
               />
             </div>
-            
+
             {/* Display Order Field */}
             <div>
               <label htmlFor="display_order" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -368,7 +370,7 @@ const SkillForm: React.FC<SkillFormProps> = ({ skill, categories, onCancel, onSu
               </p>
             </div>
           </div>
-          
+
           {/* Featured Checkbox */}
           <div className="mb-6">
             <div className="flex items-center">
@@ -389,17 +391,17 @@ const SkillForm: React.FC<SkillFormProps> = ({ skill, categories, onCancel, onSu
             </p>
           </div>
         </div>
-        
+
         {/* Icon Selection */}
         <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-md">
           <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Skill Icon</h3>
-          
+
           <IconSelector
             selectedIcon={formData.icon}
             onSelectIcon={handleIconSelect}
           />
         </div>
-        
+
         {/* Form Actions */}
         <div className="flex justify-end space-x-3">
           <Button
