@@ -91,7 +91,7 @@ const ShareWidget: React.FC<ShareWidgetProps> = ({
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className="p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+          className="p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors cursor-pointer"
           aria-label="Share this post"
           aria-haspopup="true"
           aria-expanded={isOpen}
@@ -120,7 +120,8 @@ const ShareWidget: React.FC<ShareWidgetProps> = ({
                   <button
                     key={platform.id}
                     onClick={platform.action}
-                    className="flex items-center w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+                    type="button"
+                    className="flex items-center w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors cursor-pointer"
                   >
                     <platform.icon className="mr-2 w-4 h-4" />
                     {platform.id === 'copy' && copied ? 'Copied!' : platform.name}
@@ -128,8 +129,9 @@ const ShareWidget: React.FC<ShareWidgetProps> = ({
                 ))}
 
                 <button
+                  type="button"
                   onClick={() => setShowMore(!showMore)}
-                  className="flex items-center w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+                  className="flex items-center w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors cursor-pointer"
                 >
                   <FiMoreHorizontal className="mr-2 w-4 h-4" />
                   {showMore ? 'Less options' : 'More options'}
@@ -139,9 +141,10 @@ const ShareWidget: React.FC<ShareWidgetProps> = ({
                   <div className="pt-1 border-t border-gray-200 dark:border-gray-700">
                     {morePlatforms.map((platform) => (
                       <button
+                        type="button"
                         key={platform.id}
                         onClick={platform.action}
-                        className="flex items-center w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+                        className="flex items-center w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors cursor-pointer"
                       >
                         <platform.icon className="mr-2 w-4 h-4" />
                         {platform.name}
@@ -169,8 +172,9 @@ const ShareWidget: React.FC<ShareWidgetProps> = ({
         <div className="flex flex-wrap gap-2">
           {/* Copy link button */}
           <button
+            type="button"
             onClick={copyToClipboard}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors cursor-pointer"
             aria-label="Copy link"
           >
             <FiCopy className="w-5 h-5" />
@@ -179,8 +183,9 @@ const ShareWidget: React.FC<ShareWidgetProps> = ({
 
           {/* Social share buttons */}
           <button
+            type="button"
             onClick={() => shareTo('twitter')}
-            className="flex items-center gap-2 px-4 py-2 bg-[#1DA1F2] text-white rounded-lg hover:bg-opacity-90 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-[#1DA1F2] text-white rounded-lg hover:bg-opacity-90 transition-colors cursor-pointer"
             aria-label="Share on Twitter"
           >
             <FiTwitter className="w-5 h-5" />
@@ -188,8 +193,9 @@ const ShareWidget: React.FC<ShareWidgetProps> = ({
           </button>
 
           <button
+            type="button"
             onClick={() => shareTo('facebook')}
-            className="flex items-center gap-2 px-4 py-2 bg-[#4267B2] text-white rounded-lg hover:bg-opacity-90 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-[#4267B2] text-white rounded-lg hover:bg-opacity-90 transition-colors cursor-pointer"
             aria-label="Share on Facebook"
           >
             <FiFacebook className="w-5 h-5" />
@@ -197,8 +203,9 @@ const ShareWidget: React.FC<ShareWidgetProps> = ({
           </button>
 
           <button
+            type="button"
             onClick={() => shareTo('linkedin')}
-            className="flex items-center gap-2 px-4 py-2 bg-[#0077B5] text-white rounded-lg hover:bg-opacity-90 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-[#0077B5] text-white rounded-lg hover:bg-opacity-90 transition-colors cursor-pointer"
             aria-label="Share on LinkedIn"
           >
             <FiLinkedin className="w-5 h-5" />
@@ -206,8 +213,9 @@ const ShareWidget: React.FC<ShareWidgetProps> = ({
           </button>
 
           <button
+            type="button"
             onClick={() => shareTo('whatsapp')}
-            className="flex items-center gap-2 px-4 py-2 bg-[#25D366] text-white rounded-lg hover:bg-opacity-90 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-[#25D366] text-white rounded-lg hover:bg-opacity-90 transition-colors cursor-pointer"
             aria-label="Share on WhatsApp"
           >
             <FaWhatsapp className="w-5 h-5" />
@@ -217,9 +225,10 @@ const ShareWidget: React.FC<ShareWidgetProps> = ({
           {/* More options dropdown */}
           <div className="relative">
             <button
+              type="button"
               onClick={() => setShowMore(!showMore)}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-              aria-expanded={showMore}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors cursor-pointer"
+              aria-expanded={showMore ? 'true' : 'false'}
               aria-haspopup="true"
             >
               <FiMoreHorizontal className="w-5 h-5" />
@@ -238,9 +247,10 @@ const ShareWidget: React.FC<ShareWidgetProps> = ({
                   <div className="p-2 space-y-1">
                     {morePlatforms.map((platform) => (
                       <button
+                        type="button"
                         key={platform.id}
                         onClick={platform.action}
-                        className="flex items-center w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+                        className="flex items-center w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors cursor-pointer"
                       >
                         <platform.icon className="mr-2 w-4 h-4" />
                         {platform.name}
