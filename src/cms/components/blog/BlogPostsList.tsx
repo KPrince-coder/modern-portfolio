@@ -1,10 +1,11 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import Button from '../../../components/ui/Button';
 import Badge from '../../../components/ui/Badge';
 import LoadingSpinner from '../../../components/ui/LoadingSpinner';
 import AIGeneratedBadge from '../../../components/ui/AIGeneratedBadge';
+import BlogPostPreview from './BlogPostPreview';
 
 // Types
 interface BlogPost {
@@ -68,6 +69,8 @@ const BlogPostsList: React.FC<BlogPostsListProps> = ({
   categoryFilter,
   setCategoryFilter,
 }) => {
+  // State for preview mode
+  const [previewPost, setPreviewPost] = useState<BlogPost | null>(null);
   // Get status badge color
   const getStatusBadgeColor = (status: string): 'gray' | 'blue' | 'green' | 'purple' => {
     switch (status) {
@@ -84,23 +87,27 @@ const BlogPostsList: React.FC<BlogPostsListProps> = ({
     return format(new Date(dateString), 'MMM d, yyyy, h:mm a');
   };
 
-  // Format relative date (e.g., "2 days ago")
+  // Format relative date with time for today/yesterday and date for older entries
   const formatRelativeDate = (dateString: string): string => {
     const date = new Date(dateString);
     const now = new Date();
     const diffInDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
 
+    // Format time as HH:MM (24-hour format)
+    const timeStr = format(date, 'HH:mm');
+
     if (diffInDays === 0) {
-      return 'Today';
+      // Today with time
+      return `Today, ${timeStr}`;
     } else if (diffInDays === 1) {
-      return 'Yesterday';
+      // Yesterday with time
+      return `Yesterday, ${timeStr}`;
     } else if (diffInDays < 7) {
-      return `${diffInDays} days ago`;
-    } else if (diffInDays < 30) {
-      const weeks = Math.floor(diffInDays / 7);
-      return `${weeks} ${weeks === 1 ? 'week' : 'weeks'} ago`;
+      // Recent days with weekday name and time
+      return format(date, 'EEEE, HH:mm');
     } else {
-      return format(date, 'MMM d, yyyy');
+      // Older entries with full date and time
+      return format(date, 'MMM d, yyyy, HH:mm');
     }
   };
 
@@ -114,12 +121,13 @@ const BlogPostsList: React.FC<BlogPostsListProps> = ({
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden"
-    >
+    <>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden"
+      >
       {/* Filters */}
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -146,7 +154,7 @@ const BlogPostsList: React.FC<BlogPostsListProps> = ({
             <select
               id="statusFilter"
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as any)}
+              onChange={(e) => setStatusFilter(e.target.value as 'all' | 'draft' | 'published' | 'archived')}
               className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400"
             >
               <option value="all">All Statuses</option>
@@ -285,18 +293,32 @@ const BlogPostsList: React.FC<BlogPostsListProps> = ({
                   <div className="mt-4 flex flex-wrap items-center justify-between gap-y-3">
                     {/* Left-aligned actions: View Post and Comments */}
                     <div className="flex items-center space-x-4">
-                      <a
-                        href={`/blog/${post.slug}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 text-sm font-medium"
-                      >
-                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                        View Post
-                      </a>
+                      {post.status === 'published' ? (
+                        <a
+                          href={`/blog/${post.slug}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 text-sm font-medium"
+                        >
+                          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                          View Post
+                        </a>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setPreviewPost(post)}
+                          className="inline-flex items-center text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 text-sm font-medium"
+                        >
+                          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                          Preview Post
+                        </button>
+                      )}
 
                       <button
                         type="button"
@@ -363,7 +385,18 @@ const BlogPostsList: React.FC<BlogPostsListProps> = ({
           </div>
         </div>
       )}
-    </motion.div>
+      </motion.div>
+
+      {/* Preview Modal */}
+      <AnimatePresence>
+        {previewPost && (
+          <BlogPostPreview
+            post={previewPost}
+            onClose={() => setPreviewPost(null)}
+          />
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 

@@ -174,6 +174,11 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
 
   // Initialize form with existing data if editing or with AI-generated content
   useEffect(() => {
+    // Reset initialization flag when post changes
+    if (post) {
+      formDataInitializedRef.current = false;
+    }
+
     // Skip if already initialized
     if (formDataInitializedRef.current) return;
 
@@ -227,6 +232,7 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
       }
     } else if (post) {
       // If no AI data but we have a post, load the post data
+      console.log('Loading existing post data:', post);
       setFormData({
         id: post.id,
         title: post.title ?? '',
