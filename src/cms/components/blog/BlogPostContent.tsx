@@ -907,7 +907,8 @@ For now, please manually copy and paste the content or use a TXT/DOCX file inste
                     max-width: 100%;
                     margin: 1.5rem 0;
                   }
-                  .video-container iframe {
+                  .video-container iframe,
+                  .video-container video {
                     position: absolute;
                     top: 0;
                     left: 0;
@@ -922,15 +923,34 @@ For now, please manually copy and paste the content or use a TXT/DOCX file inste
                   remarkPlugins={[remarkGfm]}
                   rehypePlugins={[rehypeRaw, rehypeSanitize]}
                   components={{
-                    // Custom renderer for div elements to handle YouTube embeds
+                    // Custom renderer for div elements to handle video embeds
                     div: ({ node, className, children, ...props }) => {
+                      // Handle video containers
                       if (className === 'video-container') {
+                        // Check if it's a local video
+                        if (props['data-local-video'] === 'true' && props['data-video-url']) {
+                          const videoUrl = props['data-video-url'] as string;
+                          return (
+                            <div className="video-container">
+                              <video
+                                controls
+                                src={videoUrl}
+                                className="w-full h-full"
+                              >
+                                Your browser does not support the video tag.
+                              </video>
+                            </div>
+                          );
+                        }
+                        // Regular video container (YouTube)
                         return <div className="video-container" {...props}>{children}</div>;
                       }
                       return <div className={className} {...props}>{children}</div>;
                     },
                     // Pass iframe elements through without modification
-                    iframe: ({ node, ...props }) => <iframe {...props} />
+                    iframe: ({ node, ...props }) => <iframe {...props} />,
+                    // Pass video elements through without modification
+                    video: ({ node, ...props }) => <video controls {...props} />
                   }}
                 >
                   {content}

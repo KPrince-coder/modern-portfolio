@@ -19,11 +19,23 @@ const BlogContent = forwardRef<HTMLDivElement, BlogContentProps>(({ content }, r
   useEffect(() => {
     // Extract YouTube video IDs from content
     const extractYoutubeEmbeds = () => {
-      const embedRegex = /<div class="video-container">\s*<iframe[^>]*src="https:\/\/www\.youtube\.com\/embed\/([a-zA-Z0-9_-]+)"[^>]*><\/iframe>\s*<\/div>/g;
+      // More flexible regex to match YouTube embeds from different domains (youtube.com or youtube-nocookie.com)
+      const embedRegex = /<div class="video-container">\s*<iframe[^>]*src="https:\/\/(?:www\.)?(?:youtube|youtube-nocookie)\.com\/embed\/([a-zA-Z0-9_-]+)"[^>]*><\/iframe>\s*<\/div>/g;
       const videoIds = new Map<string, string>();
       let match;
 
       while ((match = embedRegex.exec(content)) !== null) {
+        const videoId = match[1];
+        const fullMatch = match[0];
+        if (videoId) {
+          videoIds.set(fullMatch, videoId);
+        }
+      }
+
+      // Also try to match YouTube embeds with single quotes
+      const embedRegexSingleQuotes = /<div class="video-container">\s*<iframe[^>]*src='https:\/\/(?:www\.)?(?:youtube|youtube-nocookie)\.com\/embed\/([a-zA-Z0-9_-]+)'[^>]*><\/iframe>\s*<\/div>/g;
+      
+      while ((match = embedRegexSingleQuotes.exec(content)) !== null) {
         const videoId = match[1];
         const fullMatch = match[0];
         if (videoId) {
@@ -43,11 +55,23 @@ const BlogContent = forwardRef<HTMLDivElement, BlogContentProps>(({ content }, r
   useEffect(() => {
     // Extract local video URLs from content
     const extractLocalVideos = () => {
-      const localVideoRegex = /<div class="video-container" data-local-video="true" data-video-url="([^"]+)">[\s\S]*?<\/div>/g;
+      // More flexible regex to match local video embeds
+      const localVideoRegex = /<div class="video-container"[^>]*data-local-video="true"[^>]*data-video-url="([^"]+)"[^>]*>[\s\S]*?<\/div>/g;
       const videoUrls = new Map<string, string>();
       let match;
 
       while ((match = localVideoRegex.exec(content)) !== null) {
+        const videoUrl = match[1];
+        const fullMatch = match[0];
+        if (videoUrl) {
+          videoUrls.set(fullMatch, videoUrl);
+        }
+      }
+      
+      // Also try to match with single quotes
+      const localVideoRegexSingleQuotes = /<div class='video-container'[^>]*data-local-video='true'[^>]*data-video-url='([^']+)'[^>]*>[\s\S]*?<\/div>/g;
+      
+      while ((match = localVideoRegexSingleQuotes.exec(content)) !== null) {
         const videoUrl = match[1];
         const fullMatch = match[0];
         if (videoUrl) {
@@ -88,6 +112,28 @@ const BlogContent = forwardRef<HTMLDivElement, BlogContentProps>(({ content }, r
       transition={{ duration: 0.6, delay: 0.2 }}
       className="prose prose-lg dark:prose-invert max-w-none"
     >
+      {/* Add CSS for responsive video container */}
+      <style>
+        {`
+          .video-container {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            height: 0;
+            overflow: hidden;
+            max-width: 100%;
+            margin: 1.5rem 0;
+          }
+          .video-container iframe,
+          .video-container video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+          }
+        `}
+      </style>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeRaw, rehypeSanitize]}
@@ -171,8 +217,16 @@ const BlogContent = forwardRef<HTMLDivElement, BlogContentProps>(({ content }, r
               const videoUrl = props['data-video-url'] as string;
               return <YouTubeEmbed videoId="local" title="Video" isLocalVideo={true} localVideoUrl={videoUrl} />;
             }
+            if (className === 'video-container' && props['data-local-video'] === 'true' && props['data-video-url']) {
+              const videoUrl = props['data-video-url'] as string;
+              return <YouTubeEmbed videoId="local" title="Video" isLocalVideo={true} localVideoUrl={videoUrl} />;
+            }
             return <div className={className} {...props} />;
           },
+          // Handle video elements directly
+          video({ node, ...props }) {
+            return <video controls className="w-full rounded-lg my-4" {...props} />;
+          }
         }}
       >
         {processedContent}
