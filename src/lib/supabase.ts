@@ -8,7 +8,46 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.error('Missing Supabase URL or Anon Key. Make sure to set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file.');
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {db: {schema: 'portfolio'}});
+// Create a function to check if Supabase is reachable
+const checkSupabaseConnection = async () => {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
+    const response = await fetch(`${supabaseUrl}/rest/v1/?apikey=${supabaseAnonKey}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      signal: controller.signal
+    });
+
+    clearTimeout(timeoutId);
+    return response.ok;
+  } catch (error) {
+    console.error('Error checking Supabase connection:', error);
+    return false;
+  }
+};
+
+// Log connection status
+checkSupabaseConnection().then(isConnected => {
+  if (!isConnected) {
+    console.error('Unable to connect to Supabase. Please check your network connection and Supabase service status.');
+  } else {
+    console.log('Successfully connected to Supabase.');
+  }
+});
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  db: {schema: 'portfolio'},
+  global: {
+    fetch: (...args) => {
+      // Add custom fetch logic here if needed
+      return fetch(...args);
+    }
+  }
+});
 
 // Helper function to handle Supabase errors
 export const handleSupabaseError = (error: any) => {
@@ -378,9 +417,12 @@ export const api = {
       slug: tag.tag_id.slug
     })) || [];
 
-    // Track the view
+    // Track the view using our utility function instead of missing RPC
     try {
-      await supabase.rpc('increment_blog_post_view', { post_id: data.id });
+      // Import the utility function
+      const { trackBlogPostView } = await import('../utils/analyticsTracker');
+      // Track the view with the post ID and AI generated flag
+      await trackBlogPostView(data.id, data.ai_generated || false);
     } catch (trackError) {
       console.error('Error tracking blog post view:', trackError);
     }
@@ -468,48 +510,113 @@ export const api = {
   },
 
   getRelatedBlogPosts: async (postId: string, limit: number = 3) => {
-    const { data: post, error: postError } = await supabase
-      .from('blog_posts')
-      .select('category_id, tags:blog_post_tags(tag_id)')
-      .eq('id', postId)
-      .single();
+    try {
+      const { data: post, error: postError } = await supabase
+        .from('blog_posts')
+        .select('category_id, tags:blog_post_tags(tag_id)')
+        .eq('id', postId)
+        .single();
 
-    if (postError) throw postError;
+      if (postError) throw postError;
 
-    // Extract tag IDs
-    const tagIds = post.tags.map((tag: { tag_id: string }) => tag.tag_id);
+      // Extract tag IDs
+      const tagIds = post.tags.map((tag: { tag_id: string }) => tag.tag_id);
 
-    // Find posts with the same category or tags
-    const { data, error } = await supabase
-      .from('blog_posts')
-      .select(`
-        *,
-        category:category_id(id, name, slug),
-        tags:blog_post_tags(tag_id(id, name, slug))
-      `)
-      .eq('status', 'published')
-      .neq('id', postId) // Exclude the current post
-      .or(`category_id.eq.${post.category_id},tags.tag_id.in.(${tagIds.join(',')})`) // Match category or tags
-      .order('published_at', { ascending: false })
-      .limit(limit);
+      // Find posts with the same category
+      let relatedPosts = [];
 
-    if (error) throw error;
+      if (post.category_id) {
+        // First try to get posts from the same category
+        const { data: categoryPosts, error: categoryError } = await supabase
+          .from('blog_posts')
+          .select(`
+            *,
+            category:category_id(id, name, slug),
+            tags:blog_post_tags(tag_id(id, name, slug))
+          `)
+          .eq('status', 'published')
+          .eq('category_id', post.category_id)
+          .neq('id', postId)
+          .order('published_at', { ascending: false })
+          .limit(limit);
 
-    // Format the tags array for each post
-    const formattedPosts = data?.map(post => {
-      const formattedTags = post.tags?.map((tag: { tag_id: { id: string; name: string; slug: string } }) => ({
-        id: tag.tag_id.id,
-        name: tag.tag_id.name,
-        slug: tag.tag_id.slug
-      })) || [];
+        if (!categoryError && categoryPosts) {
+          relatedPosts = categoryPosts;
+        }
+      }
 
-      return {
-        ...post,
-        tags: formattedTags
-      };
-    });
+      // If we don't have enough posts from the same category and we have tags,
+      // try to get posts with the same tags
+      if (relatedPosts.length < limit && tagIds.length > 0) {
+        const remainingLimit = limit - relatedPosts.length;
 
-    return formattedPosts as BlogPost[];
+        // Get posts with matching tags, excluding ones we already have
+        const excludeIds = [postId, ...relatedPosts.map(p => p.id)];
+
+        const { data: tagPosts, error: tagError } = await supabase
+          .from('blog_posts')
+          .select(`
+            *,
+            category:category_id(id, name, slug),
+            tags:blog_post_tags(tag_id(id, name, slug))
+          `)
+          .eq('status', 'published')
+          .not('id', 'in', `(${excludeIds.join(',')})`) // Exclude posts we already have
+          .order('published_at', { ascending: false })
+          .limit(remainingLimit);
+
+        if (!tagError && tagPosts) {
+          // Filter posts that have at least one matching tag
+          const postsWithMatchingTags = tagPosts.filter(post => {
+            const postTagIds = post.tags.map((tag: any) => tag.tag_id.id);
+            return postTagIds.some((tagId: string) => tagIds.includes(tagId));
+          });
+
+          relatedPosts = [...relatedPosts, ...postsWithMatchingTags];
+        }
+      }
+
+      // If we still don't have enough posts, get the most recent ones
+      if (relatedPosts.length < limit) {
+        const remainingLimit = limit - relatedPosts.length;
+        const excludeIds = [postId, ...relatedPosts.map(p => p.id)];
+
+        const { data: recentPosts, error: recentError } = await supabase
+          .from('blog_posts')
+          .select(`
+            *,
+            category:category_id(id, name, slug),
+            tags:blog_post_tags(tag_id(id, name, slug))
+          `)
+          .eq('status', 'published')
+          .not('id', 'in', `(${excludeIds.join(',')})`) // Exclude posts we already have
+          .order('published_at', { ascending: false })
+          .limit(remainingLimit);
+
+        if (!recentError && recentPosts) {
+          relatedPosts = [...relatedPosts, ...recentPosts];
+        }
+      }
+
+      // Format the tags array for each post
+      const formattedPosts = relatedPosts.map(post => {
+        const formattedTags = post.tags?.map((tag: { tag_id: { id: string; name: string; slug: string } }) => ({
+          id: tag.tag_id.id,
+          name: tag.tag_id.name,
+          slug: tag.tag_id.slug
+        })) || [];
+
+        return {
+          ...post,
+          tags: formattedTags
+        };
+      });
+
+      return formattedPosts as BlogPost[];
+    } catch (error) {
+      console.error('Error fetching related blog posts:', error);
+      return [];
+    }
   },
 
   // Contact messages
