@@ -64,11 +64,14 @@ const BlogNavHeader: React.FC<BlogNavHeaderProps> = ({ title, url, imageUrl, sum
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 transition-all duration-300">
-      {/* Progress bar */}
-      <div
-        className="h-1 bg-indigo-600 dark:bg-indigo-500 transition-all duration-300 ease-out"
-        style={{ width: `${progress}%` }}
-      />
+      {/* Progress bar container with blurred background */}
+      <div className="h-1 bg-gray-200/30 dark:bg-gray-900/90 backdrop-blur-md">
+        {/* Progress bar indicator */}
+        <div
+          className="h-full bg-indigo-600 dark:bg-indigo-500 transition-all duration-300 ease-out"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
 
       {/* Header content */}
       <div className={`bg-white/90 dark:bg-gray-900/90 backdrop-blur-md shadow-sm transition-all duration-300 ${
