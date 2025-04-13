@@ -117,10 +117,36 @@ const BlogAnalyticsDashboard: React.FC = () => {
   }
 
   if (error) {
+    // Check if it's a connection error
+    const isConnectionError =
+      (error as Error).message.includes('Failed to fetch') ||
+      (error as Error).message.includes('NetworkError') ||
+      (error as Error).message.includes('ERR_CONNECTION') ||
+      (error as Error).message.includes('ERR_NAME_NOT_RESOLVED') ||
+      (error as Error).message.includes('timeout');
+
     return (
       <div className="bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-300 p-4 rounded-lg">
         <h3 className="text-lg font-medium">Error loading blog analytics</h3>
-        <p className="mt-2">{(error as Error).message}</p>
+        {isConnectionError ? (
+          <>
+            <p className="mt-2">Unable to connect to the database. Please check your internet connection and try again.</p>
+            <div className="mt-4">
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors"
+              >
+                Retry Connection
+              </button>
+            </div>
+            <p className="mt-4 text-sm text-red-600 dark:text-red-400">
+              Technical details: {(error as Error).message}
+            </p>
+          </>
+        ) : (
+          <p className="mt-2">{(error as Error).message}</p>
+        )}
       </div>
     );
   }
@@ -136,13 +162,17 @@ const BlogAnalyticsDashboard: React.FC = () => {
 
   return (
     <div className="space-y-8">
+      {/* Title - Full width */}
+      <div className="w-full">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+          Blog Analytics Dashboard
+        </h2>
+      </div>
+
       {/* Time range selector and tabs */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-            Blog Analytics Dashboard
-          </h2>
-          <div className="mt-2 flex space-x-4">
+        <div className="w-full md:w-auto">
+          <div className="flex flex-wrap gap-2 sm:gap-4">
             <button
               type="button"
               onClick={() => handleTabChange('overview')}

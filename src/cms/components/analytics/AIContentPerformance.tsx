@@ -134,31 +134,31 @@ const AIContentPerformance: React.FC<AIContentPerformanceProps> = ({ data }) => 
             key={`${index}-${item.metric || 'unknown'}`}
             className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4"
           >
-            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
               {item.metric}
             </h3>
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">AI Content</p>
-                <p className="text-lg font-semibold text-purple-600 dark:text-purple-400">
+            <div className="grid grid-cols-3 gap-2">
+              <div className="text-center">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">AI Content</p>
+                <p className="text-sm sm:text-base lg:text-lg font-semibold text-purple-600 dark:text-purple-400 break-words">
                   {item.metric && typeof item.metric === 'string' && item.metric.includes('Time')
                     ? `${Math.floor(item.ai_content / 60)}m ${Math.floor(item.ai_content % 60)}s`
                     : (item.ai_content || 0).toLocaleString()
                   }
                 </p>
               </div>
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Manual Content</p>
-                <p className="text-lg font-semibold text-blue-600 dark:text-blue-400">
+              <div className="text-center">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Manual</p>
+                <p className="text-sm sm:text-base lg:text-lg font-semibold text-blue-600 dark:text-blue-400 break-words">
                   {item.metric && typeof item.metric === 'string' && item.metric.includes('Time')
                     ? `${Math.floor(item.regular_content / 60)}m ${Math.floor(item.regular_content % 60)}s`
                     : (item.regular_content || 0).toLocaleString()
                   }
                 </p>
               </div>
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Difference</p>
-                <p className={`text-lg font-semibold ${
+              <div className="text-center">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Difference</p>
+                <p className={`text-sm sm:text-base lg:text-lg font-semibold ${
                   item.difference_percentage > 0
                     ? 'text-green-600 dark:text-green-400'
                     : 'text-red-600 dark:text-red-400'
