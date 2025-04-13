@@ -17,7 +17,7 @@ const Header = () => {
 
 
   return (
-    <header className="py-6 sticky top-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm z-40 shadow-sm">
+    <header className="py-6 fixed top-0 left-0 right-0 w-full bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm z-40 shadow-sm">
       <Container>
         <div className="flex justify-between items-center">
           {/* Logo */}

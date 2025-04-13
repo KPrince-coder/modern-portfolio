@@ -29,7 +29,7 @@ const Layout = ({ children }: LayoutProps) => {
       {isLoading ? (
         <LoadingSpinner fullPage size="lg" />
       ) : (
-        <main className="min-h-[calc(100vh-200px)]">
+        <main className="min-h-[calc(100vh-200px)] pt-24">
           <AnimatePresence mode="wait">
             <PageTransition key={location.pathname}>
               {children}
