@@ -65,7 +65,7 @@ const BlogNavHeader: React.FC<BlogNavHeaderProps> = ({ title, url, imageUrl, sum
   return (
     <header className="fixed top-0 left-0 right-0 z-40 transition-all duration-300">
       {/* Progress bar container with blurred background */}
-      <div className="h-1 bg-gray-200/30 dark:bg-gray-900/90 backdrop-blur-md">
+      <div className="h-1 bg-gray-200/30 dark:bg-gray-900/30  backdrop-blur-md">
         {/* Progress bar indicator */}
         <div
           className="h-full bg-indigo-600 dark:bg-indigo-500 transition-all duration-300 ease-out"
@@ -127,3 +127,4 @@ const BlogNavHeader: React.FC<BlogNavHeaderProps> = ({ title, url, imageUrl, sum
 };
 
 export default BlogNavHeader;
+

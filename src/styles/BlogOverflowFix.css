@@ -104,3 +104,73 @@ html, body {
     width: 100%;
   }
 }
+
+/* Enhanced visual hierarchy for headers */
+.prose h1 {
+  font-weight: 900;
+  letter-spacing: -0.025em;
+  margin-top: 2.5rem;
+  margin-bottom: 1.5rem;
+  font-size: 2rem;
+  line-height: 1.2;
+  position: relative;
+  padding-bottom: 0.5rem;
+}
+
+.dark .prose h1 {
+  color: #f9fafb;
+}
+
+.prose h2 {
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  font-size: 1.8rem;
+  line-height: 1.3;
+  border-bottom: 1px solid rgba(209, 213, 219, 0.5);
+  padding-bottom: 0.5rem;
+}
+
+.dark .prose h2 {
+  color: #f3f4f6;
+  border-bottom-color: rgba(75, 85, 99, 0.5);
+}
+
+.prose h3 {
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  font-size: 1.5rem;
+  line-height: 1.4;
+}
+
+.dark .prose h3 {
+  color: #e5e7eb;
+}
+
+.prose h4 {
+  font-weight: 600;
+  margin-top: 1.75rem;
+  margin-bottom: 0.75rem;
+  font-size: 1.25rem;
+  line-height: 1.5;
+}
+
+.dark .prose h4 {
+  color: #d1d5db;
+}
+
+/* Code block styling */
+.code-block-wrapper {
+  position: relative;
+  margin: 1.5rem 0;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.dark .code-block-wrapper {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+}

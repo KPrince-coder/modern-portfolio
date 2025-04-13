@@ -3,40 +3,13 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import rehypeSanitize from 'rehype-sanitize';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { motion } from 'framer-motion';
 import YouTubeEmbed from './YouTubeEmbed';
+import CodeBlock from './CodeBlock';
 
 interface BlogContentProps {
   content: string;
 }
-
-const CodeBlock: React.FC<{
-  node?: any;
-  inline?: boolean;
-  className?: string;
-  children?: React.ReactNode;
-}> = ({ inline, className, children, ...props }) => {
-  const match = /language-(\w+)/.exec(className || '');
-  return !inline && match ? (
-    <SyntaxHighlighter
-      style={vscDarkPlus}
-      language={match[1]}
-      PreTag="div"
-      className="rounded-md overflow-x-auto"
-      wrapLines={true}
-      wrapLongLines={true}
-      {...props}
-    >
-      {String(children).replace(/\n$/, '')}
-    </SyntaxHighlighter>
-  ) : (
-    <code className={className} {...props}>
-      {children}
-    </code>
-  );
-};
 
 const BlogContent = forwardRef<HTMLDivElement, BlogContentProps>(({ content }, ref) => {
   // Extract YouTube video IDs from content
@@ -194,19 +167,19 @@ const BlogContent = forwardRef<HTMLDivElement, BlogContentProps>(({ content }, r
             // Use existing ID if available, otherwise generate one
             const existingId = props.id;
             const text = props.children?.[0]?.toString() || '';
-            const id = existingId || `h2-${text.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}-${Math.random().toString(36).substr(2, 5)}`;
+            const id = existingId ?? `h2-${text.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}-${Math.random().toString(36).substr(2, 5)}`;
             return <h2 id={id} className="scroll-mt-24" {...props} />;
           },
           h3({ node, ...props }) {
             const existingId = props.id;
             const text = props.children?.[0]?.toString() || '';
-            const id = existingId || `h3-${text.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}-${Math.random().toString(36).substr(2, 5)}`;
+            const id = existingId ?? `h3-${text.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}-${Math.random().toString(36).substr(2, 5)}`;
             return <h3 id={id} className="scroll-mt-24" {...props} />;
           },
           h4({ node, ...props }) {
             const existingId = props.id;
             const text = props.children?.[0]?.toString() || '';
-            const id = existingId || `h4-${text.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}-${Math.random().toString(36).substr(2, 5)}`;
+            const id = existingId ?? `h4-${text.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}-${Math.random().toString(36).substr(2, 5)}`;
             return <h4 id={id} className="scroll-mt-24" {...props} />;
           },
           // Custom rendering for blockquotes
