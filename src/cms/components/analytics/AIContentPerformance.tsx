@@ -131,7 +131,7 @@ const AIContentPerformance: React.FC<AIContentPerformanceProps> = ({ data }) => 
       <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {data.map((item, index) => (
           <div
-            key={item.metric}
+            key={`${index}-${item.metric || 'unknown'}`}
             className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4"
           >
             <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
