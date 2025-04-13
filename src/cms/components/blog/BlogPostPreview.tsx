@@ -15,7 +15,7 @@ interface BlogPostPreviewProps {
     summary?: string;
     content: string;
     featured_image_url?: string;
-    category?: { id: string; name: string; slug: string } | null;
+    category: { id: string; name: string; slug: string } | undefined;
     reading_time_minutes?: number;
     is_featured: boolean;
     status: 'draft' | 'published' | 'archived';
@@ -97,7 +97,7 @@ const BlogPostPreview: React.FC<BlogPostPreviewProps> = ({ post, onClose }) => {
             {/* SEO and Social Sharing Metadata */}
             <MetadataManager
               title={`${post.title} (Preview)`}
-              description={post.summary || `Preview: ${post.title}`}
+              description={post.summary ?? `Preview: ${post.title}`}
               url={currentUrl}
               imageUrl={post.featured_image_url}
               publishedTime={post.published_at}
