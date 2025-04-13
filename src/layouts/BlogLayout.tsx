@@ -7,6 +7,7 @@ import TableOfContents from '../components/blog/TableOfContents';
 import BlogThemeToggler from '../components/blog/BlogThemeToggler';
 import BlogComments from '../components/blog/BlogComments';
 import TagCloud from '../components/blog/TagCloud';
+import RelatedPosts from '../components/blog/RelatedPosts';
 import '../styles/BlogOverflowFix.css';
 
 interface BlogLayoutProps {
@@ -205,10 +206,7 @@ const BlogLayout: React.FC<BlogLayoutProps> = ({
           {/* Related posts */}
           {postId && (
             <div className="mt-16 pt-8 border-t border-gray-200 dark:border-gray-700">
-              {/* Import and use RelatedPosts component here */}
-              {/* <RelatedPosts postId={postId} /> */}
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Related Articles</h2>
-              <p className="text-gray-600 dark:text-gray-400">Loading related articles...</p>
+              <RelatedPosts postId={postId} limit={3} />
             </div>
           )}
         </div>

@@ -12,6 +12,32 @@ interface BlogContentProps {
   content: string;
 }
 
+const CodeBlock: React.FC<{
+  node?: any;
+  inline?: boolean;
+  className?: string;
+  children?: React.ReactNode;
+}> = ({ inline, className, children, ...props }) => {
+  const match = /language-(\w+)/.exec(className || '');
+  return !inline && match ? (
+    <SyntaxHighlighter
+      style={vscDarkPlus}
+      language={match[1]}
+      PreTag="div"
+      className="rounded-md overflow-x-auto"
+      wrapLines={true}
+      wrapLongLines={true}
+      {...props}
+    >
+      {String(children).replace(/\n$/, '')}
+    </SyntaxHighlighter>
+  ) : (
+    <code className={className} {...props}>
+      {children}
+    </code>
+  );
+};
+
 const BlogContent = forwardRef<HTMLDivElement, BlogContentProps>(({ content }, ref) => {
   // Extract YouTube video IDs from content
   const [youtubeVideos, setYoutubeVideos] = useState<Map<string, string>>(new Map());
@@ -105,12 +131,13 @@ const BlogContent = forwardRef<HTMLDivElement, BlogContentProps>(({ content }, r
   }, [content, youtubeVideos, localVideos]);
 
   return (
-    <motion.div
+    <motion.article
       ref={ref}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6, delay: 0.2 }}
       className="prose prose-lg dark:prose-invert max-w-none blog-content-wrapper"
+      aria-label="Blog post content"
     >
       {/* Add CSS for responsive video container */}
       <style>
@@ -138,27 +165,7 @@ const BlogContent = forwardRef<HTMLDivElement, BlogContentProps>(({ content }, r
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeRaw, rehypeSanitize]}
         components={{
-          // Custom rendering for code blocks with syntax highlighting
-          code({ node, inline, className, children, ...props }) {
-            const match = /language-(\w+)/.exec(className || '');
-            return !inline && match ? (
-              <SyntaxHighlighter
-                style={vscDarkPlus}
-                language={match[1]}
-                PreTag="div"
-                className="rounded-md overflow-x-auto"
-                wrapLines={true}
-                wrapLongLines={true}
-                {...props}
-              >
-                {String(children).replace(/\n$/, '')}
-              </SyntaxHighlighter>
-            ) : (
-              <code className={className} {...props}>
-                {children}
-              </code>
-            );
-          },
+          code: CodeBlock,
           // Custom rendering for images
           img({ node, ...props }) {
             return (
@@ -177,7 +184,9 @@ const BlogContent = forwardRef<HTMLDivElement, BlogContentProps>(({ content }, r
                 className="text-indigo-600 dark:text-indigo-400 hover:underline"
                 target="_blank"
                 rel="noopener noreferrer"
-              />
+              >
+                {props.children || 'Link'}
+              </a>
             );
           },
           // Custom rendering for headings with unique IDs
@@ -233,10 +242,15 @@ const BlogContent = forwardRef<HTMLDivElement, BlogContentProps>(({ content }, r
       >
         {processedContent}
       </ReactMarkdown>
-    </motion.div>
+    </motion.article>
   );
 });
 
 BlogContent.displayName = 'BlogContent';
 
 export default BlogContent;
+
+
+
+
+

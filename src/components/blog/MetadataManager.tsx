@@ -11,6 +11,9 @@ interface MetadataManagerProps {
   author?: string;
   tags?: string[];
   type?: 'article' | 'website';
+  readingTime?: string;
+  category?: string;
+  locale?: string;
 }
 
 /**
@@ -27,18 +30,21 @@ const MetadataManager: React.FC<MetadataManagerProps> = ({
   author = 'Admin',
   tags = [],
   type = 'article',
+  readingTime,
+  category,
+  locale = 'en_US',
 }) => {
   // Format the site name
   const siteName = 'Modern Portfolio Blog';
-  
+
   // Format the canonical URL
   const canonicalUrl = url.startsWith('http') ? url : `https://example.com${url}`;
-  
+
   // Format the image URL
-  const formattedImageUrl = imageUrl?.startsWith('http') 
-    ? imageUrl 
-    : imageUrl 
-      ? `https://example.com${imageUrl}` 
+  const formattedImageUrl = imageUrl?.startsWith('http')
+    ? imageUrl
+    : imageUrl
+      ? `https://example.com${imageUrl}`
       : 'https://example.com/default-og-image.jpg';
 
   return (
@@ -47,6 +53,11 @@ const MetadataManager: React.FC<MetadataManagerProps> = ({
       <title>{title}</title>
       <meta name="description" content={description} />
       <link rel="canonical" href={canonicalUrl} />
+      <meta name="author" content={author} />
+      <meta name="robots" content="index, follow" />
+      <meta name="language" content={locale.split('_')[0]} />
+      {category && <meta name="category" content={category} />}
+      {tags.length > 0 && <meta name="keywords" content={tags.join(', ')} />}
 
       {/* Open Graph / Facebook */}
       <meta property="og:type" content={type} />
@@ -54,8 +65,11 @@ const MetadataManager: React.FC<MetadataManagerProps> = ({
       <meta property="og:title" content={title} />
       <meta property="og:description" content={description} />
       <meta property="og:image" content={formattedImageUrl} />
+      <meta property="og:image:alt" content={title} />
       <meta property="og:site_name" content={siteName} />
-      
+      <meta property="og:locale" content={locale} />
+      {readingTime && <meta property="og:reading_time" content={readingTime} />}
+
       {/* Additional article meta tags */}
       {type === 'article' && publishedTime && (
         <meta property="article:published_time" content={publishedTime} />
@@ -66,7 +80,7 @@ const MetadataManager: React.FC<MetadataManagerProps> = ({
       {type === 'article' && author && (
         <meta property="article:author" content={author} />
       )}
-      
+
       {/* Article tags */}
       {type === 'article' && tags.map((tag) => (
         <meta key={tag} property="article:tag" content={tag} />
@@ -78,9 +92,12 @@ const MetadataManager: React.FC<MetadataManagerProps> = ({
       <meta name="twitter:title" content={title} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={formattedImageUrl} />
-      
-      {/* JSON-LD structured data for articles */}
-      {type === 'article' && (
+      <meta name="twitter:image:alt" content={title} />
+      <meta name="twitter:site" content="@portfoliosite" />
+      {author && <meta name="twitter:creator" content={`@${author.replace(/\s+/g, '').toLowerCase()}`} />}
+
+      {/* JSON-LD structured data */}
+      {type === 'article' ? (
         <script type="application/ld+json">
           {JSON.stringify({
             '@context': 'https://schema.org',
@@ -105,6 +122,32 @@ const MetadataManager: React.FC<MetadataManagerProps> = ({
             mainEntityOfPage: {
               '@type': 'WebPage',
               '@id': canonicalUrl,
+            },
+            ...(readingTime && { timeRequired: `PT${readingTime.replace(/\D/g, '')}M` }),
+            ...(category && { articleSection: category }),
+            ...(tags.length > 0 && { keywords: tags.join(', ') }),
+          })}
+        </script>
+      ) : (
+        <script type="application/ld+json">
+          {JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'WebPage',
+            name: title,
+            description: description,
+            url: canonicalUrl,
+            image: formattedImageUrl,
+            author: {
+              '@type': 'Person',
+              name: author,
+            },
+            publisher: {
+              '@type': 'Organization',
+              name: siteName,
+              logo: {
+                '@type': 'ImageObject',
+                url: 'https://example.com/logo.png',
+              },
             },
           })}
         </script>

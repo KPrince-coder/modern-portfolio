@@ -2,10 +2,9 @@ import React, { useRef, useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useBlogPostBySlug, useBlogPosts } from '../hooks/useSupabase';
 import { useTrackBlogReadTime } from '../utils/blogAnalytics';
-import { Helmet } from 'react-helmet-async';
 import BlogLayout from '../layouts/BlogLayout';
 import BlogContent from '../components/blog/BlogContent';
-import BlogComments from '../components/blog/BlogComments';
+import MetadataManager from '../components/blog/MetadataManager';
 import { format } from 'date-fns';
 import BlogPostSkeleton from '../components/blog/BlogPostSkeleton';
 
@@ -121,17 +120,20 @@ const BlogPostPage: React.FC = () => {
       prevPost={prevPost}
       nextPost={nextPost}
     >
-      {/* SEO */}
-      <Helmet>
-        <title>{post.title}</title>
-        <meta name="description" content={post.summary || `Read ${post.title}`} />
-        <meta property="og:title" content={post.title} />
-        <meta property="og:description" content={post.summary || `Read ${post.title}`} />
-        {post.featured_image_url && <meta property="og:image" content={post.featured_image_url} />}
-        <meta property="og:url" content={currentUrl} />
-        <meta property="og:type" content="article" />
-        <meta name="twitter:card" content="summary_large_image" />
-      </Helmet>
+      {/* SEO and Social Sharing Metadata */}
+      <MetadataManager
+        title={post.title}
+        description={post.summary || `Read ${post.title}`}
+        url={currentUrl}
+        imageUrl={post.featured_image_url}
+        publishedTime={post.published_at}
+        modifiedTime={post.updated_at}
+        author={post.author?.name || 'Admin'}
+        tags={post.tags?.map(tag => tag.name) || []}
+        type="article"
+        readingTime={readTime}
+        category={post.category?.name}
+      />
 
       {/* Blog content */}
       <BlogContent ref={contentRef} content={post.content} />

@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  FiShare2, 
-  FiCopy, 
-  FiTwitter, 
-  FiLinkedin, 
-  FiFacebook, 
+import {
+  FiShare2,
+  FiCopy,
+  FiTwitter,
+  FiLinkedin,
+  FiFacebook,
   FiMail,
   FiMessageCircle,
   FiMoreHorizontal
@@ -89,9 +89,14 @@ const ShareWidget: React.FC<ShareWidgetProps> = ({
     return (
       <div className={`relative ${className}`}>
         <button
+          type="button"
           onClick={() => setIsOpen(!isOpen)}
           className="p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
           aria-label="Share this post"
+          aria-haspopup="true"
+          aria-expanded={isOpen}
+          aria-controls="share-dropdown"
+          id="share-button"
           title="Share this post"
         >
           <FiShare2 className="w-5 h-5" />
@@ -104,7 +109,11 @@ const ShareWidget: React.FC<ShareWidgetProps> = ({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.95 }}
               transition={{ duration: 0.2 }}
+              id="share-dropdown"
               className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden z-50"
+              role="menu"
+              aria-orientation="vertical"
+              aria-labelledby="share-button"
             >
               <div className="p-2 space-y-1">
                 {mainPlatforms.map((platform) => (
@@ -117,7 +126,7 @@ const ShareWidget: React.FC<ShareWidgetProps> = ({
                     {platform.id === 'copy' && copied ? 'Copied!' : platform.name}
                   </button>
                 ))}
-                
+
                 <button
                   onClick={() => setShowMore(!showMore)}
                   className="flex items-center w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
@@ -156,7 +165,7 @@ const ShareWidget: React.FC<ShareWidgetProps> = ({
           <FiShare2 className="w-5 h-5" />
           Share this post
         </h3>
-        
+
         <div className="flex flex-wrap gap-2">
           {/* Copy link button */}
           <button
