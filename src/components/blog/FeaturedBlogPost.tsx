@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
-import AIGeneratedBadge from '../ui/AIGeneratedBadge';
+// AI badge import removed
 import { BlogPost } from '../../lib/supabase';
 
 interface FeaturedBlogPostProps {
@@ -53,7 +53,7 @@ const FeaturedBlogPost: React.FC<FeaturedBlogPostProps> = ({ post }) => {
                   {post.category.name}
                 </span>
               )}
-              {post.ai_generated && <AIGeneratedBadge size="sm" />}
+              {/* AI Generated badge removed for public view */}
             </div>
 
             <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">

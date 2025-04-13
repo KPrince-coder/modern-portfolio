@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { useRelatedBlogPosts } from '../../hooks/useSupabase';
-import AIGeneratedBadge from '../ui/AIGeneratedBadge';
+// AI badge import removed
 
 interface RelatedPostsProps {
   postId: string;
@@ -83,12 +83,7 @@ const RelatedPosts: React.FC<RelatedPostsProps> = ({ postId, limit = 3, classNam
                 </div>
               )}
 
-              {/* AI Generated badge */}
-              {post.ai_generated && (
-                <div className="absolute top-2 left-2">
-                  <AIGeneratedBadge size="xs" />
-                </div>
-              )}
+              {/* AI Generated badge removed for public view */}
             </div>
 
             <div className="p-4">

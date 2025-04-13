@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useBlogPosts } from '../../hooks/useSupabase';
 import { formatDistanceToNow } from 'date-fns';
-import AIGeneratedBadge from '../ui/AIGeneratedBadge';
+// AI badge import removed
 
 /**
  * Component for displaying featured blog posts on the home page
@@ -86,12 +86,7 @@ const FeaturedBlogPosts: React.FC = () => {
                 </div>
               )}
 
-              {/* AI Generated badge */}
-              {post.ai_generated && (
-                <div className="absolute top-4 left-4">
-                  <AIGeneratedBadge size="sm" />
-                </div>
-              )}
+              {/* AI Generated badge removed for public view */}
             </div>
 
             <div className="p-6">
