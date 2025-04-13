@@ -6,6 +6,7 @@ import ShareWidget from '../components/blog/ShareWidget';
 import TableOfContents from '../components/blog/TableOfContents';
 import BlogThemeToggler from '../components/blog/BlogThemeToggler';
 import BlogComments from '../components/blog/BlogComments';
+import '../styles/BlogOverflowFix.css';
 
 interface BlogLayoutProps {
   children: ReactNode;
@@ -19,8 +20,8 @@ interface BlogLayoutProps {
   tags?: Array<{ id: string; name: string; slug: string }>;
   category?: { id: string; name: string; slug: string };
   postId?: string;
-  prevPost?: { id: string; title: string; slug: string; featured_image_url?: string } | null;
-  nextPost?: { id: string; title: string; slug: string; featured_image_url?: string } | null;
+  prevPost: { id: string; title: string; slug: string; featured_image_url?: string } | null;
+  nextPost: { id: string; title: string; slug: string; featured_image_url?: string } | null;
 }
 
 const BlogLayout: React.FC<BlogLayoutProps> = ({
@@ -97,9 +98,11 @@ const BlogLayout: React.FC<BlogLayoutProps> = ({
               )}
 
               {/* Blog content */}
-              <article className="prose prose-lg dark:prose-invert max-w-none" ref={contentRef}>
-                {children}
-              </article>
+              <div className="blog-content-wrapper overflow-hidden">
+                <article className="prose prose-lg dark:prose-invert max-w-none" ref={contentRef}>
+                  {children}
+                </article>
+              </div>
 
               {/* Share widget */}
               <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">

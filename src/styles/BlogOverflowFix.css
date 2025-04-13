@@ -1,0 +1,62 @@
+/* Fix for horizontal scrolling in blog posts */
+
+/* Ensure the root element doesn't overflow */
+html, body {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+/* Fix for blog content overflow */
+.blog-content-wrapper {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+/* Ensure all content in prose is properly constrained */
+.prose {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+/* Ensure images don't overflow */
+.prose img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Fix for code blocks */
+.prose pre {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* Fix for tables */
+.prose table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* Fix for embedded content */
+.prose iframe,
+.prose video,
+.video-container,
+.youtube-embed-container {
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* Fix for blockquotes */
+.prose blockquote {
+  max-width: 100%;
+  overflow-wrap: break-word;
+}
+
+/* Fix for syntax highlighter */
+.prose .react-syntax-highlighter-line-number,
+.prose .react-syntax-highlighter-line {
+  white-space: pre-wrap;
+  word-break: break-word;
+}

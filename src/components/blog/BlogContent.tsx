@@ -34,7 +34,7 @@ const BlogContent = forwardRef<HTMLDivElement, BlogContentProps>(({ content }, r
 
       // Also try to match YouTube embeds with single quotes
       const embedRegexSingleQuotes = /<div class="video-container">\s*<iframe[^>]*src='https:\/\/(?:www\.)?(?:youtube|youtube-nocookie)\.com\/embed\/([a-zA-Z0-9_-]+)'[^>]*><\/iframe>\s*<\/div>/g;
-      
+
       while ((match = embedRegexSingleQuotes.exec(content)) !== null) {
         const videoId = match[1];
         const fullMatch = match[0];
@@ -67,10 +67,10 @@ const BlogContent = forwardRef<HTMLDivElement, BlogContentProps>(({ content }, r
           videoUrls.set(fullMatch, videoUrl);
         }
       }
-      
+
       // Also try to match with single quotes
       const localVideoRegexSingleQuotes = /<div class='video-container'[^>]*data-local-video='true'[^>]*data-video-url='([^']+)'[^>]*>[\s\S]*?<\/div>/g;
-      
+
       while ((match = localVideoRegexSingleQuotes.exec(content)) !== null) {
         const videoUrl = match[1];
         const fullMatch = match[0];
@@ -110,7 +110,7 @@ const BlogContent = forwardRef<HTMLDivElement, BlogContentProps>(({ content }, r
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6, delay: 0.2 }}
-      className="prose prose-lg dark:prose-invert max-w-none"
+      className="prose prose-lg dark:prose-invert max-w-none blog-content-wrapper"
     >
       {/* Add CSS for responsive video container */}
       <style>
@@ -146,7 +146,9 @@ const BlogContent = forwardRef<HTMLDivElement, BlogContentProps>(({ content }, r
                 style={vscDarkPlus}
                 language={match[1]}
                 PreTag="div"
-                className="rounded-md"
+                className="rounded-md overflow-x-auto"
+                wrapLines={true}
+                wrapLongLines={true}
                 {...props}
               >
                 {String(children).replace(/\n$/, '')}
