@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import Container from './Container';
-import ThemeToggler from '../ui/ThemeToggler';
+// Theme toggler removed
 import Button from '../ui/Button';
 import SearchBar from '../ui/SearchBar';
 import MobileMenu from './MobileMenu';
@@ -56,8 +56,7 @@ const Header = () => {
               </Button>
             </div>
 
-            {/* Theme toggler */}
-            <ThemeToggler />
+            {/* Theme toggler removed */}
 
             {/* Mobile menu button */}
             <button

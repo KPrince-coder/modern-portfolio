@@ -7,7 +7,7 @@ import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 import ScrollToTop from './components/utils/ScrollToTop';
-import { ThemeProvider } from './context/ThemeContext';
+// Theme provider removed
 import { routes } from './routes';
 import CMSRoutes from './cms/CMSRoutes';
 import { CMSProvider } from './cms/CMSProvider';
@@ -28,12 +28,10 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <HelmetProvider>
-        <ThemeProvider>
-          <Router>
-            <ScrollToTop />
-            <AppContent />
-          </Router>
-        </ThemeProvider>
+        <Router>
+          <ScrollToTop />
+          <AppContent />
+        </Router>
       </HelmetProvider>
     </QueryClientProvider>
   );

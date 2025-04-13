@@ -16,7 +16,7 @@ import './App.css';
 // Import app
 import App from './App.tsx';
 
-// Theme is now set in index.html to prevent flash of wrong theme
+// Theme handling removed
 
 // Create root and render app
 const root = createRoot(document.getElementById('root')!);

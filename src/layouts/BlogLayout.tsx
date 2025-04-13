@@ -1,9 +1,9 @@
 import React, { ReactNode, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ThemeContext } from '../context/ThemeContext';
+// Theme context removed
 import { FiArrowLeft, FiShare2, FiBookmark, FiCopy, FiTwitter, FiLinkedin, FiFacebook } from 'react-icons/fi';
-import { IoMdMoon, IoMdSunny } from 'react-icons/io';
+// Theme icons removed
 
 interface BlogLayoutProps {
   children: ReactNode;
@@ -24,7 +24,7 @@ const BlogLayout: React.FC<BlogLayoutProps> = ({
   coverImage,
   slug
 }) => {
-  const { theme, setTheme, isDark } = React.useContext(ThemeContext);
+  // Theme context removed
   const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
   const [showShareMenu, setShowShareMenu] = useState(false);
@@ -145,13 +145,7 @@ const BlogLayout: React.FC<BlogLayoutProps> = ({
               </AnimatePresence>
             </div>
 
-            <button
-              onClick={() => setTheme(isDark ? 'light' : 'dark')}
-              className="flex items-center text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-              aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
-            >
-              {isDark ? <IoMdSunny className="text-xl" /> : <IoMdMoon className="text-xl" />}
-            </button>
+            {/* Theme toggler removed */}
           </div>
         </div>
       </header>
