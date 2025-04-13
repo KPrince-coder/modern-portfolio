@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
@@ -6,12 +6,47 @@ import rehypeSanitize from 'rehype-sanitize';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { motion } from 'framer-motion';
+import YouTubeEmbed from './YouTubeEmbed';
 
 interface BlogContentProps {
   content: string;
 }
 
 const BlogContent = forwardRef<HTMLDivElement, BlogContentProps>(({ content }, ref) => {
+  // Extract YouTube video IDs from content
+  const [youtubeVideos, setYoutubeVideos] = useState<Map<string, string>>(new Map());
+
+  useEffect(() => {
+    // Extract YouTube video IDs from content
+    const extractYoutubeEmbeds = () => {
+      const embedRegex = /<div class="video-container">\s*<iframe[^>]*src="https:\/\/www\.youtube\.com\/embed\/([a-zA-Z0-9_-]+)"[^>]*><\/iframe>\s*<\/div>/g;
+      const videoIds = new Map<string, string>();
+      let match;
+
+      while ((match = embedRegex.exec(content)) !== null) {
+        const videoId = match[1];
+        const fullMatch = match[0];
+        if (videoId) {
+          videoIds.set(fullMatch, videoId);
+        }
+      }
+
+      setYoutubeVideos(videoIds);
+    };
+
+    extractYoutubeEmbeds();
+  }, [content]);
+
+  // Process content to replace YouTube embeds with placeholders
+  const processedContent = React.useMemo(() => {
+    let processed = content;
+    youtubeVideos.forEach((videoId, fullMatch) => {
+      // Replace with a placeholder that our custom renderer will handle
+      processed = processed.replace(fullMatch, `<div class="youtube-embed" data-video-id="${videoId}"></div>`);
+    });
+    return processed;
+  }, [content, youtubeVideos]);
+
   return (
     <motion.div
       ref={ref}
@@ -64,17 +99,24 @@ const BlogContent = forwardRef<HTMLDivElement, BlogContentProps>(({ content }, r
               />
             );
           },
-          // Custom rendering for headings
+          // Custom rendering for headings with unique IDs
           h2({ node, ...props }) {
-            const id = props.children?.[0]?.toString().toLowerCase().replace(/\s+/g, '-');
+            // Use existing ID if available, otherwise generate one
+            const existingId = props.id;
+            const text = props.children?.[0]?.toString() || '';
+            const id = existingId || `h2-${text.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}-${Math.random().toString(36).substr(2, 5)}`;
             return <h2 id={id} className="scroll-mt-24" {...props} />;
           },
           h3({ node, ...props }) {
-            const id = props.children?.[0]?.toString().toLowerCase().replace(/\s+/g, '-');
+            const existingId = props.id;
+            const text = props.children?.[0]?.toString() || '';
+            const id = existingId || `h3-${text.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}-${Math.random().toString(36).substr(2, 5)}`;
             return <h3 id={id} className="scroll-mt-24" {...props} />;
           },
           h4({ node, ...props }) {
-            const id = props.children?.[0]?.toString().toLowerCase().replace(/\s+/g, '-');
+            const existingId = props.id;
+            const text = props.children?.[0]?.toString() || '';
+            const id = existingId || `h4-${text.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}-${Math.random().toString(36).substr(2, 5)}`;
             return <h4 id={id} className="scroll-mt-24" {...props} />;
           },
           // Custom rendering for blockquotes
@@ -86,9 +128,17 @@ const BlogContent = forwardRef<HTMLDivElement, BlogContentProps>(({ content }, r
               />
             );
           },
+          // Custom rendering for YouTube embeds
+          div({ node, className, ...props }) {
+            if (className === 'youtube-embed' && props['data-video-id']) {
+              const videoId = props['data-video-id'] as string;
+              return <YouTubeEmbed videoId={videoId} title="YouTube video" />;
+            }
+            return <div className={className} {...props} />;
+          },
         }}
       >
-        {content}
+        {processedContent}
       </ReactMarkdown>
     </motion.div>
   );

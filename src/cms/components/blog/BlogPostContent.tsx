@@ -440,7 +440,8 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
     const textarea = textAreaRef.current;
     const { start, end } = selectedText;
 
-    // Create markdown for embedding YouTube video
+    // Create markdown for embedding YouTube video with privacy-friendly approach
+    // This will be rendered by our custom YouTubeEmbed component
     const embedCode = `<div class="video-container">
   <iframe
     width="560"
