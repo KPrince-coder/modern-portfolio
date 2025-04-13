@@ -19,13 +19,19 @@ const BlogNavHeader: React.FC<BlogNavHeaderProps> = ({ title, url, imageUrl, sum
   const [isScrolled, setIsScrolled] = useState(false);
   const [progress, setProgress] = useState(0);
 
+  // Function to truncate long titles
+  const truncateTitle = (text: string, maxLength: number = 50): string => {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
+  };
+
   // Handle scroll events for progress bar and header
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.scrollY;
       const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
       const scrollProgress = scrollTop / scrollHeight;
-      
+
       setProgress(scrollProgress * 100);
       setIsScrolled(scrollTop > 300); // Show title after scrolling past the main title
     };
@@ -37,7 +43,7 @@ const BlogNavHeader: React.FC<BlogNavHeaderProps> = ({ title, url, imageUrl, sum
   return (
     <header className="fixed top-0 left-0 right-0 z-40 transition-all duration-300">
       {/* Progress bar */}
-      <div 
+      <div
         className="h-1 bg-indigo-600 dark:bg-indigo-500 transition-all duration-300 ease-out"
         style={{ width: `${progress}%` }}
       />
@@ -49,8 +55,8 @@ const BlogNavHeader: React.FC<BlogNavHeaderProps> = ({ title, url, imageUrl, sum
         <div className="container mx-auto px-4 md:px-6">
           <div className="flex justify-between items-center">
             {/* Back button */}
-            <Link 
-              to="/blog" 
+            <Link
+              to="/blog"
               className="flex items-center text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
             >
               <FiArrowLeft className="mr-2" />
@@ -65,10 +71,10 @@ const BlogNavHeader: React.FC<BlogNavHeaderProps> = ({ title, url, imageUrl, sum
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
-                  className="absolute left-1/2 transform -translate-x-1/2 max-w-md"
+                  className="absolute left-1/2 transform -translate-x-1/2 max-w-[60%] w-full"
                 >
                   <h2 className="text-lg font-bold text-gray-800 dark:text-white truncate text-center">
-                    {title}
+                    {truncateTitle(title)}
                   </h2>
                 </motion.div>
               )}

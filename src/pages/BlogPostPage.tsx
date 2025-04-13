@@ -7,7 +7,7 @@ import BlogLayout from '../layouts/BlogLayout';
 import BlogContent from '../components/blog/BlogContent';
 import BlogComments from '../components/blog/BlogComments';
 import { format } from 'date-fns';
-import LoadingSpinner from '../components/ui/LoadingSpinner';
+import BlogPostSkeleton from '../components/blog/BlogPostSkeleton';
 
 // Type for adjacent posts
 interface AdjacentPost {
@@ -88,11 +88,7 @@ const BlogPostPage: React.FC = () => {
   const currentUrl = window.location.href;
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
-        <LoadingSpinner size="lg" text="Loading article..." />
-      </div>
-    );
+    return <BlogPostSkeleton />;
   }
 
   if (error || !post) {
