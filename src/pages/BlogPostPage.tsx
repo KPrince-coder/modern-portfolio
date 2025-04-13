@@ -5,10 +5,8 @@ import { useTrackBlogReadTime } from '../utils/blogAnalytics';
 import { Helmet } from 'react-helmet-async';
 import BlogLayout from '../layouts/BlogLayout';
 import BlogContent from '../components/blog/BlogContent';
-import BlogComments from '../components/blog/BlogComments';
+// BlogComments will be handled by the layout
 import { format } from 'date-fns';
-// motion is not used in this component
-import { FiTag, FiUser } from 'react-icons/fi';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 
 // Type for adjacent posts
@@ -120,6 +118,12 @@ const BlogPostPage: React.FC = () => {
       readTime={readTime}
       coverImage={post.featured_image_url}
       slug={post.slug}
+      summary={post.summary}
+      tags={post.tags}
+      category={post.category}
+      postId={post.id}
+      prevPost={prevPost}
+      nextPost={nextPost}
     >
       {/* SEO */}
       <Helmet>
@@ -133,93 +137,8 @@ const BlogPostPage: React.FC = () => {
         <meta name="twitter:card" content="summary_large_image" />
       </Helmet>
 
-      {/* Article metadata */}
-      <div className="mb-8">
-        <div className="flex flex-wrap gap-4 text-gray-600 dark:text-gray-400 text-sm">
-          {post.category && (
-            <Link
-              to={`/blog?category=${post.category.id}`}
-              className="inline-flex items-center px-3 py-1 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-indigo-800/40 transition-colors"
-            >
-              {post.category.name}
-            </Link>
-          )}
-
-          {post.tags && post.tags.length > 0 && (
-            <div className="flex items-center">
-              <FiTag className="mr-2" />
-              <div className="flex flex-wrap gap-2">
-                {post.tags.map(tag => (
-                  <Link
-                    key={tag.id}
-                    to={`/blog?tag=${tag.slug}`}
-                    className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-                  >
-                    #{tag.name}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Main content */}
-      <article className="prose prose-lg dark:prose-invert max-w-none">
-        <BlogContent ref={contentRef} content={post.content} />
-      </article>
-
-      {/* Author section */}
-      <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
-        <div className="flex items-start gap-4">
-          <div className="w-16 h-16 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
-            <FiUser className="w-8 h-8" />
-          </div>
-          <div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-              {'Admin'}
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
-              Content creator and writer passionate about sharing knowledge and insights.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Post navigation */}
-      <nav className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {prevPost && (
-            <Link
-              to={`/blog/${prevPost.slug}`}
-              className="group p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors"
-            >
-              <span className="block text-sm text-gray-500 dark:text-gray-400 mb-2">Previous Article</span>
-              <h4 className="text-lg font-medium text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-2">
-                {prevPost.title}
-              </h4>
-            </Link>
-          )}
-
-          {nextPost && (
-            <Link
-              to={`/blog/${nextPost.slug}`}
-              className="group p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors md:text-right md:ml-auto"
-            >
-              <span className="block text-sm text-gray-500 dark:text-gray-400 mb-2">Next Article</span>
-              <h4 className="text-lg font-medium text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-2">
-                {nextPost.title}
-              </h4>
-            </Link>
-          )}
-        </div>
-      </nav>
-
-      {/* Comments section */}
-      <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Comments</h2>
-        <BlogComments postId={post.id} />
-      </div>
+      {/* Blog content */}
+      <BlogContent ref={contentRef} content={post.content} />
     </BlogLayout>
   );
 };

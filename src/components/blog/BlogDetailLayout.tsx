@@ -1,7 +1,7 @@
 import React, { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-// Theme toggler removed
+import BlogThemeToggler from './BlogThemeToggler';
 
 interface BlogDetailLayoutProps {
   children: ReactNode;
@@ -39,7 +39,7 @@ const BlogDetailLayout: React.FC<BlogDetailLayoutProps> = ({ children }) => {
             Back to Blog
           </Link>
 
-          {/* Theme toggler removed */}
+          <BlogThemeToggler />
         </div>
       </header>
 
