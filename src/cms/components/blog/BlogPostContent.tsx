@@ -434,15 +434,26 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
   }
 
   // Handle YouTube video confirmation from modal
-  const handleYouTubeConfirm = (videoId: string) => {
+  const handleYouTubeConfirm = (videoId: string, isLocalVideo?: boolean, localVideoUrl?: string) => {
     if (!textAreaRef.current) return;
 
     const textarea = textAreaRef.current;
     const { start, end } = selectedText;
 
-    // Create markdown for embedding YouTube video with privacy-friendly approach
-    // This will be rendered by our custom YouTubeEmbed component
-    const embedCode = `<div class="video-container">
+    let embedCode = '';
+
+    if (isLocalVideo && localVideoUrl) {
+      // Create markdown for embedding local video
+      embedCode = `<div class="video-container" data-local-video="true" data-video-url="${localVideoUrl}">
+  <video controls>
+    <source src="${localVideoUrl}" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+</div>`;
+    } else {
+      // Create markdown for embedding YouTube video with privacy-friendly approach
+      // This will be rendered by our custom YouTubeEmbed component
+      embedCode = `<div class="video-container">
   <iframe
     width="560"
     height="315"
@@ -453,6 +464,7 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({
     allowfullscreen>
   </iframe>
 </div>`;
+    }
 
     const newValue = textarea.value.substring(0, start) + embedCode + textarea.value.substring(end);
     onChange(newValue);

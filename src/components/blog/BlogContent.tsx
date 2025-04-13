@@ -37,15 +37,48 @@ const BlogContent = forwardRef<HTMLDivElement, BlogContentProps>(({ content }, r
     extractYoutubeEmbeds();
   }, [content]);
 
-  // Process content to replace YouTube embeds with placeholders
+  // Extract local video URLs from content
+  const [localVideos, setLocalVideos] = useState<Map<string, string>>(new Map());
+
+  useEffect(() => {
+    // Extract local video URLs from content
+    const extractLocalVideos = () => {
+      const localVideoRegex = /<div class="video-container" data-local-video="true" data-video-url="([^"]+)">[\s\S]*?<\/div>/g;
+      const videoUrls = new Map<string, string>();
+      let match;
+
+      while ((match = localVideoRegex.exec(content)) !== null) {
+        const videoUrl = match[1];
+        const fullMatch = match[0];
+        if (videoUrl) {
+          videoUrls.set(fullMatch, videoUrl);
+        }
+      }
+
+      setLocalVideos(videoUrls);
+    };
+
+    extractLocalVideos();
+  }, [content]);
+
+  // Process content to replace YouTube embeds and local videos with placeholders
   const processedContent = React.useMemo(() => {
     let processed = content;
+
+    // Replace YouTube embeds
     youtubeVideos.forEach((videoId, fullMatch) => {
       // Replace with a placeholder that our custom renderer will handle
       processed = processed.replace(fullMatch, `<div class="youtube-embed" data-video-id="${videoId}"></div>`);
     });
+
+    // Replace local videos
+    localVideos.forEach((videoUrl, fullMatch) => {
+      // Replace with a placeholder that our custom renderer will handle
+      processed = processed.replace(fullMatch, `<div class="local-video-embed" data-video-url="${videoUrl}"></div>`);
+    });
+
     return processed;
-  }, [content, youtubeVideos]);
+  }, [content, youtubeVideos, localVideos]);
 
   return (
     <motion.div
@@ -128,11 +161,15 @@ const BlogContent = forwardRef<HTMLDivElement, BlogContentProps>(({ content }, r
               />
             );
           },
-          // Custom rendering for YouTube embeds
+          // Custom rendering for YouTube embeds and local videos
           div({ node, className, ...props }) {
             if (className === 'youtube-embed' && props['data-video-id']) {
               const videoId = props['data-video-id'] as string;
               return <YouTubeEmbed videoId={videoId} title="YouTube video" />;
+            }
+            if (className === 'local-video-embed' && props['data-video-url']) {
+              const videoUrl = props['data-video-url'] as string;
+              return <YouTubeEmbed videoId="local" title="Video" isLocalVideo={true} localVideoUrl={videoUrl} />;
             }
             return <div className={className} {...props} />;
           },
