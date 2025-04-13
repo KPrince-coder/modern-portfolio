@@ -27,14 +27,16 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <HelmetProvider>
-        <Router>
-          <ScrollToTop />
-          <AppContent />
-        </Router>
-      </HelmetProvider>
-    </QueryClientProvider>
+    <div className="app-container overflow-hidden">
+      <QueryClientProvider client={queryClient}>
+        <HelmetProvider>
+          <Router>
+            <ScrollToTop />
+            <AppContent />
+          </Router>
+        </HelmetProvider>
+      </QueryClientProvider>
+    </div>
   );
 }
 

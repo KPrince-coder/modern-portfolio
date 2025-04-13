@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+/* Prevent horizontal scrolling across the entire application */
+html, body {
+  overflow-x: hidden;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
