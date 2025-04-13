@@ -144,7 +144,7 @@ const TableOfContents: React.FC<TableOfContentsProps> = ({ contentRef, className
           <FiList className="w-5 h-5" />
           Table of Contents
         </h2>
-        <nav aria-label="Table of contents">
+        <nav aria-label="Table of contents" className="max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar">
           <ul className="space-y-2">
             {headings.map((heading) => (
               <li

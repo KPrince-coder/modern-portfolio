@@ -1,4 +1,4 @@
-import React, { ReactNode, useRef } from 'react';
+import React, { ReactNode, useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import PostNavigation from '../components/blog/PostNavigation';
 import BlogNavHeader from '../components/blog/BlogNavHeader';
@@ -6,6 +6,7 @@ import ShareWidget from '../components/blog/ShareWidget';
 import TableOfContents from '../components/blog/TableOfContents';
 import BlogThemeToggler from '../components/blog/BlogThemeToggler';
 import BlogComments from '../components/blog/BlogComments';
+import TagCloud from '../components/blog/TagCloud';
 import '../styles/BlogOverflowFix.css';
 
 interface BlogLayoutProps {
@@ -41,6 +42,23 @@ const BlogLayout: React.FC<BlogLayoutProps> = ({
 }) => {
   const contentRef = useRef<HTMLDivElement>(null);
   const currentUrl = window.location.href;
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Check if we're on mobile/tablet view
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+
+    // Initial check
+    checkScreenSize();
+
+    // Add event listener for window resize
+    window.addEventListener('resize', checkScreenSize);
+
+    // Cleanup
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
@@ -68,7 +86,39 @@ const BlogLayout: React.FC<BlogLayoutProps> = ({
         )}
 
         <div className="container mx-auto px-4 md:px-6 max-w-5xl">
+          {/* Mobile/Tablet Tag Cloud (visible only on smaller screens) */}
+          {isMobile && tags && tags.length > 0 && (
+            <div className="mb-6">
+              <TagCloud tags={tags} variant="inline" />
+            </div>
+          )}
+
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            {/* Sidebar for mobile/tablet - appears at the top */}
+            {isMobile && (
+              <div className="blog-sidebar-container mb-8 order-first">
+                {/* Table of contents */}
+                <div className="blog-sidebar-item bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
+                  <TableOfContents contentRef={contentRef} />
+                </div>
+
+                {/* Theme toggler */}
+                <div className="blog-sidebar-item flex justify-center py-4">
+                  <BlogThemeToggler />
+                </div>
+
+                {/* Back to blog */}
+                <div className="blog-sidebar-item">
+                  <Link
+                    to="/blog"
+                    className="block w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-center transition-colors"
+                  >
+                    View All Articles
+                  </Link>
+                </div>
+              </div>
+            )}
+
             {/* Main content area */}
             <div className="lg:col-span-3">
               {/* Title and metadata */}
@@ -129,46 +179,37 @@ const BlogLayout: React.FC<BlogLayoutProps> = ({
               )}
             </div>
 
-            {/* Sidebar */}
-            <div className="lg:col-span-1">
-              <div className="sticky top-24">
-                {/* Table of contents */}
-                <TableOfContents contentRef={contentRef} className="mb-8" />
+            {/* Desktop Sidebar */}
+            {!isMobile && (
+              <div className="lg:col-span-1">
+                <div className="sticky top-24">
+                  {/* Table of contents */}
+                  <TableOfContents contentRef={contentRef} className="mb-8" />
 
-                {/* Theme toggler */}
-                <div className="mb-8 flex justify-center">
-                  <BlogThemeToggler />
-                </div>
-
-                {/* Tags */}
-                {tags && tags.length > 0 && (
-                  <div className="mb-8">
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Tags</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {tags.map(tag => (
-                        <Link
-                          key={tag.id}
-                          to={`/blog?tag=${tag.slug}`}
-                          className="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full text-sm hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                        >
-                          #{tag.name}
-                        </Link>
-                      ))}
-                    </div>
+                  {/* Theme toggler */}
+                  <div className="mb-8 flex justify-center">
+                    <BlogThemeToggler />
                   </div>
-                )}
 
-                {/* Back to blog */}
-                <div className="mb-8">
-                  <Link
-                    to="/blog"
-                    className="block w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-center transition-colors"
-                  >
-                    View All Articles
-                  </Link>
+                  {/* Tags */}
+                  {tags && tags.length > 0 && (
+                    <div className="mb-8">
+                      <TagCloud tags={tags} variant="sidebar" />
+                    </div>
+                  )}
+
+                  {/* Back to blog */}
+                  <div className="mb-8">
+                    <Link
+                      to="/blog"
+                      className="block w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-center transition-colors"
+                    >
+                      View All Articles
+                    </Link>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Related posts */}
@@ -182,6 +223,11 @@ const BlogLayout: React.FC<BlogLayoutProps> = ({
           )}
         </div>
       </main>
+
+      {/* Floating Tag Cloud (visible on all screen sizes) */}
+      {tags && tags.length > 0 && (
+        <TagCloud tags={tags} variant="floating" />
+      )}
 
       {/* Footer */}
       <footer className="bg-gray-50 dark:bg-gray-800 py-12">
