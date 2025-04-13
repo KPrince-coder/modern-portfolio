@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiHome } from 'react-icons/fi';
+import { FiArrowLeft } from 'react-icons/fi';
 import BlogThemeToggler from './BlogThemeToggler';
 import ShareWidget from './ShareWidget';
 
@@ -64,14 +64,11 @@ const BlogNavHeader: React.FC<BlogNavHeaderProps> = ({ title, url, imageUrl, sum
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 transition-all duration-300">
-      {/* Progress bar container with blurred background */}
-      <div className="h-1 bg-gray-200/30 dark:bg-gray-900/90 backdrop-blur-md ">
-        {/* Progress bar indicator */}
-        <div
-          className="h-full bg-indigo-600 dark:bg-indigo-500 transition-all duration-300 ease-out"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
+      {/* Progress bar */}
+      <div
+        className="h-1 bg-indigo-600 dark:bg-indigo-500 transition-all duration-300 ease-out"
+        style={{ width: `${progress}%` }}
+      />
 
       {/* Header content */}
       <div className={`bg-white/90 dark:bg-gray-900/90 backdrop-blur-md shadow-sm transition-all duration-300 ${
@@ -79,12 +76,13 @@ const BlogNavHeader: React.FC<BlogNavHeaderProps> = ({ title, url, imageUrl, sum
       }`}>
         <div className="container mx-auto px-4 md:px-6">
           <div className="flex justify-between items-center">
-            {/* Home button */}
+            {/* Back button */}
             <Link
               to="/blog"
               className="flex items-center text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
             >
-              <FiHome className="w-6 h-6" title="Visit blogs page" aria-label="Visit blogs page" />
+              <FiArrowLeft className="mr-2" />
+              <span className="hidden sm:inline">Back to Blog</span>
             </Link>
 
             {/* Title (visible when scrolled) */}
@@ -126,4 +124,3 @@ const BlogNavHeader: React.FC<BlogNavHeaderProps> = ({ title, url, imageUrl, sum
 };
 
 export default BlogNavHeader;
-

@@ -102,11 +102,6 @@ const BlogLayout: React.FC<BlogLayoutProps> = ({
                   <TableOfContents contentRef={contentRef} />
                 </div>
 
-                {/* Theme toggler */}
-                <div className="blog-sidebar-item flex justify-center py-4">
-                  <BlogThemeToggler />
-                </div>
-
                 {/* Back to blog */}
                 <div className="blog-sidebar-item">
                   <Link
@@ -185,11 +180,6 @@ const BlogLayout: React.FC<BlogLayoutProps> = ({
                 <div className="sticky top-24">
                   {/* Table of contents */}
                   <TableOfContents contentRef={contentRef} className="mb-8" />
-
-                  {/* Theme toggler */}
-                  <div className="mb-8 flex justify-center">
-                    <BlogThemeToggler />
-                  </div>
 
                   {/* Tags */}
                   {tags && tags.length > 0 && (
