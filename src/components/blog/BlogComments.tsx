@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { format } from 'date-fns';
 import { useBlogComments, useSubmitBlogComment, useLikePost } from '../../hooks/useSupabase';
 import CommentItem from './CommentItem';
 import { FiHeart } from 'react-icons/fi';
@@ -44,12 +43,15 @@ const BlogComments: React.FC<BlogCommentsProps> = ({ postId }) => {
     if (storedPostLiked) {
       setIsPostLiked(JSON.parse(storedPostLiked));
     }
+  }, [postId]);
 
+  // Set post likes count from comments data
+  useEffect(() => {
     // Get post likes count from the first comment's post_likes_count property
     if (comments.length > 0 && comments[0].post_likes_count !== undefined) {
       setPostLikesCount(comments[0].post_likes_count);
     }
-  }, [postId, comments]);
+  }, [comments]);
 
   // Handle form input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -130,10 +132,7 @@ const BlogComments: React.FC<BlogCommentsProps> = ({ postId }) => {
     }
   };
 
-  // Format date for display
-  const formatDate = (dateString: string): string => {
-    return format(new Date(dateString), 'MMMM d, yyyy');
-  };
+  // Note: formatDate is now used in the CommentItem component
 
   // Handle comment like toggle
   const handleCommentLikeToggle = (commentId: string) => {
