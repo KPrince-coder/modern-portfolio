@@ -99,6 +99,42 @@ export const useTrackBlogShare = () => {
   });
 };
 
+export const useLikePost = () => {
+  return useMutation({
+    mutationFn: ({ postId, unlike }: { postId: string; unlike?: boolean }) =>
+      api.likePost(postId, unlike),
+    onSuccess: (_, variables) => {
+      // Invalidate the blog post query to refetch with updated likes count
+      queryClient.invalidateQueries({ queryKey: ['blogPost', variables.postId] });
+      // Also invalidate comments query since it might contain post_likes_count
+      queryClient.invalidateQueries({ queryKey: ['blogComments', variables.postId] });
+    },
+  });
+};
+
+export const useLikeComment = () => {
+  return useMutation({
+    mutationFn: ({ commentId, unlike }: { commentId: string; unlike?: boolean }) =>
+      api.likeComment(commentId, unlike),
+    onSuccess: (_, variables) => {
+      // Get the post ID from the comment ID by querying the cache
+      const allCommentsQueries = queryClient.getQueriesData<any[]>({ queryKey: ['blogComments'] });
+
+      // Iterate through all blogComments queries
+      for (const [queryKey, comments] of allCommentsQueries) {
+        if (Array.isArray(comments)) {
+          const comment = comments.find(c => c.id === variables.commentId);
+          if (comment?.post_id) {
+            // Invalidate the specific comments query to refetch with updated likes count
+            queryClient.invalidateQueries({ queryKey: ['blogComments', comment.post_id] });
+            break; // Found the comment, no need to continue
+          }
+        }
+      }
+    },
+  });
+};
+
 export const useTrackBlogTimeSpent = () => {
   return useMutation({
     mutationFn: ({ postId, timeSpentSeconds }: { postId: string; timeSpentSeconds: number }) =>

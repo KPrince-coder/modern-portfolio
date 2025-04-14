@@ -68,6 +68,24 @@ export const formatSupabaseData = <T>(data: T) => {
   };
 };
 
+// Helper function to get a unique session ID for the current user
+export const getSessionId = (): string => {
+  // Check if we already have a session ID in localStorage
+  let sessionId = localStorage.getItem('portfolio_session_id');
+
+  // If not, create a new one
+  if (!sessionId) {
+    // Generate a random ID
+    sessionId = Math.random().toString(36).substring(2, 15) +
+                Math.random().toString(36).substring(2, 15);
+
+    // Store it in localStorage
+    localStorage.setItem('portfolio_session_id', sessionId);
+  }
+
+  return sessionId;
+};
+
 // Helper function to check if user has a specific role
 export const checkUserRole = async (userId: string, role: string) => {
   try {
@@ -454,15 +472,30 @@ export const api = {
 
   // Blog comments
   getBlogComments: async (postId: string) => {
+    // First get the post likes count
+    const { data: postData, error: postError } = await supabase
+      .from('blog_posts')
+      .select('likes_count')
+      .eq('id', postId)
+      .single();
+
+    if (postError) console.error('Error fetching post likes count:', postError);
+
+    // Then get the comments with their likes count
     const { data, error } = await supabase
       .from('blog_comments')
-      .select('*')
+      .select('*, likes_count')
       .eq('post_id', postId)
       .eq('is_approved', true)
       .order('created_at', { ascending: true });
 
     if (error) throw error;
-    return data;
+
+    // Add post_likes_count to each comment for easy access
+    return data.map(comment => ({
+      ...comment,
+      post_likes_count: postData?.likes_count || 0
+    }));
   },
 
   submitBlogComment: async (comment: {
@@ -507,6 +540,76 @@ export const api = {
 
     if (error) throw error;
     return data;
+  },
+
+  // Like a blog post
+  likePost: async (postId: string, unlike: boolean = false) => {
+    const userIdentifier = getSessionId();
+
+    if (unlike) {
+      // Unlike the post
+      const { error } = await supabase
+        .from('blog_post_likes')
+        .delete()
+        .match({ post_id: postId, user_identifier: userIdentifier });
+
+      if (error) throw error;
+      return { success: true, action: 'unliked' };
+    } else {
+      // Like the post
+      const { data, error } = await supabase
+        .from('blog_post_likes')
+        .insert([{
+          post_id: postId,
+          user_identifier: userIdentifier
+        }])
+        .select();
+
+      if (error) {
+        // If the error is a unique violation, the user already liked the post
+        if (error.code === '23505') {
+          return { success: true, action: 'already_liked' };
+        }
+        throw error;
+      }
+
+      return { success: true, action: 'liked', data };
+    }
+  },
+
+  // Like a comment
+  likeComment: async (commentId: string, unlike: boolean = false) => {
+    const userIdentifier = getSessionId();
+
+    if (unlike) {
+      // Unlike the comment
+      const { error } = await supabase
+        .from('blog_comment_likes')
+        .delete()
+        .match({ comment_id: commentId, user_identifier: userIdentifier });
+
+      if (error) throw error;
+      return { success: true, action: 'unliked' };
+    } else {
+      // Like the comment
+      const { data, error } = await supabase
+        .from('blog_comment_likes')
+        .insert([{
+          comment_id: commentId,
+          user_identifier: userIdentifier
+        }])
+        .select();
+
+      if (error) {
+        // If the error is a unique violation, the user already liked the comment
+        if (error.code === '23505') {
+          return { success: true, action: 'already_liked' };
+        }
+        throw error;
+      }
+
+      return { success: true, action: 'liked', data };
+    }
   },
 
   getRelatedBlogPosts: async (postId: string, limit: number = 3) => {
