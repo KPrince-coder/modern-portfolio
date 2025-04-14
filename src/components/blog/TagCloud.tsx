@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiTag, FiX, FiFilter } from 'react-icons/fi';
+import { FiTag, FiX } from 'react-icons/fi';
 
 interface Tag {
   id: string;
@@ -32,7 +32,7 @@ const TagCloud: React.FC<TagCloudProps> = ({ tags, className = '', variant = 'si
   // Floating variant (fixed position at bottom of screen)
   if (variant === 'floating') {
     return (
-      <div className={`fixed bottom-4 right-4 z-30 ${className}`}>
+      <div className={`fixed bottom-6 right-10 z-30 ${className}`}>
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
@@ -107,7 +107,7 @@ const TagCloud: React.FC<TagCloudProps> = ({ tags, className = '', variant = 'si
           <FiTag className="mr-2" />
           Article Tags
         </h3>
-        
+
         <div className="relative">
           {/* Tag cloud visualization */}
           <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto pr-1 custom-scrollbar">

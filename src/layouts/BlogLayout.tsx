@@ -8,6 +8,7 @@ import BlogThemeToggler from '../components/blog/BlogThemeToggler';
 import BlogComments from '../components/blog/BlogComments';
 import TagCloud from '../components/blog/TagCloud';
 import RelatedPosts from '../components/blog/RelatedPosts';
+import ScrollToTopButton from '../components/ui/ScrollToTopButton';
 import '../styles/BlogOverflowFix.css';
 
 interface BlogLayoutProps {
@@ -216,6 +217,9 @@ const BlogLayout: React.FC<BlogLayoutProps> = ({
       {tags && tags.length > 0 && (
         <TagCloud tags={tags} variant="floating" />
       )}
+
+      {/* Scroll to top button */}
+      <ScrollToTopButton position="bottom-left" showAtHeight={600} />
 
       {/* Footer */}
       <footer className="bg-gray-50 dark:bg-gray-800 py-12">
