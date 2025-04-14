@@ -9,11 +9,12 @@ This document provides comprehensive documentation for the blog system implement
 3. [Content Management](#content-management)
 4. [Blog Analytics](#blog-analytics)
 5. [AI Integration](#ai-integration)
-6. [Frontend Components](#frontend-components)
-7. [API Endpoints](#api-endpoints)
-8. [User Flows](#user-flows)
-9. [Performance Considerations](#performance-considerations)
-10. [Security Considerations](#security-considerations)
+6. [Social Engagement Features](#social-engagement-features)
+7. [Frontend Components](#frontend-components)
+8. [API Endpoints](#api-endpoints)
+9. [User Flows](#user-flows)
+10. [Performance Considerations](#performance-considerations)
+11. [Security Considerations](#security-considerations)
 
 ## System Architecture
 
@@ -28,19 +29,19 @@ graph TD
         A --> E[TipTap Editor]
         A --> F[Tailwind CSS]
     end
-    
+
     subgraph "Backend"
         D --> G[Supabase API]
         G --> H[PostgreSQL Database]
         G --> I[Supabase Storage]
         G --> J[Supabase Auth]
     end
-    
+
     subgraph "External Services"
         K[Groq API] <--> L[AI Integration]
         L <--> A
     end
-    
+
     H <--> G
 ```
 
@@ -67,7 +68,7 @@ erDiagram
         timestamp published_at
         uuid author_id FK
     }
-    
+
     blog_post_analytics {
         uuid id PK
         uuid post_id FK
@@ -82,14 +83,14 @@ erDiagram
         timestamp created_at
         timestamp last_viewed_at
     }
-    
+
     blog_post_shares {
         uuid id PK
         uuid post_id FK
         string platform
         timestamp shared_at
     }
-    
+
     ai_content_feedback {
         uuid id PK
         uuid post_id FK
@@ -97,7 +98,7 @@ erDiagram
         text feedback
         timestamp created_at
     }
-    
+
     blog_audience_data {
         uuid id PK
         uuid post_id FK
@@ -110,7 +111,7 @@ erDiagram
         boolean is_new_visitor
         timestamp created_at
     }
-    
+
     blog_content_engagement {
         uuid id PK
         uuid post_id FK
@@ -122,22 +123,43 @@ erDiagram
         int time_spent_seconds
         timestamp created_at
     }
-    
+
     blog_comments {
         uuid id PK
         uuid post_id FK
-        uuid user_id FK
+        string author_name
+        string author_email
+        string author_website
         text content
+        uuid parent_id FK
+        int likes_count
         timestamp created_at
         boolean is_approved
     }
-    
+
+    blog_post_likes {
+        uuid id PK
+        uuid post_id FK
+        string user_identifier
+        timestamp created_at
+    }
+
+    blog_comment_likes {
+        uuid id PK
+        uuid comment_id FK
+        string user_identifier
+        timestamp created_at
+    }
+
     blog_posts ||--o{ blog_post_analytics : "has"
     blog_posts ||--o{ blog_post_shares : "has"
     blog_posts ||--o{ ai_content_feedback : "has"
     blog_posts ||--o{ blog_audience_data : "has"
     blog_posts ||--o{ blog_content_engagement : "has"
     blog_posts ||--o{ blog_comments : "has"
+    blog_posts ||--o{ blog_post_likes : "has"
+    blog_comments ||--o{ blog_comment_likes : "has"
+    blog_comments }o--|| blog_comments : "parent-child"
 ```
 
 ## Content Management
@@ -153,18 +175,18 @@ sequenceDiagram
     participant Editor
     participant AI
     participant Supabase
-    
+
     Admin->>CMS: Navigate to Create Post
     CMS->>Editor: Initialize TipTap Editor
     Admin->>Editor: Enter Title, Content, etc.
-    
+
     alt AI-Assisted Content
         Admin->>AI: Request Content Generation
         AI->>Groq: Send Prompt
         Groq->>AI: Return Generated Content
         AI->>Editor: Populate Editor Fields
     end
-    
+
     Admin->>Editor: Edit Content
     Admin->>CMS: Save Post
     CMS->>Supabase: Store Post Data
@@ -203,23 +225,23 @@ sequenceDiagram
     participant Supabase
     participant CMS
     participant Admin
-    
+
     User->>Blog: View Blog Post
     Blog->>AnalyticsTracker: Track View
     AnalyticsTracker->>Supabase: Store View Data
-    
+
     User->>Blog: Scroll Through Content
     Blog->>AnalyticsTracker: Track Scroll Depth
     AnalyticsTracker->>Supabase: Store Engagement Data
-    
+
     User->>Blog: Click Element
     Blog->>AnalyticsTracker: Track Interaction
     AnalyticsTracker->>Supabase: Store Interaction Data
-    
+
     User->>Blog: Share Post
     Blog->>AnalyticsTracker: Track Share
     AnalyticsTracker->>Supabase: Store Share Data
-    
+
     Admin->>CMS: View Analytics
     CMS->>Supabase: Fetch Analytics Data
     Supabase->>CMS: Return Analytics Data
@@ -238,12 +260,12 @@ graph TD
     A --> E[Share Analytics]
     A --> F[Content Engagement]
     A --> G[Audience Insights]
-    
+
     F --> H[Scroll Depth Analysis]
     F --> I[Element Interaction]
     F --> J[Reading Time Distribution]
     F --> K[Content Decay Analysis]
-    
+
     G --> L[Geographic Distribution]
     G --> M[Device Distribution]
     G --> N[Browser Distribution]
@@ -262,7 +284,7 @@ sequenceDiagram
     participant CMS
     participant AI
     participant Groq
-    
+
     Admin->>CMS: Request AI Content
     CMS->>AI: Send Content Parameters
     AI->>Groq: Generate Content Request
@@ -279,18 +301,148 @@ graph TD
     A[AI Content Analytics] --> B[Performance Comparison]
     A --> C[Feedback Analysis]
     A --> D[Optimization Recommendations]
-    
+
     B --> E[Views Comparison]
     B --> F[Engagement Comparison]
     B --> G[Share Comparison]
-    
+
     C --> H[Rating Distribution]
     C --> I[Feedback Sentiment]
     C --> J[Improvement Areas]
-    
+
     D --> K[Content Structure]
     D --> L[SEO Recommendations]
     D --> M[Engagement Strategies]
+```
+
+## Social Engagement Features
+
+The blog system includes comprehensive social engagement features to increase user interaction and build community around the content.
+
+### Comments System
+
+The comments system allows readers to engage with blog content through threaded discussions:
+
+```mermaid
+graph TD
+    A[Comments System] --> B[Comment Creation]
+    A --> C[Comment Display]
+    A --> D[Comment Management]
+    A --> E[Comment Analytics]
+
+    B --> B1[Comment Form]
+    B --> B2[Validation]
+    B --> B3[Submission]
+    B --> B4[Moderation Queue]
+
+    C --> C1[Threaded Comments]
+    C --> C2[Nested Replies]
+    C --> C3[Comment Sorting]
+    C --> C4[Pagination]
+
+    D --> D1[Approval/Rejection]
+    D --> D2[Spam Detection]
+    D --> D3[Reporting]
+    D --> D4[Bulk Actions]
+
+    E --> E1[Comment Counts]
+    E --> E2[Engagement Metrics]
+    E --> E3[User Tracking]
+```
+
+#### Threaded Comments Implementation
+
+The system implements a hierarchical comment structure with parent-child relationships:
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant CommentForm
+    participant CommentItem
+    participant Supabase
+
+    User->>CommentForm: Submit Comment
+    CommentForm->>Supabase: Store Comment
+    Supabase->>CommentItem: Update Comments List
+
+    User->>CommentItem: Click Reply
+    CommentItem->>CommentForm: Show Reply Form
+    User->>CommentForm: Submit Reply
+    CommentForm->>Supabase: Store Reply with Parent ID
+    Supabase->>CommentItem: Update Comments List
+    CommentItem->>CommentItem: Organize Comments Hierarchically
+```
+
+### Like and Reaction System
+
+The like and reaction system allows users to express appreciation for posts and comments:
+
+```mermaid
+graph TD
+    A[Like/Reaction System] --> B[Post Likes]
+    A --> C[Comment Likes]
+    A --> D[Analytics Integration]
+
+    B --> B1[Like Button]
+    B --> B2[Like Counter]
+    B --> B3[Persistence]
+
+    C --> C1[Comment Like Button]
+    C --> C2[Comment Like Counter]
+    C --> C3[Persistence]
+
+    D --> D1[Track Likes]
+    D --> D2[Engagement Metrics]
+    D --> D3[Content Popularity]
+```
+
+#### Like System Implementation
+
+The like system uses local storage and database persistence to track user interactions:
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant UI
+    participant LocalStorage
+    participant Supabase
+
+    User->>UI: Click Like Button
+    UI->>UI: Optimistic Update
+    UI->>Supabase: Store Like
+    UI->>LocalStorage: Store Like State
+
+    User->>UI: Load Page
+    UI->>LocalStorage: Check Like State
+    LocalStorage->>UI: Return Like State
+    UI->>UI: Update UI
+
+    UI->>Supabase: Fetch Like Counts
+    Supabase->>UI: Return Like Counts
+    UI->>UI: Display Like Counts
+```
+
+### Share Functionality
+
+The share functionality allows users to share blog posts on various platforms:
+
+```mermaid
+graph TD
+    A[Share Functionality] --> B[Share Buttons]
+    A --> C[Share Analytics]
+    A --> D[Social Metadata]
+
+    B --> B1[Primary Platforms]
+    B --> B2[Secondary Platforms]
+    B --> B3[Copy Link]
+
+    C --> C1[Track Shares]
+    C --> C2[Platform Analytics]
+    C --> C3[Share Conversion]
+
+    D --> D1[Open Graph Tags]
+    D --> D2[Twitter Cards]
+    D --> D3[Rich Previews]
 ```
 
 ## Frontend Components
@@ -304,18 +456,18 @@ graph TD
     A[Blog Page] --> B[Blog List]
     A --> C[Blog Post]
     A --> D[Blog Sidebar]
-    
+
     B --> E[Post Card]
     B --> F[Pagination]
     B --> G[Filter/Search]
-    
+
     C --> H[Post Header]
     C --> I[Post Content]
     C --> J[Post Footer]
     C --> K[Comments Section]
     C --> L[Share Buttons]
     C --> M[Related Posts]
-    
+
     D --> N[Categories]
     D --> O[Tags]
     D --> P[Popular Posts]
@@ -329,21 +481,21 @@ graph TD
     A --> C[Blog Editor]
     A --> D[Blog Analytics]
     A --> E[Media Library]
-    
+
     B --> F[Post Table]
     B --> G[Filter/Search]
     B --> H[Bulk Actions]
-    
+
     C --> I[TipTap Editor]
     C --> J[Metadata Fields]
     C --> K[Media Selector]
     C --> L[AI Assistant]
     C --> M[Preview]
-    
+
     D --> N[Analytics Dashboard]
     D --> O[Post Analytics]
     D --> P[Export Options]
-    
+
     E --> Q[Media Grid]
     E --> R[Upload]
     E --> S[Media Details]
@@ -380,6 +532,20 @@ graph LR
     A --> H[Get AI Performance]
 ```
 
+### Blog Comments and Social Endpoints
+
+```mermaid
+graph LR
+    A[Supabase API] --> B[Get Comments]
+    A --> C[Submit Comment]
+    A --> D[Reply to Comment]
+    A --> E[Like Post]
+    A --> F[Unlike Post]
+    A --> G[Like Comment]
+    A --> H[Unlike Comment]
+    A --> I[Get Liked Status]
+```
+
 ## User Flows
 
 ### Blog Reader Flow
@@ -388,10 +554,21 @@ graph LR
 graph TD
     A[Visit Blog] --> B[Browse Posts]
     B --> C[Read Post]
-    C --> D[Share Post]
-    C --> E[Comment on Post]
-    C --> F[View Related Posts]
-    F --> C
+
+    C --> D[Social Engagement]
+    D --> D1[Share Post]
+    D --> D2[Like Post]
+    D --> D3[Comment on Post]
+    D3 --> D3a[Submit Comment]
+    D3 --> D3b[Reply to Comment]
+    D3 --> D3c[Like Comment]
+
+    C --> E[Content Navigation]
+    E --> E1[View Related Posts]
+    E --> E2[Browse Table of Contents]
+    E --> E3[Scroll to Top]
+
+    E1 --> C
 ```
 
 ### Blog Admin Flow
@@ -403,17 +580,17 @@ graph TD
     B --> D[Edit Existing Post]
     B --> E[View Analytics]
     B --> F[Manage Media]
-    
+
     C --> G[Use AI Assistant]
     C --> H[Add Media]
     C --> I[Preview Post]
     C --> J[Publish Post]
-    
+
     D --> G
     D --> H
     D --> I
     D --> J
-    
+
     E --> K[View Overall Analytics]
     E --> L[View Post Analytics]
     E --> M[Export Analytics]
@@ -433,12 +610,12 @@ The blog system is designed with performance in mind, implementing several optim
 graph TD
     A[Performance Optimizations] --> B[Frontend Optimizations]
     A --> C[Backend Optimizations]
-    
+
     B --> D[Code Splitting]
     B --> E[Lazy Loading]
     B --> F[Responsive Images]
     B --> G[Pagination]
-    
+
     C --> H[Database Indexing]
     C --> I[Query Optimization]
     C --> J[Caching]
@@ -461,16 +638,16 @@ graph TD
     A --> C[Authorization]
     A --> D[Data Validation]
     A --> E[Protection Mechanisms]
-    
+
     B --> F[Supabase Auth]
     B --> G[JWT Tokens]
-    
+
     C --> H[Role-Based Access]
     C --> I[Permission Checks]
-    
+
     D --> J[Input Validation]
     D --> K[Output Sanitization]
-    
+
     E --> L[CSRF Protection]
     E --> M[Content Security Policy]
     E --> N[Rate Limiting]
@@ -497,23 +674,23 @@ sequenceDiagram
     participant Blog
     participant AnalyticsTracker
     participant Supabase
-    
+
     User->>Blog: Load Blog Post
     Blog->>AnalyticsTracker: Initialize Tracking
     AnalyticsTracker->>Supabase: Record Page View
-    
+
     User->>Blog: Scroll Through Content
     Blog->>AnalyticsTracker: Track Scroll Position
     AnalyticsTracker->>Supabase: Record Scroll Depth
-    
+
     User->>Blog: Click on Element
     Blog->>AnalyticsTracker: Track Element Interaction
     AnalyticsTracker->>Supabase: Record Interaction
-    
+
     User->>Blog: Share Post
     Blog->>AnalyticsTracker: Track Share
     AnalyticsTracker->>Supabase: Record Share
-    
+
     User->>Blog: Leave Page
     Blog->>AnalyticsTracker: Calculate Time Spent
     AnalyticsTracker->>Supabase: Record Time Spent
@@ -531,23 +708,23 @@ graph TD
     A --> E[BlogShareAnalytics]
     A --> F[BlogContentEngagement]
     A --> G[BlogAudienceInsights]
-    
+
     B --> B1[Summary Metrics]
-    
+
     C --> C1[Posts by Views]
     C --> C2[Posts by Time Spent]
-    
+
     D --> D1[AI vs. Manual Performance]
     D --> D2[Performance Metrics]
-    
+
     E --> E1[Share Distribution]
     E --> E2[Platform Breakdown]
-    
+
     F --> F1[ScrollDepthChart]
     F --> F2[ElementInteractionChart]
     F --> F3[ReadingTimeDistribution]
     F --> F4[ContentOptimizationTips]
-    
+
     G --> G1[AudienceDemographics]
     G --> G2[DeviceDistribution]
     G --> G3[GeographicDistribution]
@@ -562,32 +739,32 @@ For individual blog posts, the system provides detailed analytics:
 graph TD
     A[BlogPostAnalyticsDetail] --> B[Post Header]
     A --> C[Analytics Tabs]
-    
+
     C --> D[Overview Tab]
     C --> E[Engagement Tab]
     C --> F[Audience Tab]
     C --> G[Optimization Tab]
-    
+
     D --> D1[Basic Metrics]
     D --> D2[Share Breakdown]
     D --> D3[AI Feedback]
-    
+
     E --> E1[PostEngagementMetrics]
-    
+
     F --> F1[PostAudienceInsights]
-    
+
     G --> G1[PostOptimizationTips]
-    
+
     E1 --> E1a[Engagement Metrics Summary]
     E1 --> E1b[Scroll Depth Chart]
     E1 --> E1c[Element Interaction Chart]
     E1 --> E1d[Reading Time Distribution]
-    
+
     F1 --> F1a[Audience Demographics]
     F1 --> F1b[Device Distribution]
     F1 --> F1c[Geographic Distribution]
     F1 --> F1d[Browser Distribution]
-    
+
     G1 --> G1a[Content Structure Tips]
     G1 --> G1b[Engagement Tips]
     G1 --> G1c[Device Optimization Tips]
@@ -603,17 +780,17 @@ graph TD
     B --> C[Metric Calculation]
     C --> D[Insight Generation]
     D --> E[Visualization]
-    
+
     B --> B1[Group by Post]
     B --> B2[Group by Time Period]
     B --> B3[Group by Device]
     B --> B4[Group by Location]
-    
+
     C --> C1[Calculate Views]
     C --> C2[Calculate Avg Time]
     C --> C3[Calculate Scroll Depth]
     C --> C4[Calculate Interaction Rate]
-    
+
     D --> D1[Identify Top Posts]
     D --> D2[Compare AI vs Manual]
     D --> D3[Analyze Audience]
@@ -630,15 +807,15 @@ graph TD
     A --> C[Export CSV]
     A --> D[Export PDF]
     A --> E[Email Report]
-    
+
     B --> F[Browser Print]
-    
+
     C --> G[Generate CSV]
     C --> H[Download File]
-    
+
     D --> I[Generate PDF]
     D --> J[Download File]
-    
+
     E --> K[Generate Report]
     E --> L[Send Email]
 ```
