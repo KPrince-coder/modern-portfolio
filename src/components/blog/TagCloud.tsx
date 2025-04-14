@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiTag, FiX } from 'react-icons/fi';
+import { scrollButtonEvent } from '../ui/ScrollToTopButton';
 
 interface Tag {
   id: string;
@@ -20,7 +21,25 @@ interface TagCloudProps {
  */
 const TagCloud: React.FC<TagCloudProps> = ({ tags, className = '', variant = 'sidebar' }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  // For sidebar variant only
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [isScrollButtonVisible, setIsScrollButtonVisible] = useState(false);
+
+  // Listen for scroll button visibility events
+  useEffect(() => {
+    const handleScrollButtonVisible = () => setIsScrollButtonVisible(true);
+    const handleScrollButtonHidden = () => setIsScrollButtonVisible(false);
+
+    // Add event listeners
+    document.addEventListener('scrollButtonVisible', handleScrollButtonVisible);
+    document.addEventListener('scrollButtonHidden', handleScrollButtonHidden);
+
+    // Clean up
+    return () => {
+      document.removeEventListener('scrollButtonVisible', handleScrollButtonVisible);
+      document.removeEventListener('scrollButtonHidden', handleScrollButtonHidden);
+    };
+  }, []);
 
   if (!tags || tags.length === 0) {
     return null;
@@ -31,8 +50,14 @@ const TagCloud: React.FC<TagCloudProps> = ({ tags, className = '', variant = 'si
 
   // Floating variant (fixed position at bottom of screen)
   if (variant === 'floating') {
+    // We'll use animate prop instead of a class for smoother transitions
+
     return (
-      <div className={`fixed bottom-6 right-10 z-30 ${className}`}>
+      <motion.div
+        className={`fixed right-10 z-30 ${className}`}
+        animate={{ bottom: isScrollButtonVisible ? '5.5rem' : '1.5rem' }}
+        transition={{ duration: 0.3, ease: 'easeInOut' }}
+      >
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
@@ -70,7 +95,7 @@ const TagCloud: React.FC<TagCloudProps> = ({ tags, className = '', variant = 'si
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </motion.div>
     );
   }
 

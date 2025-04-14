@@ -218,8 +218,8 @@ const BlogLayout: React.FC<BlogLayoutProps> = ({
         <TagCloud tags={tags} variant="floating" />
       )}
 
-      {/* Scroll to top button */}
-      <ScrollToTopButton position="bottom-left" showAtHeight={600} />
+      {/* Scroll to top button - positioned at the same spot as the tags button */}
+      <ScrollToTopButton position="bottom-right" showAtHeight={600} />
 
       {/* Footer */}
       <footer className="bg-gray-50 dark:bg-gray-800 py-12">
