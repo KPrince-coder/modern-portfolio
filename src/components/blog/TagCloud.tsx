@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiTag, FiX } from 'react-icons/fi';
 import { scrollState } from '../../utils/scrollState';
+import '../../styles/FloatingButton.css';
 
 interface Tag {
   id: string;
@@ -63,7 +64,7 @@ const TagCloud: React.FC<TagCloudProps> = ({ tags, className = '', variant = 'si
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setIsExpanded(!isExpanded)}
-          className="flex items-center justify-center w-12 h-12 bg-indigo-600 text-white rounded-full shadow-lg"
+          className="flex items-center justify-center w-12 h-12 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all"
           aria-label={isExpanded ? "Close tags" : "Show tags"}
         >
           {isExpanded ? <FiX size={20} /> : <FiTag size={20} />}
