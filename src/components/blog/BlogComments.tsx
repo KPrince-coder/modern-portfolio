@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useBlogComments, useSubmitBlogComment, useLikePost } from '../../hooks/useSupabase';
+import { supabase } from '../../lib/supabase';
 import CommentItem from './CommentItem';
 import { FiHeart } from 'react-icons/fi';
 
@@ -34,24 +35,62 @@ const BlogComments: React.FC<BlogCommentsProps> = ({ postId }) => {
 
   // Load liked state from localStorage on component mount
   useEffect(() => {
+    // Load liked comments from localStorage
     const storedLikedComments = localStorage.getItem(`likedComments_${postId}`);
     if (storedLikedComments) {
-      setLikedComments(JSON.parse(storedLikedComments));
+      try {
+        setLikedComments(JSON.parse(storedLikedComments));
+      } catch (error) {
+        console.error('Error parsing liked comments from localStorage:', error);
+        // Reset to empty array if parsing fails
+        setLikedComments([]);
+      }
     }
 
+    // Load post liked status from localStorage
     const storedPostLiked = localStorage.getItem(`likedPost_${postId}`);
     if (storedPostLiked) {
-      setIsPostLiked(JSON.parse(storedPostLiked));
+      try {
+        const isLiked = JSON.parse(storedPostLiked);
+        setIsPostLiked(isLiked);
+
+        // If the post is liked, we'll fetch the actual count in the next useEffect
+      } catch (error) {
+        console.error('Error parsing post liked status from localStorage:', error);
+        // Reset to false if parsing fails
+        setIsPostLiked(false);
+      }
     }
   }, [postId]);
 
-  // Set post likes count from comments data
+  // Set post likes count from comments data and check if post is liked
   useEffect(() => {
-    // Get post likes count from the first comment's post_likes_count property
-    if (comments.length > 0 && comments[0].post_likes_count !== undefined) {
-      setPostLikesCount(comments[0].post_likes_count);
-    }
-  }, [comments]);
+    // Always fetch the actual likes count from the database when the component mounts
+    const fetchPostLikesCount = async () => {
+      try {
+        const { count } = await supabase
+          .from('blog_post_likes')
+          .select('*', { count: 'exact', head: true })
+          .eq('post_id', postId);
+
+        if (count !== null) {
+          setPostLikesCount(count);
+        } else if (comments.length > 0 && comments[0].post_likes_count !== undefined) {
+          // Fallback to comment data if direct count fails
+          setPostLikesCount(comments[0].post_likes_count);
+        }
+      } catch (error) {
+        console.error('Error fetching post likes count:', error);
+
+        // Fallback to comment data if direct count fails
+        if (comments.length > 0 && comments[0].post_likes_count !== undefined) {
+          setPostLikesCount(comments[0].post_likes_count);
+        }
+      }
+    };
+
+    fetchPostLikesCount();
+  }, [comments, postId]);
 
   // Handle form input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -134,15 +173,21 @@ const BlogComments: React.FC<BlogCommentsProps> = ({ postId }) => {
 
   // Note: formatDate is now used in the CommentItem component
 
-  // Handle comment like toggle
+  // Handle comment like toggle (works for both comments and replies)
   const handleCommentLikeToggle = (commentId: string) => {
+    // Get the current liked comments from state
     setLikedComments(prev => {
+      // Toggle the like status
       const newLikedComments = prev.includes(commentId)
         ? prev.filter(id => id !== commentId)
         : [...prev, commentId];
 
-      // Store in localStorage
-      localStorage.setItem(`likedComments_${postId}`, JSON.stringify(newLikedComments));
+      try {
+        // Store in localStorage to persist across page refreshes
+        localStorage.setItem(`likedComments_${postId}`, JSON.stringify(newLikedComments));
+      } catch (error) {
+        console.error('Error saving liked comments to localStorage:', error);
+      }
 
       return newLikedComments;
     });
@@ -150,23 +195,40 @@ const BlogComments: React.FC<BlogCommentsProps> = ({ postId }) => {
 
   // Handle post like toggle
   const handlePostLikeToggle = async () => {
+    // Store the current state before updating
+    const wasLiked = isPostLiked;
+    const currentCount = postLikesCount;
+
     // Optimistic update
-    setIsPostLiked(!isPostLiked);
-    setPostLikesCount(prev => isPostLiked ? Math.max(0, prev - 1) : prev + 1);
+    setIsPostLiked(!wasLiked);
+    setPostLikesCount(prev => wasLiked ? Math.max(0, prev - 1) : prev + 1);
 
     try {
+      // Update localStorage immediately to ensure persistence
+      localStorage.setItem(`likedPost_${postId}`, JSON.stringify(!wasLiked));
+
+      // Call the API to update the like status
       await likePost.mutateAsync({
         postId,
-        unlike: isPostLiked,
+        unlike: wasLiked,
       });
 
-      // Store in localStorage
-      localStorage.setItem(`likedPost_${postId}`, JSON.stringify(!isPostLiked));
+      // After successful like/unlike, fetch the actual count to ensure accuracy
+      const { count } = await supabase
+        .from('blog_post_likes')
+        .select('*', { count: 'exact', head: true })
+        .eq('post_id', postId);
+
+      if (count !== null) {
+        setPostLikesCount(count);
+      }
     } catch (error) {
       console.error('Error toggling post like:', error);
       // Revert optimistic update on error
-      setIsPostLiked(!isPostLiked);
-      setPostLikesCount(prev => !isPostLiked ? Math.max(0, prev - 1) : prev + 1);
+      setIsPostLiked(wasLiked);
+      setPostLikesCount(currentCount);
+      // Also revert localStorage
+      localStorage.setItem(`likedPost_${postId}`, JSON.stringify(wasLiked));
     }
   };
 
