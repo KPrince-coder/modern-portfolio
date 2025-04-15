@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
-import { Dialog } from '@headlessui/react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, Fragment } from 'react';
+import { Dialog, Transition } from '@headlessui/react';
 import Button from '../../../components/ui/Button';
 import { EyeIcon, EyeSlashIcon, LockClosedIcon } from '@heroicons/react/24/outline';
 
@@ -24,9 +23,9 @@ export const PasswordVerificationModal: React.FC<PasswordVerificationModalProps>
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!password) {
       setError('Password is required');
       return;
@@ -36,9 +35,11 @@ export const PasswordVerificationModal: React.FC<PasswordVerificationModalProps>
     setError(null);
 
     try {
-      await onVerify(password);
+      // Call onVerify with the password
+      onVerify(password);
       setPassword('');
     } catch (error) {
+      // Handle any synchronous errors
       setError('Password verification failed. Please try again.');
     } finally {
       setIsLoading(false);
@@ -46,49 +47,43 @@ export const PasswordVerificationModal: React.FC<PasswordVerificationModalProps>
   };
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <Dialog
-          as={motion.div}
-          static
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 overflow-y-auto"
-          open={isOpen}
-          onClose={onClose}
-        >
-          <div className="min-h-screen px-4 text-center">
-            <Dialog.Overlay
-              as={motion.div}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.5 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black"
-            />
+    <Transition appear show={isOpen} as={Fragment}>
+      <Dialog as="div" className="fixed inset-0 z-50 overflow-y-auto" onClose={onClose}>
+        <div className="min-h-screen px-4 text-center">
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black bg-opacity-50" />
+          </Transition.Child>
 
-            {/* This element is to trick the browser into centering the modal contents. */}
-            <span className="inline-block h-screen align-middle" aria-hidden="true">
-              &#8203;
-            </span>
+          {/* This element is to trick the browser into centering the modal contents. */}
+          <span className="inline-block h-screen align-middle" aria-hidden="true">
+            &#8203;
+          </span>
 
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ duration: 0.3 }}
-              className="inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle bg-white dark:bg-gray-800 rounded-2xl shadow-xl transform"
-            >
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0 scale-95 translate-y-4"
+            enterTo="opacity-100 scale-100 translate-y-0"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100 scale-100 translate-y-0"
+            leaveTo="opacity-0 scale-95 translate-y-4"
+          >
+            <div className="inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle bg-white dark:bg-gray-800 rounded-2xl shadow-xl transform transition-all">
               <div className="flex items-center mb-4">
                 <div className="flex-shrink-0 bg-indigo-100 dark:bg-indigo-900 rounded-full p-2">
                   <LockClosedIcon className="h-6 w-6 text-indigo-600 dark:text-indigo-300" />
                 </div>
-                <Dialog.Title
-                  as="h3"
-                  className="ml-3 text-lg font-medium leading-6 text-gray-900 dark:text-white"
-                >
+                <h3 className="ml-3 text-lg font-medium leading-6 text-gray-900 dark:text-white">
                   {title}
-                </Dialog.Title>
+                </h3>
               </div>
 
               <div className="mt-2">
@@ -159,10 +154,10 @@ export const PasswordVerificationModal: React.FC<PasswordVerificationModalProps>
                   </Button>
                 </div>
               </form>
-            </motion.div>
-          </div>
-        </Dialog>
-      )}
-    </AnimatePresence>
+            </div>
+          </Transition.Child>
+        </div>
+      </Dialog>
+    </Transition>
   );
 };

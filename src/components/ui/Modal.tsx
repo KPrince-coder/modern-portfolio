@@ -59,9 +59,9 @@ const Modal: React.FC<ModalProps> = ({
 
   return (
     <Transition appear show={isOpen} as={Fragment}>
-      <Dialog 
-        as="div" 
-        className="fixed inset-0 z-50 overflow-y-auto" 
+      <Dialog
+        as="div"
+        className="fixed inset-0 z-50 overflow-y-auto"
         onClose={closeOnClickOutside ? onClose : () => {}}
         initialFocus={initialFocusRef}
       >
@@ -75,7 +75,7 @@ const Modal: React.FC<ModalProps> = ({
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <Dialog.Overlay className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity" />
+            <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity" />
           </Transition.Child>
 
           {/* This element is to trick the browser into centering the modal contents. */}
@@ -85,7 +85,7 @@ const Modal: React.FC<ModalProps> = ({
           >
             &#8203;
           </span>
-          
+
           <Transition.Child
             as={Fragment}
             enter="ease-out duration-300"
@@ -101,13 +101,10 @@ const Modal: React.FC<ModalProps> = ({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
             >
-              <Dialog.Title
-                as="h3"
-                className="text-lg font-medium leading-6 text-gray-900 dark:text-white"
-              >
+              <h3 className="text-lg font-medium leading-6 text-gray-900 dark:text-white">
                 {title}
-              </Dialog.Title>
-              
+              </h3>
+
               <div className="mt-4">
                 {children}
               </div>
