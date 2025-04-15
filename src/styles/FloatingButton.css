@@ -1,0 +1,29 @@
+/* Floating Button Animations */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(79, 70, 229, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(79, 70, 229, 0);
+  }
+}
+
+/* Pulsating effect for the scroll-to-top button */
+.scroll-top-pulse {
+  animation: pulse-ring 2s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
+}
+
+/* Shared hover and tap animations for floating buttons */
+.floating-button-hover {
+  transform: scale(1.05);
+}
+
+.floating-button-tap {
+  transform: scale(0.95);
+}
