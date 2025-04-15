@@ -42,21 +42,17 @@ const ScrollToTopButton: React.FC<ScrollToTopButtonProps> = ({
 
   // Scroll to top function
   const scrollToTop = () => {
-    // Use both methods for maximum compatibility
+    // Direct approach for maximum compatibility
+    window.scrollTo(0, 0);
+
+    // Also try the smooth scroll approach
     try {
-      // Method 1: scrollTo
       window.scrollTo({
         top: 0,
         behavior: 'smooth',
       });
-
-      // Method 2: scroll
-      window.scroll({
-        top: 0,
-        behavior: 'smooth',
-      });
     } catch {
-      // Fallback for older browsers
+      // Fallback for older browsers that don't support smooth scrolling
       document.body.scrollTop = 0; // For Safari
       document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
     }
@@ -76,7 +72,7 @@ const ScrollToTopButton: React.FC<ScrollToTopButtonProps> = ({
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={scrollToTop}
-            className={`fixed ${position === 'bottom-right' ? 'bottom-6 right-10' : 'bottom-6 left-6'} z-50 flex items-center justify-center w-12 h-12 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all ${className}`}
+            className={`fixed ${position === 'bottom-right' ? 'bottom-6 right-10' : 'bottom-6 left-6'} z-50 flex items-center justify-center w-12 h-12 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-0 transition-all ${className}`}
             aria-label="Scroll to top"
             type="button"
             data-testid="scroll-to-top-button"
@@ -96,7 +92,7 @@ const ScrollToTopButton: React.FC<ScrollToTopButtonProps> = ({
             exit={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.3 }}
             onClick={toggleVisibility}
-            className="fixed bottom-20 right-10 bg-blue-500 text-white text-xs p-2 rounded-md z-50 flex items-center gap-1 shadow-md hover:bg-blue-600 transition-colors"
+            className="fixed bottom-20 right-10 bg-blue-500 text-white text-xs p-2 rounded-md z-50 flex items-center gap-1 shadow-md hover:bg-blue-600 transition-colors focus:outline-none"
             type="button"
           >
             <FiEye size={14} />
@@ -115,7 +111,7 @@ const ScrollToTopButton: React.FC<ScrollToTopButtonProps> = ({
             transition={{ duration: 0.3 }}
             whileHover={{ opacity: 1, scale: 1.1 }}
             onClick={toggleVisibility}
-            className="fixed bottom-6 right-10 bg-gray-200 text-gray-600 w-6 h-6 rounded-full z-50 flex items-center justify-center shadow-sm hover:bg-gray-300 transition-all"
+            className="fixed bottom-6 right-10 bg-gray-200 text-gray-600 w-6 h-6 rounded-full z-50 flex items-center justify-center shadow-sm hover:bg-gray-300 transition-all focus:outline-none"
             type="button"
             aria-label="Show scroll to top button"
           >
