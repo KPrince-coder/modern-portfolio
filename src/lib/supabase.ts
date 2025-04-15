@@ -532,14 +532,59 @@ export const api = {
   },
 
   trackBlogTimeSpent: async (postId: string, timeSpentSeconds: number) => {
-    const { data, error } = await supabase
-      .rpc('update_blog_post_time_spent', {
-        post_id: postId,
-        time_spent: timeSpentSeconds
-      });
+    try {
+      // Use the direct table update approach instead of RPC
+      // First check if analytics record exists
+      const { data: existingData, error: checkError } = await supabase
+        .from('blog_post_analytics')
+        .select('total_time_spent, view_count_for_time')
+        .eq('post_id', postId)
+        .single();
 
-    if (error) throw error;
-    return data;
+      if (checkError && checkError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+        console.error('Error checking blog post analytics:', checkError);
+        throw checkError;
+      }
+
+      if (existingData) {
+        // Update existing record
+        const totalTimeSpent = (existingData.total_time_spent || 0) + timeSpentSeconds;
+        const viewCountForTime = (existingData.view_count_for_time || 0) + 1;
+        const avgTimeSpent = totalTimeSpent / viewCountForTime;
+
+        const { error: updateError } = await supabase
+          .from('blog_post_analytics')
+          .update({
+            total_time_spent: totalTimeSpent,
+            view_count_for_time: viewCountForTime,
+            avg_time_spent: avgTimeSpent,
+            last_viewed_at: new Date().toISOString()
+          })
+          .eq('post_id', postId);
+
+        if (updateError) throw updateError;
+      } else {
+        // Create new record
+        const { error: insertError } = await supabase
+          .from('blog_post_analytics')
+          .insert({
+            post_id: postId,
+            avg_time_spent: timeSpentSeconds,
+            total_time_spent: timeSpentSeconds,
+            view_count_for_time: 1,
+            views: 1,
+            last_viewed_at: new Date().toISOString()
+          });
+
+        if (insertError) throw insertError;
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error tracking blog time spent:', error);
+      // Return success anyway to prevent UI errors
+      return { success: false, error };
+    }
   },
 
   // Like a blog post
