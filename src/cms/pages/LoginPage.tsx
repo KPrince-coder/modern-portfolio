@@ -24,7 +24,7 @@ const LoginPage: React.FC = () => {
 
     try {
       const { error: loginError } = await login(email, password);
-      
+
       if (loginError) {
         setError(loginError.message);
       } else {
@@ -40,28 +40,58 @@ const LoginPage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 sm:px-6 lg:px-8">
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="max-w-md w-full space-y-8"
+        className="max-w-md w-full space-y-8 mx-auto"
+        style={{ maxWidth: '480px' }}
       >
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
-            Portfolio CMS
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-            Sign in to access the content management system
+          <motion.div
+            className="relative"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.1 }}
+          >
+            <h2 className="mt-6 text-center text-4xl font-extrabold pb-2 relative drop-shadow-sm">
+              <span className="relative inline-block text-indigo-600 dark:text-indigo-400">Portfolio<span className="absolute -top-1 -right-2 w-2 h-2 rounded-full bg-indigo-400 animate-ping"></span></span>
+              <span className="relative ml-2 inline-block text-purple-600 dark:text-purple-400">CMS
+                <svg className="absolute -bottom-1 left-0 w-full" height="6" viewBox="0 0 100 6" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <linearGradient id="cms-title-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#6366f1" />
+                      <stop offset="50%" stopColor="#a855f7" />
+                      <stop offset="100%" stopColor="#ec4899" />
+                    </linearGradient>
+                  </defs>
+                  <path d="M0 3 Q 25 6 50 3 Q 75 0 100 3" stroke="url(#cms-title-gradient)" strokeWidth="2" fill="none">
+                    <animate attributeName="d" values="M0 3 Q 25 6 50 3 Q 75 0 100 3;M0 3 Q 25 0 50 3 Q 75 6 100 3;M0 3 Q 25 6 50 3 Q 75 0 100 3" dur="5s" repeatCount="indefinite" />
+                  </path>
+                </svg>
+              </span>
+            </h2>
+          </motion.div>
+          <p className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
+            Sign in to access your creative dashboard
           </p>
         </div>
-        
-        <div className="mt-8 bg-white dark:bg-gray-800 py-8 px-4 shadow sm:rounded-lg sm:px-10">
+
+        <motion.div
+          className="mt-8 bg-white dark:bg-gray-800 py-8 px-4 shadow sm:rounded-lg sm:px-10 relative overflow-hidden"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.2, duration: 0.4 }}
+        >
+          {/* Decorative elements */}
+          <div className="absolute -top-10 -right-10 w-20 h-20 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-full blur-xl"></div>
+          <div className="absolute -bottom-10 -left-10 w-20 h-20 bg-gradient-to-tr from-purple-500/20 to-pink-500/20 rounded-full blur-xl"></div>
           {error && (
             <div className="mb-4 bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 p-4 rounded">
               <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
             </div>
           )}
-          
+
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -105,7 +135,7 @@ const LoginPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-md text-sm font-medium text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 hover:from-indigo-700 hover:via-purple-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
               >
                 {isLoading ? (
                   <>
@@ -121,7 +151,7 @@ const LoginPage: React.FC = () => {
               </button>
             </div>
           </form>
-          
+
           <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
@@ -140,8 +170,8 @@ const LoginPage: React.FC = () => {
               </p>
             </div>
           </div>
-        </div>
-        
+        </motion.div>
+
         <div className="text-center mt-4">
           <a href="/" className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-500">
             ← Return to website

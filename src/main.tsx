@@ -12,6 +12,7 @@ import '@fontsource/fira-code/500.css';
 // Import styles
 import './index.css';
 import './App.css';
+import './cms/styles/customUtilities.css';
 
 // Import app
 import App from './App.tsx';
