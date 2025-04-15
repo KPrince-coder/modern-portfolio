@@ -25,6 +25,15 @@ const BlogPostPage: React.FC = () => {
   // Fetch the blog post
   const { data: post, isLoading, error } = useBlogPostBySlug(slug ?? '');
 
+  // Scroll to top when the page loads or slug changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
+
+    console.log('BlogPostPage: Scrolled to top on mount/update');
+  }, [slug]);
+
   // Fetch all posts to determine previous and next posts
   const { data: allPostsData } = useBlogPosts({
     limit: 100, // Fetch enough posts to find adjacent ones

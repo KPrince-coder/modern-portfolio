@@ -24,6 +24,19 @@ const PostNavigation: React.FC<PostNavigationProps> = ({
   nextPost,
   className = '',
 }) => {
+  // Function to force scroll to top
+  const handleClick = () => {
+    // Force scroll to top immediately
+    window.scrollTo(0, 0);
+
+    // Also schedule another scroll after a short delay to ensure it works
+    setTimeout(() => {
+      window.scrollTo(0, 0);
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+    }, 100);
+  };
+
   if (!prevPost && !nextPost) {
     return null;
   }
@@ -39,6 +52,7 @@ const PostNavigation: React.FC<PostNavigationProps> = ({
           >
             <Link
               to={`/blog/${prevPost.slug}`}
+              onClick={handleClick}
               className="group block p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors"
             >
             <span className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-2">
@@ -74,6 +88,7 @@ const PostNavigation: React.FC<PostNavigationProps> = ({
           >
             <Link
               to={`/blog/${nextPost.slug}`}
+              onClick={handleClick}
               className="group block p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors md:text-right md:ml-auto"
             >
             <span className="flex items-center justify-end text-sm text-gray-500 dark:text-gray-400 mb-2">
