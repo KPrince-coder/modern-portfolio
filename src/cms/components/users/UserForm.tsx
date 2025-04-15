@@ -426,18 +426,20 @@ const UserForm: React.FC<UserFormProps> = ({
                 } bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400`}
                 placeholder={isEditMode ? '••••••••' : 'Minimum 8 characters'}
               />
-              <button
-                type="button"
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none transition-colors duration-200"
-                onClick={() => setShowPassword(!showPassword)}
-                tabIndex={-1}
-              >
-                {showPassword ? (
-                  <EyeSlashIcon className="h-5 w-5 stroke-2" />
-                ) : (
-                  <EyeIcon className="h-5 w-5 stroke-2" />
-                )}
-              </button>
+              {formData.password && (
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none transition-colors duration-200"
+                  onClick={() => setShowPassword(!showPassword)}
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    <EyeSlashIcon className="h-5 w-5 stroke-2" />
+                  ) : (
+                    <EyeIcon className="h-5 w-5 stroke-2" />
+                  )}
+                </button>
+              )}
             </div>
             {errors.password && (
               <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.password}</p>
@@ -463,18 +465,20 @@ const UserForm: React.FC<UserFormProps> = ({
                 } bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400`}
                 placeholder="••••••••"
               />
-              <button
-                type="button"
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none transition-colors duration-200"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                tabIndex={-1}
-              >
-                {showConfirmPassword ? (
-                  <EyeSlashIcon className="h-5 w-5 stroke-2" />
-                ) : (
-                  <EyeIcon className="h-5 w-5 stroke-2" />
-                )}
-              </button>
+              {formData.confirmPassword && (
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none transition-colors duration-200"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  tabIndex={-1}
+                >
+                  {showConfirmPassword ? (
+                    <EyeSlashIcon className="h-5 w-5 stroke-2" />
+                  ) : (
+                    <EyeIcon className="h-5 w-5 stroke-2" />
+                  )}
+                </button>
+              )}
             </div>
             {errors.confirmPassword && (
               <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.confirmPassword}</p>

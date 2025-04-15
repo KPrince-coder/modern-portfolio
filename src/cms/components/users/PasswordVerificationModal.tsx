@@ -34,22 +34,16 @@ export const PasswordVerificationModal: React.FC<PasswordVerificationModalProps>
     setIsLoading(true);
     setError(null);
 
-    try {
-      // Call onVerify with the password
-      onVerify(password);
-      setPassword('');
-    } catch (error) {
-      // Handle any synchronous errors
-      setError('Password verification failed. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
+    // Call onVerify with the password
+    onVerify(password);
+    setPassword('');
+    setIsLoading(false);
   };
 
   return (
     <Transition appear show={isOpen} as={Fragment}>
       <Dialog as="div" className="fixed inset-0 z-50 overflow-y-auto" onClose={onClose}>
-        <div className="min-h-screen px-4 text-center">
+        <div className="min-h-screen px-4 text-center flex items-center justify-center">
           <Transition.Child
             as={Fragment}
             enter="ease-out duration-300"
@@ -76,7 +70,7 @@ export const PasswordVerificationModal: React.FC<PasswordVerificationModalProps>
             leaveFrom="opacity-100 scale-100 translate-y-0"
             leaveTo="opacity-0 scale-95 translate-y-4"
           >
-            <div className="inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle bg-white dark:bg-gray-800 rounded-2xl shadow-xl transform transition-all">
+            <div className="inline-block w-full max-w-sm sm:max-w-md mx-auto p-6 my-8 overflow-hidden text-left align-middle bg-white dark:bg-gray-800 rounded-2xl shadow-xl transform transition-all">
               <div className="flex items-center mb-4">
                 <div className="flex-shrink-0 bg-indigo-100 dark:bg-indigo-900 rounded-full p-2">
                   <LockClosedIcon className="h-6 w-6 text-indigo-600 dark:text-indigo-300" />
@@ -92,7 +86,7 @@ export const PasswordVerificationModal: React.FC<PasswordVerificationModalProps>
                 </p>
               </div>
 
-              <form onSubmit={handleSubmit} className="mt-4">
+              <form onSubmit={handleSubmit} className="mt-4 w-full max-w-xs mx-auto">
                 {error && (
                   <div className="mb-4 bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 p-3 rounded">
                     <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
@@ -117,18 +111,20 @@ export const PasswordVerificationModal: React.FC<PasswordVerificationModalProps>
                       placeholder="Enter your password"
                       autoFocus
                     />
-                    <button
-                      type="button"
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none transition-colors duration-200"
-                      onClick={() => setShowPassword(!showPassword)}
-                      tabIndex={-1}
-                    >
-                      {showPassword ? (
-                        <EyeSlashIcon className="h-5 w-5 stroke-2" />
-                      ) : (
-                        <EyeIcon className="h-5 w-5 stroke-2" />
-                      )}
-                    </button>
+                    {password && (
+                      <button
+                        type="button"
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none transition-colors duration-200"
+                        onClick={() => setShowPassword(!showPassword)}
+                        tabIndex={-1}
+                      >
+                        {showPassword ? (
+                          <EyeSlashIcon className="h-5 w-5 stroke-2" />
+                        ) : (
+                          <EyeIcon className="h-5 w-5 stroke-2" />
+                        )}
+                      </button>
+                    )}
                   </div>
                 </div>
 
