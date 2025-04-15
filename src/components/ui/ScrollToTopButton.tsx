@@ -33,29 +33,63 @@ const ScrollToTopButton: React.FC<ScrollToTopButtonProps> = ({
     return unsubscribe;
   }, []);
 
-  // For development only - force visibility toggle
+  // Toggle visibility function - toggles visibility when button is clicked
   const toggleVisibility = () => {
     const newVisibility = !isVisible;
     setIsVisible(newVisibility);
     scrollState.setVisible(newVisibility);
   };
 
-  // Scroll to top function
-  const scrollToTop = () => {
-    // Direct approach for maximum compatibility
+  // Scroll to top function - scrolls to the top of the page when clicked
+  const scrollToTop = (e: React.MouseEvent) => {
+    // Prevent default behavior
+    e.preventDefault();
+    e.stopPropagation();
+
+    console.log('Scroll to top clicked');
+    console.log('Before scroll - window.scrollY:', window.scrollY);
+    console.log('Before scroll - document.documentElement.scrollTop:', document.documentElement.scrollTop);
+    console.log('Before scroll - document.body.scrollTop:', document.body.scrollTop);
+
+    // Use all possible methods to ensure scrolling works
+
+    // 1. Direct method (most compatible)
     window.scrollTo(0, 0);
 
-    // Also try the smooth scroll approach
+    // 2. Try smooth scroll
     try {
-      window.scrollTo({
+      window.scroll({
         top: 0,
-        behavior: 'smooth',
+        behavior: 'smooth'
       });
-    } catch {
-      // Fallback for older browsers that don't support smooth scrolling
-      document.body.scrollTop = 0; // For Safari
-      document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
+    } catch (e) {
+      console.log('Smooth scroll not supported', e);
     }
+
+    // 3. Set scroll positions directly
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+
+    // 4. Try to find the main content element and scroll it
+    const mainContent = document.querySelector('main');
+    if (mainContent) {
+      mainContent.scrollTop = 0;
+      console.log('Scrolled main content element');
+    }
+
+    // 5. Try to find any scrollable parent and scroll it
+    const scrollableElements = document.querySelectorAll('.overflow-auto, .overflow-y-auto, [style*="overflow"]');
+    scrollableElements.forEach(el => {
+      (el as HTMLElement).scrollTop = 0;
+      console.log('Scrolled element:', el);
+    });
+
+    // Check scroll position after a short delay
+    setTimeout(() => {
+      console.log('After scroll - window.scrollY:', window.scrollY);
+      console.log('After scroll - document.documentElement.scrollTop:', document.documentElement.scrollTop);
+      console.log('After scroll - document.body.scrollTop:', document.body.scrollTop);
+    }, 100);
   };
 
   // We'll use CSS classes for positioning and animation
