@@ -46,50 +46,44 @@ const ScrollToTopButton: React.FC<ScrollToTopButtonProps> = ({
     e.preventDefault();
     e.stopPropagation();
 
-    console.log('Scroll to top clicked');
-    console.log('Before scroll - window.scrollY:', window.scrollY);
-    console.log('Before scroll - document.documentElement.scrollTop:', document.documentElement.scrollTop);
-    console.log('Before scroll - document.body.scrollTop:', document.body.scrollTop);
+    // Based on the logs, we know document.body is the scrolling container
+    // Let's implement a custom smooth scroll function
+    const scrollingElement = document.body;
+    const currentScroll = scrollingElement.scrollTop;
 
-    // Use all possible methods to ensure scrolling works
+    if (currentScroll <= 0) return; // Already at the top
 
-    // 1. Direct method (most compatible)
-    window.scrollTo(0, 0);
+    // Smooth scroll animation
+    const scrollToTopAnimated = () => {
+      const duration = 500; // ms
+      const startTime = performance.now();
 
-    // 2. Try smooth scroll
-    try {
-      window.scroll({
-        top: 0,
-        behavior: 'smooth'
-      });
-    } catch (e) {
-      console.log('Smooth scroll not supported', e);
-    }
+      // Animation function
+      const animateScroll = (currentTime: number) => {
+        const elapsedTime = currentTime - startTime;
 
-    // 3. Set scroll positions directly
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
+        // Easing function - easeOutCubic
+        const easeProgress = 1 - Math.pow(1 - Math.min(elapsedTime / duration, 1), 3);
 
-    // 4. Try to find the main content element and scroll it
-    const mainContent = document.querySelector('main');
-    if (mainContent) {
-      mainContent.scrollTop = 0;
-      console.log('Scrolled main content element');
-    }
+        // Calculate new scroll position
+        const newScrollTop = currentScroll - (currentScroll * easeProgress);
+        scrollingElement.scrollTop = newScrollTop;
 
-    // 5. Try to find any scrollable parent and scroll it
-    const scrollableElements = document.querySelectorAll('.overflow-auto, .overflow-y-auto, [style*="overflow"]');
-    scrollableElements.forEach(el => {
-      (el as HTMLElement).scrollTop = 0;
-      console.log('Scrolled element:', el);
-    });
+        // Continue animation if not complete
+        if (elapsedTime < duration) {
+          requestAnimationFrame(animateScroll);
+        } else {
+          // Ensure we're at the top when animation completes
+          scrollingElement.scrollTop = 0;
+        }
+      };
 
-    // Check scroll position after a short delay
-    setTimeout(() => {
-      console.log('After scroll - window.scrollY:', window.scrollY);
-      console.log('After scroll - document.documentElement.scrollTop:', document.documentElement.scrollTop);
-      console.log('After scroll - document.body.scrollTop:', document.body.scrollTop);
-    }, 100);
+      // Start animation
+      requestAnimationFrame(animateScroll);
+    };
+
+    // Start the smooth scroll animation
+    scrollToTopAnimated();
   };
 
   // We'll use CSS classes for positioning and animation
