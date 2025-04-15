@@ -74,8 +74,8 @@ const UserForm: React.FC<UserFormProps> = ({
   useEffect(() => {
     if (user) {
       setFormData({
-        email: user.email || '',
-        name: user.user_metadata?.name || '',
+        email: user.email ?? '',
+        name: user.user_metadata?.name ?? '',
         password: '',
         confirmPassword: '',
         roleIds: user.roles ? user.roles.map(role => role.id) : [],
@@ -168,7 +168,7 @@ const UserForm: React.FC<UserFormProps> = ({
         };
 
         // Use a stored procedure to update the user with proper permissions
-        const { data: userData, error: updateError } = await supabase
+        const { error: updateError } = await supabase
           .rpc('update_user', {
             user_id: user?.id ?? '',
             user_email: formData.email,
@@ -182,7 +182,7 @@ const UserForm: React.FC<UserFormProps> = ({
         }
 
         // Log the update for audit purposes
-        await supabase
+        const { error: auditError } = await supabase
           .from('audit_logs')
           .insert({
             user_id: currentUser.data.user?.id,
@@ -197,6 +197,11 @@ const UserForm: React.FC<UserFormProps> = ({
               password_changed: !!formData.password,
             },
           });
+
+        if (auditError) {
+          console.error('Error logging audit:', auditError);
+          // Don't throw error here, just log it - we don't want to fail the update if audit logging fails
+        }
 
         return true;
       } catch (error) {
