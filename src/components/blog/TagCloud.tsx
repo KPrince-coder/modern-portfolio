@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiTag, FiX } from 'react-icons/fi';
-import { scrollButtonEvent } from '../ui/ScrollToTopButton';
+import { scrollState } from '../../utils/scrollState';
 
 interface Tag {
   id: string;
@@ -25,20 +25,21 @@ const TagCloud: React.FC<TagCloudProps> = ({ tags, className = '', variant = 'si
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [isScrollButtonVisible, setIsScrollButtonVisible] = useState(false);
 
-  // Listen for scroll button visibility events
+  // Subscribe to scroll button visibility changes
   useEffect(() => {
-    const handleScrollButtonVisible = () => setIsScrollButtonVisible(true);
-    const handleScrollButtonHidden = () => setIsScrollButtonVisible(false);
+    // Set initial state
+    setIsScrollButtonVisible(scrollState.isVisible());
 
-    // Add event listeners
-    document.addEventListener('scrollButtonVisible', handleScrollButtonVisible);
-    document.addEventListener('scrollButtonHidden', handleScrollButtonHidden);
+    // Subscribe to changes
+    const handleScrollButtonVisibilityChange = (visible: boolean) => {
+      setIsScrollButtonVisible(visible);
+    };
+
+    // Add subscription and get unsubscribe function
+    const unsubscribe = scrollState.subscribe(handleScrollButtonVisibilityChange);
 
     // Clean up
-    return () => {
-      document.removeEventListener('scrollButtonVisible', handleScrollButtonVisible);
-      document.removeEventListener('scrollButtonHidden', handleScrollButtonHidden);
-    };
+    return unsubscribe;
   }, []);
 
   if (!tags || tags.length === 0) {
@@ -51,12 +52,12 @@ const TagCloud: React.FC<TagCloudProps> = ({ tags, className = '', variant = 'si
   // Floating variant (fixed position at bottom of screen)
   if (variant === 'floating') {
     // We'll use animate prop instead of a class for smoother transitions
-
     return (
       <motion.div
-        className={`fixed right-10 z-30 ${className}`}
-        animate={{ bottom: isScrollButtonVisible ? '5.5rem' : '1.5rem' }}
+        className={`fixed right-10 z-40 ${className}`}
+        animate={{ bottom: isScrollButtonVisible ? '6rem' : '1.5rem' }}
         transition={{ duration: 0.3, ease: 'easeInOut' }}
+        data-testid="tag-cloud-floating"
       >
         <motion.button
           whileHover={{ scale: 1.05 }}

@@ -9,6 +9,7 @@ import BlogComments from '../components/blog/BlogComments';
 import TagCloud from '../components/blog/TagCloud';
 import RelatedPosts from '../components/blog/RelatedPosts';
 import ScrollToTopButton from '../components/ui/ScrollToTopButton';
+import ScrollObserver from '../components/ui/ScrollObserver';
 import '../styles/BlogOverflowFix.css';
 
 interface BlogLayoutProps {
@@ -64,6 +65,8 @@ const BlogLayout: React.FC<BlogLayoutProps> = ({
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+      {/* Scroll observer to detect scroll position */}
+      <ScrollObserver threshold={300} />
       {/* Navigation header with scrolling title */}
       <BlogNavHeader
         title={title || ''}
@@ -219,7 +222,7 @@ const BlogLayout: React.FC<BlogLayoutProps> = ({
       )}
 
       {/* Scroll to top button - positioned at the same spot as the tags button */}
-      <ScrollToTopButton position="bottom-right" showAtHeight={600} />
+      <ScrollToTopButton position="bottom-right" />
 
       {/* Footer */}
       <footer className="bg-gray-50 dark:bg-gray-800 py-12">
