@@ -242,6 +242,11 @@ sequenceDiagram
     Blog->>AnalyticsTracker: Track Share
     AnalyticsTracker->>Supabase: Store Share Data
 
+    User->>Blog: Leave Page
+    Blog->>AnalyticsTracker: Calculate Time Spent
+    AnalyticsTracker->>Supabase: Call update_blog_post_time_spent RPC
+    Supabase->>Supabase: Update Analytics in Database
+
     Admin->>CMS: View Analytics
     CMS->>Supabase: Fetch Analytics Data
     Supabase->>CMS: Return Analytics Data
@@ -631,6 +636,25 @@ The blog system implements several security measures to protect data and prevent
 3. **Input Validation**: Validates all user inputs to prevent injection attacks.
 4. **CSRF Protection**: Implements CSRF tokens to prevent cross-site request forgery.
 5. **Content Security Policy**: Implements CSP to prevent XSS attacks.
+6. **RPC Security**: Implements proper security contexts for RPC functions using SECURITY INVOKER to respect row-level security policies.
+
+### RPC Security Implementation
+
+```mermaid
+flowchart TD
+    A[Client Request] --> B{Authentication}
+    B -->|Authenticated| C{Authorization}
+    B -->|Not Authenticated| D[Reject Request]
+    C -->|Authorized| E[Execute RPC Function]
+    C -->|Not Authorized| F[Reject Request]
+    E --> G{Security Context}
+    G -->|SECURITY INVOKER| H[Run as Calling User]
+    G -->|SECURITY DEFINER| I[Run as Function Owner]
+    H --> J[Apply RLS Policies]
+    I --> K[Bypass RLS Policies]
+    J --> L[Return Results]
+    K --> L
+```
 
 ```mermaid
 graph TD
@@ -659,14 +683,55 @@ The blog analytics system provides comprehensive insights into blog performance,
 
 ### Analytics Data Collection
 
-The system collects various types of analytics data:
+The system collects various types of analytics data through several mechanisms:
 
-1. **Page Views**: Tracks when a user views a blog post.
-2. **Time Spent**: Measures how long a user spends on a blog post.
-3. **Scroll Depth**: Tracks how far a user scrolls down a blog post.
-4. **Element Interactions**: Tracks when a user interacts with elements in a blog post (e.g., clicks on links, images, etc.).
-5. **Shares**: Tracks when a user shares a blog post on social media.
-6. **Device Information**: Collects information about the user's device, browser, and location.
+1. **Page Views**: Tracked when users load a blog post page
+2. **Time Spent**: Calculated based on the time between page load and unload events
+3. **Scroll Depth**: Measured as users scroll through content
+4. **Element Interactions**: Tracked when users interact with specific elements
+5. **Shares**: Recorded when users share content on social platforms
+6. **Device and Browser Information**: Collected from user agent data
+7. **Geographic Information**: Derived from IP addresses (when available)
+
+### RPC Functions for Analytics
+
+The system uses Remote Procedure Calls (RPCs) to efficiently update analytics data in the database. For example, the `update_blog_post_time_spent` RPC function:
+
+```sql
+CREATE OR REPLACE FUNCTION portfolio.update_blog_post_time_spent(post_id UUID, time_spent INTEGER)
+RETURNS VOID AS $$
+BEGIN
+  -- Check if analytics record exists for this post
+  IF EXISTS (SELECT 1 FROM portfolio.blog_post_analytics WHERE post_id = $1) THEN
+    -- Update existing record
+    UPDATE portfolio.blog_post_analytics
+    SET
+      total_time_spent = total_time_spent + $2,
+      view_count_for_time = view_count_for_time + 1,
+      avg_time_spent = (total_time_spent + $2) / (view_count_for_time + 1)
+    WHERE post_id = $1;
+  ELSE
+    -- Create new record
+    INSERT INTO portfolio.blog_post_analytics (
+      post_id,
+      avg_time_spent,
+      total_time_spent,
+      view_count_for_time,
+      views
+    )
+    VALUES (
+      $1,
+      $2,
+      $2,
+      1,
+      1
+    );
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
+```
+
+This function is called from the client when a user leaves a blog post page, sending the total time spent reading the post.
 
 ```mermaid
 sequenceDiagram
@@ -820,6 +885,67 @@ graph TD
     E --> L[Send Email]
 ```
 
+## Troubleshooting
+
+### Common Issues
+
+#### Relationship Ambiguity Error
+
+If you encounter the error "Could not embed because more than one relationship was found for 'blog_audience_data' and 'post_id'", this indicates duplicate foreign key relationships in the database schema.
+
+**Solution**:
+
+1. Run the migration file `20240702000002_recreate_blog_analytics_tables.sql` to recreate the tables with proper relationships.
+2. Use explicit column selection in queries instead of `select('*')` to avoid ambiguity.
+
+```mermaid
+flowchart TD
+    A[Error: Multiple relationships found] --> B{Fix Approach}
+    B -->|Database Schema Fix| C[Run recreate_blog_analytics_tables migration]
+    B -->|Query Fix| D[Use explicit column selection]
+    C --> E[Drop duplicate constraints]
+    C --> F[Recreate tables with single FK]
+    D --> G["Replace select * with explicit columns"]
+    E --> H[Issue Resolved]
+    F --> H
+    G --> H
+```
+
+#### RPC Function Not Found
+
+If you encounter a 404 error when calling an RPC function, the function may not be properly defined in the database.
+
+**Solution**:
+
+1. Check that the migration file defining the function has been applied.
+2. Verify the function name and parameters match exactly.
+3. Implement a fallback approach in your code to handle cases where the RPC function might not be available.
+
+```mermaid
+flowchart TD
+    A[Error: 404 RPC Function Not Found] --> B{Troubleshooting Steps}
+    B -->|Check Migrations| C[Verify migration was applied]
+    B -->|Check Function Name| D[Ensure exact name match]
+    B -->|Check Parameters| E[Verify parameter types]
+    B -->|Implement Fallback| F[Add fallback logic]
+    C --> G[Run missing migrations]
+    D --> H[Fix function name]
+    E --> I[Fix parameter types]
+    F --> J[Create fallback implementation]
+    G --> K[Issue Resolved]
+    H --> K
+    I --> K
+    J --> K
+```
+
+For more information on RPC functions, see the [RPC Functions Documentation](./supabase/rpc_functions.md).
+
 ## Conclusion
 
 This documentation provides a comprehensive overview of the blog system implemented in the Modern Portfolio application. The system includes content management, publishing, analytics, and AI-assisted features, all designed to provide a seamless experience for both blog administrators and readers.
+
+The blog system leverages modern technologies and best practices to deliver a high-performance, secure, and feature-rich blogging platform. The integration with Supabase provides a robust backend infrastructure, while the React frontend offers a responsive and intuitive user interface.
+
+The analytics system provides valuable insights into blog performance and user engagement, helping administrators make data-driven decisions to improve content and user experience. The AI-assisted features streamline content creation and enhance the quality of blog posts.
+
+Continuous improvements and updates to the blog system ensure that it remains at the cutting edge of web development and content management technologies.
