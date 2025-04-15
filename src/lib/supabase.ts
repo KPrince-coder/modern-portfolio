@@ -946,17 +946,56 @@ export const api = {
 
     if (feedbackError) throw feedbackError;
 
-    // Get audience data (device, browser, location)
-    const { data: audienceData, error: audienceError } = await supabase
+    // Get audience data (device, browser, location) with time range filter
+    // Use a simpler select to avoid relationship ambiguity
+    let audienceQuery = supabase
       .from('blog_audience_data')
-      .select('*');
+      .select(`
+        id,
+        post_id,
+        session_id,
+        device_type,
+        browser,
+        country,
+        region,
+        city,
+        is_new_visitor,
+        created_at
+      `);
+
+    // Apply time range filter if provided
+    if (timeRange && timeRange.startDate && timeRange.endDate) {
+      audienceQuery = audienceQuery.gte('created_at', timeRange.startDate)
+                                  .lte('created_at', timeRange.endDate);
+    }
+
+    const { data: audienceData, error: audienceError } = await audienceQuery;
 
     if (audienceError) throw audienceError;
 
-    // Get content engagement data (scroll depth, element interactions)
-    const { data: engagementData, error: engagementError } = await supabase
+    // Get content engagement data (scroll depth, element interactions) with time range filter
+    // Use a simpler select to avoid relationship ambiguity
+    let engagementQuery = supabase
       .from('blog_content_engagement')
-      .select('*');
+      .select(`
+        id,
+        post_id,
+        session_id,
+        scroll_depth,
+        element_type,
+        element_id,
+        interaction_type,
+        time_spent_seconds,
+        created_at
+      `);
+
+    // Apply time range filter if provided
+    if (timeRange && timeRange.startDate && timeRange.endDate) {
+      engagementQuery = engagementQuery.gte('created_at', timeRange.startDate)
+                                      .lte('created_at', timeRange.endDate);
+    }
+
+    const { data: engagementData, error: engagementError } = await engagementQuery;
 
     if (engagementError) throw engagementError;
 
@@ -1083,18 +1122,36 @@ export const api = {
         deviceDistribution,
         browserDistribution,
         locationDistribution,
-        newVsReturning: { new: 65, returning: 35 } // Mock data, replace with actual data when available
+        newVsReturning: {
+          new: audienceData.filter((item: any) => item.is_new_visitor).length,
+          returning: audienceData.filter((item: any) => !item.is_new_visitor).length
+        }
       },
       contentEngagement: {
         scrollDepthData,
         elementInteractionData,
-        readingTimeDistribution: { // Mock data, replace with actual data when available
-          'less_than_1_min': 120,
-          '1_to_3_min': 350,
-          '3_to_5_min': 280,
-          '5_to_10_min': 190,
-          'more_than_10_min': 60
-        }
+        scrollDepthDistribution: {
+          '0-25': engagementData.filter((item: any) => item.scroll_depth && item.scroll_depth <= 25).length,
+          '26-50': engagementData.filter((item: any) => item.scroll_depth && item.scroll_depth > 25 && item.scroll_depth <= 50).length,
+          '51-75': engagementData.filter((item: any) => item.scroll_depth && item.scroll_depth > 50 && item.scroll_depth <= 75).length,
+          '76-100': engagementData.filter((item: any) => item.scroll_depth && item.scroll_depth > 75).length
+        },
+        readingTimeDistribution: {
+          'less_than_1_min': engagementData.filter((item: any) => (item.time_spent_seconds || 0) < 60).length,
+          '1_to_3_min': engagementData.filter((item: any) => (item.time_spent_seconds || 0) >= 60 && (item.time_spent_seconds || 0) < 180).length,
+          '3_to_5_min': engagementData.filter((item: any) => (item.time_spent_seconds || 0) >= 180 && (item.time_spent_seconds || 0) < 300).length,
+          '5_to_10_min': engagementData.filter((item: any) => (item.time_spent_seconds || 0) >= 300 && (item.time_spent_seconds || 0) < 600).length,
+          'more_than_10_min': engagementData.filter((item: any) => (item.time_spent_seconds || 0) >= 600).length
+        },
+        avgScrollDepth: engagementData.length > 0 ?
+          engagementData.reduce((sum: number, item: any) => sum + (item.scroll_depth || 0), 0) /
+          engagementData.filter((item: any) => item.scroll_depth !== null && item.scroll_depth !== undefined).length : 0,
+        completionRate: engagementData.length > 0 ?
+          (engagementData.filter((item: any) => item.scroll_depth && item.scroll_depth >= 90).length /
+           engagementData.filter((item: any) => item.scroll_depth !== null && item.scroll_depth !== undefined).length) * 100 : 0,
+        avgTimeSpentPerInteraction: engagementData.length > 0 ?
+          engagementData.reduce((sum: number, item: any) => sum + (item.time_spent_seconds || 0), 0) /
+          engagementData.filter((item: any) => item.time_spent_seconds !== null && item.time_spent_seconds !== undefined).length : 0
       },
       rawData: {
         overallData,
@@ -1143,17 +1200,40 @@ export const api = {
     if (postDetailsError) throw postDetailsError;
 
     // Get audience data for this post
+    // Use a more explicit select to avoid relationship ambiguity
     const { data: audienceData, error: audienceError } = await supabase
       .from('blog_audience_data')
-      .select('*')
+      .select(`
+        id,
+        post_id,
+        session_id,
+        device_type,
+        browser,
+        country,
+        region,
+        city,
+        is_new_visitor,
+        created_at
+      `)
       .eq('post_id', postId);
 
     if (audienceError) throw audienceError;
 
     // Get content engagement data for this post
+    // Use a more explicit select to avoid relationship ambiguity
     const { data: engagementData, error: engagementError } = await supabase
       .from('blog_content_engagement')
-      .select('*')
+      .select(`
+        id,
+        post_id,
+        session_id,
+        scroll_depth,
+        element_type,
+        element_id,
+        interaction_type,
+        time_spent_seconds,
+        created_at
+      `)
       .eq('post_id', postId);
 
     if (engagementError) throw engagementError;
