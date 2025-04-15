@@ -328,10 +328,10 @@ const UsersPage: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col sm:flex-row sm:items-center sm:justify-between"
+          className="flex flex-col w-full"
         >
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">User Management</h1>
-          <div className="mt-4 sm:mt-0 flex flex-wrap gap-3">
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6">User Management</h1>
+          <div className="flex flex-wrap gap-3">
             <Button
               variant={view === 'users' || view === 'add-user' || view === 'edit-user' ? 'primary' : 'secondary'}
               onClick={() => {

@@ -161,6 +161,14 @@ body {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
+/* Remove focus rings from buttons */
+button:focus, button:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  ring-width: 0 !important;
+  ring-offset-width: 0 !important;
+}
+
 /* Rich Text Editor (Quill) Styles */
 .ql-editor {
   min-height: 200px;
