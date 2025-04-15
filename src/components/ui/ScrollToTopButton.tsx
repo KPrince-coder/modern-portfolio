@@ -87,17 +87,42 @@ const ScrollToTopButton: React.FC<ScrollToTopButtonProps> = ({
         )}
       </AnimatePresence>
 
-      {/* Debug button - only in development */}
-      {process.env.NODE_ENV === 'development' && (
-        <button
-          onClick={toggleVisibility}
-          className="fixed bottom-20 right-10 bg-blue-500 text-white text-xs p-2 rounded-md z-50 flex items-center gap-1 shadow-md hover:bg-blue-600 transition-colors"
-          type="button"
-        >
-          <FiEye size={14} />
-          Toggle Button
-        </button>
-      )}
+      {/* Toggle button - only visible when ScrollToTop is visible */}
+      <AnimatePresence>
+        {isVisible && (
+          <motion.button
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.3 }}
+            onClick={toggleVisibility}
+            className="fixed bottom-20 right-10 bg-blue-500 text-white text-xs p-2 rounded-md z-50 flex items-center gap-1 shadow-md hover:bg-blue-600 transition-colors"
+            type="button"
+          >
+            <FiEye size={14} />
+            Hide Button
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      {/* Show button toggle - only visible when ScrollToTop is hidden */}
+      <AnimatePresence>
+        {!isVisible && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 0.7, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.3 }}
+            whileHover={{ opacity: 1, scale: 1.1 }}
+            onClick={toggleVisibility}
+            className="fixed bottom-6 right-10 bg-gray-200 text-gray-600 w-6 h-6 rounded-full z-50 flex items-center justify-center shadow-sm hover:bg-gray-300 transition-all"
+            type="button"
+            aria-label="Show scroll to top button"
+          >
+            <FiEye size={10} />
+          </motion.button>
+        )}
+      </AnimatePresence>
     </>
   );
 };
