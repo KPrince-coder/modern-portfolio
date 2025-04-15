@@ -77,7 +77,7 @@ const MediaUploader: React.FC<MediaUploaderProps> = ({
 
         // Add file record to database
         const { error: dbError } = await supabase
-          .from('portfolio.media')
+          .from('media')
           .insert({
             name: fileData.file.name,
             size: fileData.file.size,

@@ -34,7 +34,7 @@ const MediaDetail: React.FC<MediaDetailProps> = ({ file, onBack, onDelete }) => 
   const updateFileMutation = useMutation({
     mutationFn: async (data: { name: string; folder: string | null }) => {
       const { error } = await supabase
-        .from('portfolio.media')
+        .from('media')
         .update({
           name: data.name,
           folder: data.folder || null,
