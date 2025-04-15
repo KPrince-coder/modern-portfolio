@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FiArrowLeft, FiArrowRight } from 'react-icons/fi';
 
@@ -32,14 +33,14 @@ const PostNavigation: React.FC<PostNavigationProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Previous post */}
         {prevPost ? (
-          <motion.a
-            href={`/blog/${prevPost.slug}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors"
+          <motion.div
             whileHover={{ x: -5 }}
             transition={{ duration: 0.2 }}
           >
+            <Link
+              to={`/blog/${prevPost.slug}`}
+              className="group block p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors"
+            >
             <span className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-2">
               <FiArrowLeft className="mr-2" />
               Previous Article
@@ -59,21 +60,22 @@ const PostNavigation: React.FC<PostNavigationProps> = ({
                 {prevPost.title}
               </h4>
             </div>
-          </motion.a>
+            </Link>
+          </motion.div>
         ) : (
           <div className="hidden md:block" /> // Empty div for spacing when no previous post
         )}
 
         {/* Next post */}
         {nextPost ? (
-          <motion.a
-            href={`/blog/${nextPost.slug}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors md:text-right md:ml-auto"
+          <motion.div
             whileHover={{ x: 5 }}
             transition={{ duration: 0.2 }}
           >
+            <Link
+              to={`/blog/${nextPost.slug}`}
+              className="group block p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors md:text-right md:ml-auto"
+            >
             <span className="flex items-center justify-end text-sm text-gray-500 dark:text-gray-400 mb-2">
               Next Article
               <FiArrowRight className="ml-2" />
@@ -93,7 +95,8 @@ const PostNavigation: React.FC<PostNavigationProps> = ({
                 {nextPost.title}
               </h4>
             </div>
-          </motion.a>
+            </Link>
+          </motion.div>
         ) : (
           <div className="hidden md:block" /> // Empty div for spacing when no next post
         )}
