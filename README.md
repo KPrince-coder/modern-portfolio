@@ -166,6 +166,26 @@ node scripts/create-admin-user.js
 
 Detailed instructions can be found in [docs/cms-access.md](docs/cms-access.md).
 
+### User Management Features
+
+#### Email Confirmation
+
+Admins can confirm a user's email directly from the user management interface. To apply this feature, run the following scripts:
+
+```bash
+# Set up environment variables
+export NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+export SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+# First, apply the confirm email function migration
+node scripts/apply-confirm-email-migration.js
+
+# Then, update the users view to include the email_confirmed_at field
+node scripts/apply-update-users-view-migration.js
+```
+
+This adds a new "Confirm Email" button in the user management interface that allows admins to confirm a user's email without requiring the user to click on a confirmation link.
+
 ## Customization
 
 ### Changing the Theme

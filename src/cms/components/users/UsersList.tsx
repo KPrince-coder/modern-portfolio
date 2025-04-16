@@ -18,6 +18,7 @@ interface User {
   email: string;
   created_at: string;
   last_sign_in_at?: string;
+  email_confirmed_at?: string | null;
   user_metadata?: {
     name?: string;
   };
@@ -30,6 +31,7 @@ interface UsersListProps {
   onAddUser: () => void;
   onEditUser: (userId: string) => void;
   onDeleteUser: (userId: string) => void;
+  onConfirmEmail: (user: User) => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
 }
@@ -46,6 +48,7 @@ const UsersList: React.FC<UsersListProps> = ({
   onAddUser,
   onEditUser,
   onDeleteUser,
+  onConfirmEmail,
   searchQuery,
   setSearchQuery,
 }) => {
@@ -236,6 +239,7 @@ const UsersList: React.FC<UsersListProps> = ({
                     user={user}
                     onEditUser={onEditUser}
                     onDeleteUser={onDeleteUser}
+                    onConfirmEmail={onConfirmEmail}
                   />
                 </tr>
               ))

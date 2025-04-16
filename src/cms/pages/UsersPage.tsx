@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import { useCMS } from '../CMSProvider';
+import { EnvelopeIcon, CheckCircleIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline';
 
 // Components
 import UsersList from '../components/users/UsersList';
@@ -26,6 +27,15 @@ const UsersPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{ id: string; type: 'user' | 'role' } | null>(null);
+
+  // Email confirmation modal state
+  const [showEmailConfirmModal, setShowEmailConfirmModal] = useState(false);
+  const [emailConfirmStatus, setEmailConfirmStatus] = useState<'pending' | 'success' | 'already-confirmed' | 'error'>('pending');
+  const [userToConfirm, setUserToConfirm] = useState<{ id: string; email: string } | null>(null);
+
+  // Account deletion modal state
+  const [showAccountDeletedModal, setShowAccountDeletedModal] = useState(false);
+  const [deleteErrorMessage, setDeleteErrorMessage] = useState<string | null>(null);
 
   // Fetch users
   const {
@@ -235,6 +245,44 @@ const UsersPage: React.FC = () => {
     },
   });
 
+  // Confirm email mutation
+  const confirmEmailMutation = useMutation({
+    mutationFn: async (user: { id: string; email: string; email_confirmed_at?: string | null }) => {
+      try {
+        // Check if email is already confirmed
+        if (user.email_confirmed_at) {
+          setEmailConfirmStatus('already-confirmed');
+          return { success: true, alreadyConfirmed: true };
+        }
+
+        // Call the confirm_user_email function
+        const { data, error } = await supabase
+          .rpc('confirm_user_email', {
+            in_user_id: user.id
+          });
+
+        if (error) {
+          setEmailConfirmStatus('error');
+          throw new Error(error.message);
+        }
+
+        setEmailConfirmStatus('success');
+        return { success: true, alreadyConfirmed: false };
+      } catch (error) {
+        console.error('Error confirming user email:', error);
+        setEmailConfirmStatus('error');
+        throw error;
+      }
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      // Modal will show the success message instead of alert
+    },
+    onError: () => {
+      setEmailConfirmStatus('error');
+    }
+  });
+
   // Delete role mutation
   const deleteRoleMutation = useMutation({
     mutationFn: async (roleId: string) => {
@@ -286,14 +334,17 @@ const UsersPage: React.FC = () => {
         // Delete the user
         await deleteUserMutation.mutateAsync(itemToDelete.id);
 
-        // If the user deleted their own account, log them out
+        // If the user deleted their own account, show confirmation and log them out
         if (isDeletingSelf) {
-          // Show a message before logging out
-          alert('Your account has been deleted. You will now be logged out.');
-          // Log the user out
-          await supabase.auth.signOut();
-          // Redirect to login page
-          window.location.href = '/admin/login';
+          // Show the account deleted modal
+          setShowAccountDeletedModal(true);
+          // Wait a moment to show the modal before logging out
+          setTimeout(async () => {
+            // Log the user out
+            await supabase.auth.signOut();
+            // Redirect to login page
+            window.location.href = '/admin/login';
+          }, 2000); // 2 seconds delay to show the modal
           return; // Exit early to prevent state updates on unmounted component
         }
       } else {
@@ -305,8 +356,8 @@ const UsersPage: React.FC = () => {
       setItemToDelete(null);
     } catch (error) {
       console.error('Error during deletion:', error);
-      // Show error in a toast or alert
-      alert(error instanceof Error ? error.message : 'An error occurred during deletion');
+      // Set error message and show in modal
+      setDeleteErrorMessage(error instanceof Error ? error.message : 'An error occurred during deletion');
       setShowDeleteConfirm(false);
       setItemToDelete(null);
     }
@@ -406,6 +457,12 @@ const UsersPage: React.FC = () => {
                 setItemToDelete({ id: userId, type: 'user' });
                 setShowDeleteConfirm(true);
               }}
+              onConfirmEmail={(user) => {
+                setUserToConfirm(user);
+                setEmailConfirmStatus('pending');
+                setShowEmailConfirmModal(true);
+                confirmEmailMutation.mutate(user);
+              }}
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
             />
@@ -479,7 +536,7 @@ const UsersPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Confirmation Modal */}
+      {/* Delete Confirmation Modal */}
       <ConfirmModal
         isOpen={showDeleteConfirm}
         title={`Delete ${itemToDelete?.type === 'user' ? 'User' : 'Role'}`}
@@ -496,6 +553,67 @@ const UsersPage: React.FC = () => {
           setItemToDelete(null);
         }}
         variant="danger"
+      />
+
+      {/* Email Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showEmailConfirmModal}
+        title="Confirm Email"
+        message={
+          emailConfirmStatus === 'pending' ?
+            `Confirming email for ${userToConfirm?.email}...` :
+          emailConfirmStatus === 'success' ?
+            `Email for ${userToConfirm?.email} has been confirmed successfully.` :
+          emailConfirmStatus === 'already-confirmed' ?
+            `Email for ${userToConfirm?.email} is already confirmed.` :
+            `Error confirming email for ${userToConfirm?.email}. Please try again.`
+        }
+        confirmLabel="OK"
+        onConfirm={() => {
+          setShowEmailConfirmModal(false);
+          setUserToConfirm(null);
+        }}
+        onClose={() => {
+          setShowEmailConfirmModal(false);
+          setUserToConfirm(null);
+        }}
+        variant="primary"
+        icon={
+          emailConfirmStatus === 'pending' ?
+            <svg className="h-6 w-6 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg> :
+          emailConfirmStatus === 'success' ?
+            <CheckCircleIcon className="h-6 w-6 text-green-500" /> :
+          emailConfirmStatus === 'already-confirmed' ?
+            <EnvelopeIcon className="h-6 w-6 text-blue-500" /> :
+            <ExclamationCircleIcon className="h-6 w-6 text-red-500" />
+        }
+      />
+
+      {/* Account Deleted Modal */}
+      <ConfirmModal
+        isOpen={showAccountDeletedModal}
+        title="Account Deleted"
+        message="Your account has been deleted. You will now be logged out."
+        confirmLabel="OK"
+        onConfirm={() => {}} // No action needed as the timeout will handle logout
+        onClose={() => {}} // No close action as we want to force the logout
+        variant="primary"
+        icon={<ExclamationCircleIcon className="h-6 w-6 text-red-500" />}
+      />
+
+      {/* Delete Error Modal */}
+      <ConfirmModal
+        isOpen={!!deleteErrorMessage}
+        title="Error"
+        message={deleteErrorMessage || 'An error occurred during deletion'}
+        confirmLabel="OK"
+        onConfirm={() => setDeleteErrorMessage(null)}
+        onClose={() => setDeleteErrorMessage(null)}
+        variant="primary"
+        icon={<ExclamationCircleIcon className="h-6 w-6 text-red-500" />}
       />
     </div>
   );
