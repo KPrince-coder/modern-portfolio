@@ -23,7 +23,7 @@ export const PasswordVerificationModal: React.FC<PasswordVerificationModalProps>
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!password) {
@@ -31,13 +31,21 @@ export const PasswordVerificationModal: React.FC<PasswordVerificationModalProps>
       return;
     }
 
-    setIsLoading(true);
-    setError(null);
+    try {
+      setIsLoading(true);
+      setError(null);
 
-    // Call onVerify with the password
-    onVerify(password);
-    setPassword('');
-    setIsLoading(false);
+      // Call onVerify with the password
+      await onVerify(password);
+
+      // Only reset password after successful verification
+      setPassword('');
+    } catch (error) {
+      console.error('Password verification error:', error);
+      setError(error instanceof Error ? error.message : 'Verification failed');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -106,6 +114,12 @@ export const PasswordVerificationModal: React.FC<PasswordVerificationModalProps>
                       onChange={(e) => {
                         setPassword(e.target.value);
                         if (error) setError(null);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleSubmit(e);
+                        }
                       }}
                       className="w-full px-4 py-2 pr-10 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400"
                       placeholder="Enter your password"

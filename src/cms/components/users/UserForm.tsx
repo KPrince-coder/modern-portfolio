@@ -187,7 +187,7 @@ const UserForm: React.FC<UserFormProps> = ({
         // Call the update_user function with the correct parameter names
         const { error: updateError } = await supabase
           .rpc('update_user', {
-            user_id: user?.id ?? '',
+            in_user_id: user?.id ?? '',
             user_email: formData.email,
             user_password: formData.password || null,
             user_name: formData.name,

@@ -117,6 +117,45 @@ export const checkUserRole = async (userId: string, role: string) => {
   }
 };
 
+// Helper function to check if user has a specific permission
+export const checkUserPermission = async (userId: string, permission: string) => {
+  try {
+    const { data, error } = await supabase
+      .rpc('has_permission', {
+        user_id: userId,
+        permission: permission
+      });
+
+    if (error) {
+      console.error('Error checking user permission:', error);
+      return false;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error in checkUserPermission:', error);
+    return false;
+  }
+};
+
+// Helper function to check if current user is an admin
+export const isCurrentUserAdmin = async () => {
+  try {
+    const { data, error } = await supabase
+      .rpc('is_admin_current');
+
+    if (error) {
+      console.error('Error checking if user is admin:', error);
+      return false;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error in isCurrentUserAdmin:', error);
+    return false;
+  }
+};
+
 // Helper function to get current user
 export const getCurrentUser = async () => {
   try {

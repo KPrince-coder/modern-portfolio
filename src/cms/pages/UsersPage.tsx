@@ -204,7 +204,7 @@ const UsersPage: React.FC = () => {
         // that will handle the deletion with proper permissions
         const { data, error } = await supabase
           .rpc('delete_user', {
-            user_id: userId
+            in_user_id: userId
           });
 
         if (error) {
