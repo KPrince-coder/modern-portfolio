@@ -51,7 +51,7 @@ export const PasswordVerificationModal: React.FC<PasswordVerificationModalProps>
   return (
     <Transition appear show={isOpen} as={Fragment}>
       <Dialog as="div" className="fixed inset-0 z-50 overflow-y-auto" onClose={onClose}>
-        <div className="min-h-screen px-4 text-center flex items-center justify-center">
+        <div className="min-h-screen px-4 text-center flex items-center justify-center max-w-screen-lg mx-auto">
           <Transition.Child
             as={Fragment}
             enter="ease-out duration-300"
@@ -78,7 +78,7 @@ export const PasswordVerificationModal: React.FC<PasswordVerificationModalProps>
             leaveFrom="opacity-100 scale-100 translate-y-0"
             leaveTo="opacity-0 scale-95 translate-y-4"
           >
-            <div className="inline-block w-full max-w-sm sm:max-w-md mx-auto p-6 my-8 overflow-hidden text-left align-middle bg-white dark:bg-gray-800 rounded-2xl shadow-xl transform transition-all">
+            <div className="inline-block max-w-[450px] mx-auto p-6 my-8 overflow-hidden text-left align-middle bg-white dark:bg-gray-800 rounded-2xl shadow-xl transform transition-all">
               <div className="flex items-center mb-4">
                 <div className="flex-shrink-0 bg-indigo-100 dark:bg-indigo-900 rounded-full p-2">
                   <LockClosedIcon className="h-6 w-6 text-indigo-600 dark:text-indigo-300" />
@@ -94,7 +94,7 @@ export const PasswordVerificationModal: React.FC<PasswordVerificationModalProps>
                 </p>
               </div>
 
-              <form onSubmit={handleSubmit} className="mt-4 w-full max-w-xs mx-auto">
+              <form onSubmit={handleSubmit} className="mt-4 w-full mx-auto">
                 {error && (
                   <div className="mb-4 bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 p-3 rounded">
                     <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
