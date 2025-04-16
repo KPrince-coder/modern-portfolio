@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import Button from '../../../components/ui/Button';
-import { PencilIcon, TrashIcon, UserPlusIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { UserPlusIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { format } from 'date-fns';
-import Badge from '../../../components/ui/Badge';
+import Badge, { BadgeColor } from '../../../components/ui/Badge';
+import UserActions from './UserActions';
+import SortIcon, { SortConfig, SortableField } from './SortIcon';
 
 interface Role {
   id: string;
@@ -32,6 +34,12 @@ interface UsersListProps {
   setSearchQuery: (query: string) => void;
 }
 
+const getBadgeColor = (roleName: string): BadgeColor => {
+  if (roleName === 'admin') return 'red';
+  if (roleName === 'content_editor') return 'blue';
+  return 'gray';
+};
+
 const UsersList: React.FC<UsersListProps> = ({
   users,
   roles,
@@ -41,56 +49,56 @@ const UsersList: React.FC<UsersListProps> = ({
   searchQuery,
   setSearchQuery,
 }) => {
-  const [sortField, setSortField] = useState<'email' | 'created_at' | 'last_sign_in_at'>('created_at');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
-
-  // Sort users
-  const sortedUsers = [...users].sort((a, b) => {
-    if (sortField === 'email') {
-      return sortDirection === 'asc'
-        ? a.email.localeCompare(b.email)
-        : b.email.localeCompare(a.email);
-    } else if (sortField === 'created_at') {
-      return sortDirection === 'asc'
-        ? new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-        : new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-    } else if (sortField === 'last_sign_in_at') {
-      // Handle null values for last_sign_in_at
-      if (!a.last_sign_in_at && !b.last_sign_in_at) return 0;
-      if (!a.last_sign_in_at) return sortDirection === 'asc' ? -1 : 1;
-      if (!b.last_sign_in_at) return sortDirection === 'asc' ? 1 : -1;
-      
-      return sortDirection === 'asc'
-        ? new Date(a.last_sign_in_at).getTime() - new Date(b.last_sign_in_at).getTime()
-        : new Date(b.last_sign_in_at).getTime() - new Date(a.last_sign_in_at).getTime();
-    }
-    return 0;
+  const [sortConfig, setSortConfig] = useState<SortConfig>({
+    field: 'created_at',
+    direction: 'desc'
   });
 
-  // Handle sort
-  const handleSort = (field: 'email' | 'created_at' | 'last_sign_in_at') => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDirection('asc');
-    }
+  // Separate function to handle date comparisons
+  const compareDates = (dateA: string | undefined, dateB: string | undefined, ascending: boolean): number => {
+    if (!dateA && !dateB) return 0;
+    if (!dateA) return ascending ? -1 : 1;
+    if (!dateB) return ascending ? 1 : -1;
+
+    const comparison = new Date(dateA).getTime() - new Date(dateB).getTime();
+    return ascending ? comparison : -comparison;
   };
 
-  // Get sort icon
-  const getSortIcon = (field: 'email' | 'created_at' | 'last_sign_in_at') => {
-    if (sortField !== field) return null;
-    
-    return sortDirection === 'asc' ? (
-      <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-      </svg>
-    ) : (
-      <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-      </svg>
-    );
+  // Separate function to handle string comparisons
+  const compareStrings = (a: string, b: string, ascending: boolean): number => {
+    const comparison = a.localeCompare(b);
+    return ascending ? comparison : -comparison;
   };
+
+  // Separate function to sort users
+  const getSortedUsers = (users: User[], config: SortConfig): User[] => {
+    const { field, direction } = config;
+    const ascending = direction === 'asc';
+
+    return [...users].sort((a, b) => {
+      switch (field) {
+        case 'email':
+          return compareStrings(a.email, b.email, ascending);
+        case 'created_at':
+          return compareDates(a.created_at, b.created_at, ascending);
+        case 'last_sign_in_at':
+          return compareDates(a.last_sign_in_at, b.last_sign_in_at, ascending);
+        default:
+          return 0;
+      }
+    });
+  };
+
+  // Separate function to handle sort changes
+  const handleSort = (field: SortableField) => {
+    setSortConfig(prevConfig => ({
+      field,
+      direction: prevConfig.field === field && prevConfig.direction === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  // Get sorted users
+  const sortedUsers = getSortedUsers(users, sortConfig);
 
   return (
     <motion.div
@@ -115,7 +123,7 @@ const UsersList: React.FC<UsersListProps> = ({
             />
             <MagnifyingGlassIcon className="absolute right-3 top-2.5 h-5 w-5 text-gray-400" />
           </div>
-          
+
           {/* Add User Button */}
           <Button
             variant="primary"
@@ -140,7 +148,7 @@ const UsersList: React.FC<UsersListProps> = ({
               >
                 <div className="flex items-center">
                   User
-                  {getSortIcon('email')}
+                  <SortIcon field="email" currentSort={sortConfig} />
                 </div>
               </th>
               <th
@@ -156,7 +164,7 @@ const UsersList: React.FC<UsersListProps> = ({
               >
                 <div className="flex items-center">
                   Created
-                  {getSortIcon('created_at')}
+                  <SortIcon field="created_at" currentSort={sortConfig} />
                 </div>
               </th>
               <th
@@ -166,7 +174,7 @@ const UsersList: React.FC<UsersListProps> = ({
               >
                 <div className="flex items-center">
                   Last Login
-                  {getSortIcon('last_sign_in_at')}
+                  <SortIcon field="last_sign_in_at" currentSort={sortConfig} />
                 </div>
               </th>
               <th
@@ -190,7 +198,7 @@ const UsersList: React.FC<UsersListProps> = ({
                       </div>
                       <div className="ml-4">
                         <div className="text-sm font-medium text-gray-900 dark:text-white">
-                          {user.user_metadata?.name || 'No Name'}
+                          {user.user_metadata?.name ?? 'No Name'}
                         </div>
                         <div className="text-sm text-gray-500 dark:text-gray-400">
                           {user.email}
@@ -204,12 +212,15 @@ const UsersList: React.FC<UsersListProps> = ({
                         user.roles.map((role) => (
                           <Badge
                             key={role.id}
-                            text={role.name}
-                            color={role.name === 'admin' ? 'red' : role.name === 'content_editor' ? 'blue' : 'gray'}
-                          />
+                            color={getBadgeColor(role.name)}
+                          >
+                            {role.name}
+                          </Badge>
                         ))
                       ) : (
-                        <Badge text="No Roles" color="gray" />
+                        <Badge color="gray">
+                          No Roles
+                        </Badge>
                       )}
                     </div>
                   </td>
@@ -221,20 +232,11 @@ const UsersList: React.FC<UsersListProps> = ({
                       ? format(new Date(user.last_sign_in_at), 'MMM d, yyyy')
                       : 'Never'}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button
-                      onClick={() => onEditUser(user.id)}
-                      className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 mr-4"
-                    >
-                      <PencilIcon className="h-5 w-5" />
-                    </button>
-                    <button
-                      onClick={() => onDeleteUser(user.id)}
-                      className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
-                    >
-                      <TrashIcon className="h-5 w-5" />
-                    </button>
-                  </td>
+                  <UserActions
+                    user={user}
+                    onEditUser={onEditUser}
+                    onDeleteUser={onDeleteUser}
+                  />
                 </tr>
               ))
             ) : (
@@ -250,5 +252,4 @@ const UsersList: React.FC<UsersListProps> = ({
     </motion.div>
   );
 };
-
 export default UsersList;

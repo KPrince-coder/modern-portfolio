@@ -51,7 +51,7 @@ const UsersPage: React.FC = () => {
           throw new Error(userError.message);
         }
 
-        // For each user, get their roles
+        // For each user, get their roles and properly transform the data
         const usersWithRoles = await Promise.all(
           userData.map(async (user) => {
             const { data: roleData, error: roleError } = await supabase
@@ -70,9 +70,20 @@ const UsersPage: React.FC = () => {
               };
             }
 
+            // Transform the role data to match the Role interface
+            const transformedRoles = roleData.map((r) => ({
+              id: r.roles.id,
+              name: r.roles.name,
+              description: r.roles.description
+            }));
+
             return {
-              ...user,
-              roles: roleData.map((r) => r.roles),
+              id: user.id,
+              email: user.email,
+              created_at: user.created_at,
+              last_sign_in_at: user.last_sign_in_at,
+              user_metadata: user.user_metadata,
+              roles: transformedRoles
             };
           })
         );
@@ -202,7 +213,7 @@ const UsersPage: React.FC = () => {
       try {
         // Instead of directly deleting the user, we'll use a stored procedure
         // that will handle the deletion with proper permissions
-        const { data, error } = await supabase
+        const { error } = await supabase
           .rpc('delete_user', {
             in_user_id: userId
           });
@@ -217,6 +228,7 @@ const UsersPage: React.FC = () => {
         console.error('Error deleting user:', error);
         throw new Error('Failed to delete user. You may not have the required permissions.');
       }
+
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
@@ -268,10 +280,27 @@ const UsersPage: React.FC = () => {
 
     try {
       if (itemToDelete.type === 'user') {
+        // Check if the user is deleting their own account
+        const isDeletingSelf = itemToDelete.id === user?.id;
+
+        // Delete the user
         await deleteUserMutation.mutateAsync(itemToDelete.id);
+
+        // If the user deleted their own account, log them out
+        if (isDeletingSelf) {
+          // Show a message before logging out
+          alert('Your account has been deleted. You will now be logged out.');
+          // Log the user out
+          await supabase.auth.signOut();
+          // Redirect to login page
+          window.location.href = '/admin/login';
+          return; // Exit early to prevent state updates on unmounted component
+        }
       } else {
+        // Delete the role
         await deleteRoleMutation.mutateAsync(itemToDelete.id);
       }
+
       setShowDeleteConfirm(false);
       setItemToDelete(null);
     } catch (error) {
@@ -369,11 +398,11 @@ const UsersPage: React.FC = () => {
                 setSelectedUserId(null);
                 setView('add-user');
               }}
-              onEditUser={(userId) => {
+              onEditUser={(userId: string) => {
                 setSelectedUserId(userId);
                 setView('edit-user');
               }}
-              onDeleteUser={(userId) => {
+              onDeleteUser={(userId: string) => {
                 setItemToDelete({ id: userId, type: 'user' });
                 setShowDeleteConfirm(true);
               }}
@@ -409,11 +438,11 @@ const UsersPage: React.FC = () => {
                 setSelectedRoleId(null);
                 setView('add-role');
               }}
-              onEditRole={(roleId) => {
+              onEditRole={(roleId: string) => {
                 setSelectedRoleId(roleId);
                 setView('edit-role');
               }}
-              onDeleteRole={(roleId) => {
+              onDeleteRole={(roleId: string) => {
                 setItemToDelete({ id: roleId, type: 'role' });
                 setShowDeleteConfirm(true);
               }}
@@ -454,14 +483,19 @@ const UsersPage: React.FC = () => {
       <ConfirmModal
         isOpen={showDeleteConfirm}
         title={`Delete ${itemToDelete?.type === 'user' ? 'User' : 'Role'}`}
-        message={`Are you sure you want to delete this ${itemToDelete?.type}? This action cannot be undone.`}
-        confirmText="Delete"
-        cancelText="Cancel"
+        message={
+          itemToDelete?.type === 'user' && itemToDelete?.id === user?.id
+            ? 'Are you sure you want to delete your own account? You will be logged out immediately. This action cannot be undone.'
+            : `Are you sure you want to delete this ${itemToDelete?.type}? This action cannot be undone.`
+        }
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
         onConfirm={handleDeleteConfirm}
-        onCancel={() => {
+        onClose={() => {
           setShowDeleteConfirm(false);
           setItemToDelete(null);
         }}
+        variant="danger"
       />
     </div>
   );

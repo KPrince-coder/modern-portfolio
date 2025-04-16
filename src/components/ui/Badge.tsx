@@ -1,6 +1,6 @@
 import React from 'react';
 
-type BadgeColor = 'gray' | 'red' | 'yellow' | 'green' | 'blue' | 'indigo' | 'purple' | 'pink';
+export type BadgeColor = 'gray' | 'red' | 'yellow' | 'green' | 'blue' | 'indigo' | 'purple' | 'pink';
 
 interface BadgeProps {
   children: React.ReactNode;
