@@ -109,7 +109,7 @@ The system supports the following permissions:
 The system provides several helper functions:
 
 1. `has_permission(user_id, permission)`: Checks if a user has a specific permission
-2. `is_admin(user_id)`: Checks if a user has the admin role
+2. `user_is_admin(user_id)`: Checks if a user has the admin role
 3. `get_user_roles(user_id)`: Returns all roles assigned to a user
 
 ## User Interface

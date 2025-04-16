@@ -24,7 +24,7 @@ classDiagram
         +handleDeleteConfirm()
         +render()
     }
-    
+
     class UsersList {
         -users: User[]
         -roles: Role[]
@@ -35,7 +35,7 @@ classDiagram
         +handleDeleteUser()
         +render()
     }
-    
+
     class UserForm {
         -formData: FormData
         -errors: FormErrors
@@ -50,7 +50,7 @@ classDiagram
         +handlePasswordVerified()
         +render()
     }
-    
+
     class RolesList {
         -roles: Role[]
         +handleAddRole()
@@ -58,7 +58,7 @@ classDiagram
         +handleDeleteRole()
         +render()
     }
-    
+
     class RoleForm {
         -formData: FormData
         -errors: FormErrors
@@ -69,7 +69,7 @@ classDiagram
         +updateRole()
         +render()
     }
-    
+
     class AccountSettings {
         -formData: FormData
         -errors: FormErrors
@@ -89,7 +89,7 @@ classDiagram
         +updatePassword()
         +render()
     }
-    
+
     class PasswordVerificationModal {
         -password: string
         -error: string
@@ -98,7 +98,7 @@ classDiagram
         +handleSubmit()
         +render()
     }
-    
+
     class ConfirmModal {
         -isOpen: boolean
         -title: string
@@ -109,7 +109,7 @@ classDiagram
         +onCancel()
         +render()
     }
-    
+
     UsersPage --> UsersList
     UsersPage --> UserForm
     UsersPage --> RolesList
@@ -130,53 +130,53 @@ flowchart TD
         Lists[Lists]
         Modals[Modals]
     end
-    
+
     subgraph "React Query"
         Queries[Queries]
         Mutations[Mutations]
         Cache[Query Cache]
     end
-    
+
     subgraph "Supabase Client"
         Auth[Auth API]
         DB[Database API]
         RPC[RPC Calls]
     end
-    
+
     subgraph "Supabase Backend"
         Tables[(Database Tables)]
         Views[(Database Views)]
         SP[(Stored Procedures)]
         RLS[(Row-Level Security)]
     end
-    
+
     UI --> Forms
     UI --> Lists
     UI --> Modals
-    
+
     Forms --> Queries
     Forms --> Mutations
     Lists --> Queries
-    
+
     Queries --> Cache
     Mutations --> Cache
-    
+
     Queries --> Auth
     Queries --> DB
     Queries --> RPC
     Mutations --> Auth
     Mutations --> DB
     Mutations --> RPC
-    
+
     Auth --> RLS
     DB --> RLS
     RPC --> SP
-    
+
     RLS --> Tables
     RLS --> Views
     SP --> Tables
     SP --> Views
-    
+
     style React fill:#f9f,stroke:#333,stroke-width:2px
     style Supabase fill:#bbf,stroke:#333,stroke-width:2px
 ```
@@ -251,13 +251,13 @@ BEGIN
         )
       )
   ) INTO has_perm;
-  
+
   RETURN has_perm;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Check if user is an admin
-CREATE OR REPLACE FUNCTION portfolio.is_admin(user_id UUID)
+CREATE OR REPLACE FUNCTION portfolio.user_is_admin(user_id UUID)
 RETURNS BOOLEAN AS $$
 DECLARE
   is_admin_user BOOLEAN;
@@ -269,7 +269,7 @@ BEGIN
     WHERE ur.user_id = user_id
       AND r.name = 'admin'
   ) INTO is_admin_user;
-  
+
   RETURN is_admin_user;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -300,7 +300,7 @@ BEGIN
   -- This is a simplified version - in a real implementation, you would use
   -- Supabase's server-side functions or Edge Functions to create the user
   new_user_id := uuid_generate_v4();
-  
+
   -- Insert into users_view
   INSERT INTO portfolio.users_view (
     id,
@@ -313,14 +313,14 @@ BEGIN
     jsonb_build_object('name', user_name),
     NOW()
   );
-  
+
   -- Assign roles to the user
   FOREACH role_id IN ARRAY user_roles
   LOOP
     INSERT INTO portfolio.user_roles (user_id, role_id)
     VALUES (new_user_id, role_id);
   END LOOP;
-  
+
   -- Return the user data
   result := jsonb_build_object(
     'id', new_user_id,
@@ -328,7 +328,7 @@ BEGIN
     'user_metadata', jsonb_build_object('name', user_name),
     'created_at', NOW()
   );
-  
+
   RETURN result;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -358,24 +358,24 @@ BEGIN
     user_metadata = jsonb_build_object('name', user_name),
     updated_at = NOW()
   WHERE id = user_id;
-  
+
   -- Delete existing roles
   DELETE FROM portfolio.user_roles
   WHERE user_id = user_id;
-  
+
   -- Assign new roles
   FOREACH role_id IN ARRAY user_roles
   LOOP
     INSERT INTO portfolio.user_roles (user_id, role_id)
     VALUES (user_id, role_id);
   END LOOP;
-  
+
   -- Return success
   result := jsonb_build_object(
     'success', true,
     'id', user_id
   );
-  
+
   RETURN result;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -396,13 +396,13 @@ BEGIN
   -- Delete the user from users_view
   DELETE FROM portfolio.users_view
   WHERE id = user_id;
-  
+
   -- Return success
   result := jsonb_build_object(
     'success', true,
     'id', user_id
   );
-  
+
   RETURN result;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -619,11 +619,11 @@ const UsersPage: React.FC = () => {
           .rpc('delete_user', {
             user_id: userId
           });
-        
+
         if (error) {
           throw new Error(error.message);
         }
-        
+
         return { success: true };
       } catch (error) {
         console.error('Error deleting user:', error);

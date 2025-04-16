@@ -15,55 +15,55 @@ flowchart TD
         Forms[User Forms]
         Lists[User Lists]
     end
-    
+
     subgraph "Business Logic Layer"
         Auth[Authentication Service]
         UserOps[User Operations]
         RoleOps[Role Operations]
         Audit[Audit Logging]
     end
-    
+
     subgraph "Data Access Layer"
         SP[Stored Procedures]
         RLS[Row-Level Security]
         Views[Database Views]
     end
-    
+
     subgraph "Database Layer"
         Users[(Users Table)]
         Roles[(Roles Table)]
         UserRoles[(User Roles Table)]
         AuditLogs[(Audit Logs Table)]
     end
-    
+
     UI --> Forms
     UI --> Lists
     Forms --> UserOps
     Lists --> UserOps
     Forms --> RoleOps
     Lists --> RoleOps
-    
+
     UserOps --> Auth
     RoleOps --> Auth
     UserOps --> Audit
     RoleOps --> Audit
-    
+
     UserOps --> SP
     RoleOps --> SP
     Auth --> SP
-    
+
     SP --> RLS
     SP --> Views
-    
+
     RLS --> Users
     RLS --> Roles
     RLS --> UserRoles
     RLS --> AuditLogs
-    
+
     Views --> Users
-    
+
     Audit --> AuditLogs
-    
+
     style UI fill:#f9f,stroke:#333,stroke-width:2px
     style Database fill:#bbf,stroke:#333,stroke-width:2px
 ```
@@ -82,7 +82,7 @@ erDiagram
         timestamp updated_at
         timestamp last_sign_in_at
     }
-    
+
     ROLES {
         uuid id PK
         string name
@@ -91,14 +91,14 @@ erDiagram
         timestamp created_at
         timestamp updated_at
     }
-    
+
     USER_ROLES {
         uuid id PK
         uuid user_id FK
         uuid role_id FK
         timestamp created_at
     }
-    
+
     AUDIT_LOGS {
         uuid id PK
         uuid user_id FK
@@ -109,7 +109,7 @@ erDiagram
         jsonb new_values
         timestamp created_at
     }
-    
+
     USERS ||--o{ USER_ROLES : has
     ROLES ||--o{ USER_ROLES : assigned_to
     USERS ||--o{ AUDIT_LOGS : creates
@@ -134,7 +134,7 @@ graph TD
         A8[manage_settings]
         A9[view_analytics]
     end
-    
+
     subgraph "Content Editor Role"
         B1[create_posts]
         B2[edit_posts]
@@ -142,11 +142,11 @@ graph TD
         B4[manage_media]
         B5[view_analytics]
     end
-    
+
     subgraph "Viewer Role"
         C1[view_analytics]
     end
-    
+
     style A1 fill:#f9f,stroke:#333,stroke-width:1px
     style A2 fill:#f9f,stroke:#333,stroke-width:1px
     style A3 fill:#f9f,stroke:#333,stroke-width:1px
@@ -156,13 +156,13 @@ graph TD
     style A7 fill:#f9f,stroke:#333,stroke-width:1px
     style A8 fill:#f9f,stroke:#333,stroke-width:1px
     style A9 fill:#f9f,stroke:#333,stroke-width:1px
-    
+
     style B1 fill:#bbf,stroke:#333,stroke-width:1px
     style B2 fill:#bbf,stroke:#333,stroke-width:1px
     style B3 fill:#bbf,stroke:#333,stroke-width:1px
     style B4 fill:#bbf,stroke:#333,stroke-width:1px
     style B5 fill:#bbf,stroke:#333,stroke-width:1px
-    
+
     style C1 fill:#bfb,stroke:#333,stroke-width:1px
 ```
 
@@ -176,12 +176,12 @@ sequenceDiagram
     participant UI as User Interface
     participant Auth as Auth Service
     participant DB as Database
-    
+
     User->>UI: Enter credentials
     UI->>Auth: Sign in request
     Auth->>DB: Validate credentials
     DB-->>Auth: Authentication result
-    
+
     alt Authentication successful
         Auth-->>UI: Generate JWT token
         UI-->>User: Redirect to dashboard
@@ -189,14 +189,14 @@ sequenceDiagram
         Auth-->>UI: Error message
         UI-->>User: Display error
     end
-    
+
     Note over User,DB: After successful authentication
-    
+
     User->>UI: Access protected resource
     UI->>Auth: Verify token
     Auth->>DB: Check permissions
     DB-->>Auth: Permission result
-    
+
     alt Has permission
         Auth-->>UI: Allow access
         UI-->>User: Display resource
@@ -296,18 +296,18 @@ flowchart TD
         JWT[JWT Token Validation]
         Session[Session Management]
     end
-    
+
     subgraph "Authorization Layer"
         RBAC[Role-Based Access Control]
         Permissions[Permission Checking]
     end
-    
+
     subgraph "Database Security"
         RLS[Row-Level Security]
         SP[Stored Procedures]
         Audit[Audit Logging]
     end
-    
+
     Request[User Request] --> JWT
     JWT --> Session
     Session --> RBAC
@@ -316,7 +316,7 @@ flowchart TD
     Permissions --> SP
     SP --> Audit
     RLS --> Audit
-    
+
     style Authentication fill:#f9f,stroke:#333,stroke-width:2px
     style Authorization fill:#bbf,stroke:#333,stroke-width:2px
     style Database fill:#bfb,stroke:#333,stroke-width:2px
@@ -348,7 +348,7 @@ The user management system exposes the following API endpoints and functions:
 | Function | Description |
 |----------|-------------|
 | `has_permission` | Checks if a user has a specific permission |
-| `is_admin` | Checks if a user has the admin role |
+| `user_is_admin` | Checks if a user has the admin role |
 
 ## Implementation Details
 
@@ -380,7 +380,7 @@ BEGIN
 
   -- Create the user
   -- ... implementation details ...
-  
+
   RETURN result;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
