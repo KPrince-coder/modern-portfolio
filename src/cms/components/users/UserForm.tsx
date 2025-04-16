@@ -73,12 +73,22 @@ const UserForm: React.FC<UserFormProps> = ({
   // Initialize form data when user changes
   useEffect(() => {
     if (user) {
+      // Safely extract role IDs from user object
+      let roleIds: string[] = [];
+      try {
+        if (user.roles && Array.isArray(user.roles)) {
+          roleIds = user.roles.map(role => role.id).filter(id => id);
+        }
+      } catch (error) {
+        console.error('Error extracting role IDs:', error);
+      }
+
       setFormData({
         email: user.email ?? '',
         name: user.user_metadata?.name ?? '',
         password: '',
         confirmPassword: '',
-        roleIds: user.roles ? user.roles.map(role => role.id) : [],
+        roleIds: roleIds,
       });
     } else {
       setFormData({
@@ -95,16 +105,20 @@ const UserForm: React.FC<UserFormProps> = ({
   const createUserMutation = useMutation({
     mutationFn: async (data: FormData) => {
       try {
-        // Use a stored procedure to create the user with proper permissions
+        // Ensure roleIds is an array
+        const roleIds = Array.isArray(data.roleIds) ? data.roleIds : [];
+
+        // Call the create_user function with the correct parameter names
         const { data: userData, error: createError } = await supabase
           .rpc('create_user', {
             user_email: data.email,
             user_password: data.password,
             user_name: data.name,
-            user_roles: data.roleIds
+            user_roles: roleIds // Send as direct array
           });
 
         if (createError) {
+          console.error('Error creating user:', createError);
           throw new Error(createError.message);
         }
 
@@ -123,7 +137,7 @@ const UserForm: React.FC<UserFormProps> = ({
             new_values: {
               email: data.email,
               name: data.name,
-              roles: data.roleIds,
+              roles: roleIds,
             },
           });
 
@@ -167,17 +181,21 @@ const UserForm: React.FC<UserFormProps> = ({
           roles: user?.roles?.map(role => role.id) || [],
         };
 
-        // Use a stored procedure to update the user with proper permissions
+        // Ensure roleIds is an array
+        const roleIds = Array.isArray(formData.roleIds) ? formData.roleIds : [];
+
+        // Call the update_user function with the correct parameter names
         const { error: updateError } = await supabase
           .rpc('update_user', {
             user_id: user?.id ?? '',
             user_email: formData.email,
             user_password: formData.password || null,
             user_name: formData.name,
-            user_roles: formData.roleIds
+            user_roles: roleIds // Send as direct array
           });
 
         if (updateError) {
+          console.error('Error updating user:', updateError);
           throw new Error(updateError.message);
         }
 
@@ -193,14 +211,14 @@ const UserForm: React.FC<UserFormProps> = ({
             new_values: {
               email: formData.email,
               name: formData.name,
-              roles: formData.roleIds,
+              roles: roleIds,
               password_changed: !!formData.password,
             },
           });
 
         if (auditError) {
           console.error('Error logging audit:', auditError);
-          // Don't throw error here, just log it - we don't want to fail the update if audit logging fails
+          // Don't throw error here, just log it
         }
 
         return true;
@@ -224,17 +242,27 @@ const UserForm: React.FC<UserFormProps> = ({
     const { name, value } = e.target;
 
     if (name === 'roleIds') {
-      // Handle multiple select
-      const select = e.target as HTMLSelectElement;
-      const options = Array.from(select.options);
-      const selectedValues = options
-        .filter(option => option.selected)
-        .map(option => option.value);
+      try {
+        // Handle multiple select - use selectedOptions instead of options
+        const select = e.target as HTMLSelectElement;
+        // Safely extract selected values
+        const selectedOptions = select.selectedOptions || [];
+        const selectedValues = Array.from(selectedOptions)
+          .map(option => option.value)
+          .filter(value => value); // Filter out empty values
 
-      setFormData(prev => ({
-        ...prev,
-        roleIds: selectedValues,
-      }));
+        setFormData(prev => ({
+          ...prev,
+          roleIds: selectedValues,
+        }));
+      } catch (error) {
+        console.error('Error handling role selection:', error);
+        // Fallback to empty array if there's an error
+        setFormData(prev => ({
+          ...prev,
+          roleIds: [],
+        }));
+      }
     } else {
       setFormData(prev => ({
         ...prev,
@@ -291,11 +319,44 @@ const UserForm: React.FC<UserFormProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
+  // Debug function to log the current state of roleIds
+  const debugRoleIds = () => {
+    console.log('Current roleIds:', formData.roleIds);
+    console.log('Is array?', Array.isArray(formData.roleIds));
+    console.log('Length:', formData.roleIds.length);
+    console.log('JSON string:', JSON.stringify(formData.roleIds));
+    console.log('Type of first element:', formData.roleIds.length > 0 ? typeof formData.roleIds[0] : 'N/A');
+    console.log('Valid UUIDs?', formData.roleIds.every(id => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)));
+    return true; // Always return true to continue with form submission
+  };
+
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!validateForm()) {
+      return;
+    }
+
+    // Debug roleIds before submission
+    debugRoleIds();
+
+    // Ensure roleIds is an array of valid UUIDs
+    const safeFormData = {
+      ...formData,
+      roleIds: Array.isArray(formData.roleIds)
+        ? formData.roleIds.filter(id => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id))
+        : []
+    };
+
+    console.log('After validation - roleIds:', safeFormData.roleIds);
+
+    if (safeFormData.roleIds.length === 0) {
+      setErrors({
+        ...errors,
+        roleIds: 'At least one valid role is required',
+        general: 'Please select at least one valid role'
+      });
       return;
     }
 
@@ -305,7 +366,7 @@ const UserForm: React.FC<UserFormProps> = ({
     } else {
       // For new users, we can create directly
       try {
-        await createUserMutation.mutateAsync(formData);
+        await createUserMutation.mutateAsync(safeFormData);
       } catch (error) {
         console.error('Error creating user:', error);
       }
@@ -314,12 +375,29 @@ const UserForm: React.FC<UserFormProps> = ({
 
   // Handle password verification
   const handlePasswordVerified = async (adminPassword: string) => {
-    setShowVerificationModal(false);
-
     try {
-      await updateUserMutation.mutateAsync({ formData, adminPassword });
+      // Debug roleIds before update
+      console.log('Before update - roleIds:', formData.roleIds);
+      console.log('Before update - JSON string:', JSON.stringify(formData.roleIds));
+      console.log('Before update - Type of first element:', formData.roleIds.length > 0 ? typeof formData.roleIds[0] : 'N/A');
+      console.log('Before update - Valid UUIDs?', formData.roleIds.every(id => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)));
+
+      // Ensure roleIds is an array of valid UUIDs
+      const safeFormData = {
+        ...formData,
+        roleIds: Array.isArray(formData.roleIds)
+          ? formData.roleIds.filter(id => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id))
+          : []
+      };
+
+      console.log('After validation - roleIds:', safeFormData.roleIds);
+
+      await updateUserMutation.mutateAsync({ formData: safeFormData, adminPassword });
+      setShowVerificationModal(false);
     } catch (error) {
       console.error('Error updating user:', error);
+      // Let the error propagate to the PasswordVerificationModal
+      throw error;
     }
   };
 
@@ -495,7 +573,7 @@ const UserForm: React.FC<UserFormProps> = ({
             id="roleIds"
             name="roleIds"
             multiple
-            value={formData.roleIds}
+            value={formData.roleIds || []}
             onChange={handleChange}
             className={`w-full px-4 py-2 rounded-lg border ${
               errors.roleIds
