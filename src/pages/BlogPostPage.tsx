@@ -135,6 +135,7 @@ const BlogPostPage: React.FC = () => {
         description={post.summary || `Read ${post.title}`}
         url={currentUrl}
         imageUrl={post.featured_image_url}
+        imageAlt={post.title}
         publishedTime={post.published_at}
         modifiedTime={post.updated_at}
         author={post.author?.name || 'Admin'}
@@ -142,6 +143,7 @@ const BlogPostPage: React.FC = () => {
         type="article"
         readingTime={readTime}
         category={post.category?.name}
+        robots="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
       />
 
       {/* Blog content */}

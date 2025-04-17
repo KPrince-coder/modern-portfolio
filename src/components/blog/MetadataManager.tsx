@@ -6,6 +6,7 @@ interface MetadataManagerProps {
   description: string;
   url: string;
   imageUrl?: string;
+  imageAlt?: string;
   publishedTime?: string;
   modifiedTime?: string;
   author?: string;
@@ -14,6 +15,7 @@ interface MetadataManagerProps {
   readingTime?: string;
   category?: string;
   locale?: string;
+  robots?: string;
 }
 
 /**
@@ -25,6 +27,7 @@ const MetadataManager: React.FC<MetadataManagerProps> = ({
   description,
   url,
   imageUrl,
+  imageAlt,
   publishedTime,
   modifiedTime,
   author = 'Admin',
@@ -33,6 +36,7 @@ const MetadataManager: React.FC<MetadataManagerProps> = ({
   readingTime,
   category,
   locale = 'en_US',
+  robots = 'index, follow, max-image-preview:large',
 }) => {
   // Format the site name
   const siteName = 'Modern Portfolio Blog';
@@ -53,7 +57,7 @@ const MetadataManager: React.FC<MetadataManagerProps> = ({
       description={description}
       canonical={canonicalUrl}
       author={author}
-      robots="index, follow"
+      robots={robots}
       language={locale.split('_')[0]}
       category={category}
       keywords={tags.length > 0 ? tags : undefined}
@@ -62,12 +66,14 @@ const MetadataManager: React.FC<MetadataManagerProps> = ({
       ogTitle={title}
       ogDescription={description}
       ogImage={formattedImageUrl}
+      ogImageAlt={imageAlt || title}
       ogSiteName={siteName}
       ogLocale={locale}
       twitterCard="summary_large_image"
       twitterTitle={title}
       twitterDescription={description}
       twitterImage={formattedImageUrl}
+      twitterImageAlt={imageAlt || title}
       twitterSite="@portfoliosite"
       twitterCreator={author ? `@${author.replace(/\s+/g, '').toLowerCase()}` : undefined}
       articlePublishedTime={type === 'article' ? publishedTime : undefined}

@@ -56,7 +56,7 @@ const BlogPostPreview: React.FC<BlogPostPreviewProps> = ({ post, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-75 flex items-center justify-center">
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.9 }}
@@ -100,6 +100,7 @@ const BlogPostPreview: React.FC<BlogPostPreviewProps> = ({ post, onClose }) => {
               description={post.summary ?? `Preview: ${post.title}`}
               url={currentUrl}
               imageUrl={post.featured_image_url}
+              imageAlt={post.title}
               publishedTime={post.published_at}
               modifiedTime={post.updated_at}
               author={'Admin'}
@@ -107,6 +108,7 @@ const BlogPostPreview: React.FC<BlogPostPreviewProps> = ({ post, onClose }) => {
               type="article"
               readingTime={readTime}
               category={post.category?.name}
+              robots="noindex, nofollow"
             />
 
             {/* Blog content */}

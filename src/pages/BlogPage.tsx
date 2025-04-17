@@ -123,11 +123,21 @@ const BlogPage = () => {
       <Metadata
         title="Blog | Modern Portfolio"
         description="Explore our blog for insights on technology, design, and development."
+        canonical={window.location.href}
+        author="Modern Portfolio Team"
+        keywords={["blog", "technology", "design", "development", "portfolio", "web development"]}
+        robots="index, follow, max-image-preview:large"
+        category="Technology"
         ogTitle="Blog | Modern Portfolio"
         ogDescription="Explore our blog for insights on technology, design, and development."
         ogType="website"
         ogUrl={window.location.href}
+        ogImage="/images/blog-og-image.jpg"
+        ogImageAlt="Modern Portfolio Blog"
         twitterCard="summary_large_image"
+        twitterImage="/images/blog-twitter-image.jpg"
+        twitterImageAlt="Modern Portfolio Blog"
+        twitterCreator="@modernportfolio"
       />
 
       <div className="py-16">
