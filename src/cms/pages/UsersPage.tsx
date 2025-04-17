@@ -36,6 +36,8 @@ const UsersPage: React.FC = () => {
   // Account deletion modal state
   const [showAccountDeletedModal, setShowAccountDeletedModal] = useState(false);
   const [deleteErrorMessage, setDeleteErrorMessage] = useState<string | null>(null);
+  const [showRoleAssignedModal, setShowRoleAssignedModal] = useState(false);
+  const [roleAssignedUser, setRoleAssignedUser] = useState<string | null>(null);
 
   // Fetch users
   const {
@@ -46,67 +48,64 @@ const UsersPage: React.FC = () => {
     queryKey: ['users', searchQuery],
     queryFn: async () => {
       try {
-        // Get users from auth.users view (this is a view that exposes auth.users safely)
-        const { data: userData, error: userError } = await supabase
-          .from('users_view')
-          .select(`
-            id,
-            email,
-            created_at,
-            last_sign_in_at,
-            user_metadata
-          `);
+        // Use the get_users_with_roles RPC function to get all users with their roles
+        // This function should include email_confirmed_at in its return values
+        const { data: usersWithRoles, error: usersError } = await supabase
+          .rpc('get_users_with_roles');
 
-        if (userError) {
-          throw new Error(userError.message);
+        // Log the SQL query for debugging
+        console.log('SQL query executed:', 'get_users_with_roles');
+
+        if (usersError) {
+          console.error('Error fetching users with roles:', usersError);
+          throw new Error(usersError.message);
         }
 
-        // For each user, get their roles and properly transform the data
-        const usersWithRoles = await Promise.all(
-          userData.map(async (user) => {
-            const { data: roleData, error: roleError } = await supabase
-              .from('user_roles')
-              .select(`
-                role_id,
-                roles:role_id(id, name, description)
-              `)
-              .eq('user_id', user.id);
+        console.log('Users with roles from RPC:', usersWithRoles);
 
-            if (roleError) {
-              console.error('Error fetching roles for user:', roleError);
-              return {
-                ...user,
-                roles: [],
-              };
-            }
+        // Log raw data to check email_confirmed_at values
+        console.log('Raw users data from RPC:', usersWithRoles);
+        usersWithRoles.forEach(user => {
+          console.log(`User ${user.email} email_confirmed_at:`, user.email_confirmed_at);
+        });
 
-            // Transform the role data to match the Role interface
-            const transformedRoles = roleData.map((r) => ({
-              id: r.roles.id,
-              name: r.roles.name,
-              description: r.roles.description
-            }));
+        // Transform the data to match our User interface
+        const transformedUsers = usersWithRoles.map(user => {
+          // Parse the roles JSON array
+          const roles = user.roles && Array.isArray(user.roles)
+            ? user.roles.map(role => ({
+                id: role.id,
+                name: role.name,
+                description: role.description
+              }))
+            : [];
 
-            return {
-              id: user.id,
-              email: user.email,
-              created_at: user.created_at,
-              last_sign_in_at: user.last_sign_in_at,
-              user_metadata: user.user_metadata,
-              roles: transformedRoles
-            };
-          })
-        );
+          // Create the transformed user object
+          const transformedUser = {
+            id: user.user_id,
+            email: user.email,
+            created_at: user.created_at,
+            last_sign_in_at: user.last_sign_in_at,
+            email_confirmed_at: user.email_confirmed_at,
+            user_metadata: { name: user.name },
+            roles: roles
+          };
+
+          // Log the transformed user to check email_confirmed_at
+          console.log(`Transformed user ${transformedUser.email} email_confirmed_at:`, transformedUser.email_confirmed_at);
+
+          return transformedUser;
+        });
 
         // Filter by search query if provided
         if (searchQuery) {
-          return usersWithRoles.filter((user) =>
+          return transformedUsers.filter((user) =>
             user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             user.user_metadata?.name?.toLowerCase().includes(searchQuery.toLowerCase())
           );
         }
 
-        return usersWithRoles;
+        return transformedUsers;
       } catch (error) {
         console.error('Error fetching users:', error);
         throw new Error('Failed to fetch users. You may not have the required permissions.');
@@ -147,43 +146,41 @@ const UsersPage: React.FC = () => {
       if (!selectedUserId) return null;
 
       try {
-        // Get user details from users_view
+        // Use the get_user_with_roles RPC function to get the user with their roles
         const { data: userData, error: userError } = await supabase
-          .from('users_view')
-          .select(`
-            id,
-            email,
-            created_at,
-            last_sign_in_at,
-            user_metadata
-          `)
-          .eq('id', selectedUserId)
-          .single();
+          .rpc('get_user_with_roles', { in_user_id: selectedUserId });
 
         if (userError) {
+          console.error('Error fetching user with roles:', userError);
           throw new Error(userError.message);
         }
 
-        // Get user roles
-        const { data: roleData, error: roleError } = await supabase
-          .from('user_roles')
-          .select(`
-            role_id,
-            roles:role_id(id, name, description)
-          `)
-          .eq('user_id', selectedUserId);
-
-        if (roleError) {
-          console.error('Error fetching roles for user:', roleError);
-          return {
-            ...userData,
-            roles: [],
-          };
+        if (!userData || userData.length === 0) {
+          throw new Error('User not found');
         }
 
+        // Get the first (and only) user from the result
+        const user = userData[0];
+        console.log('Selected user with roles from RPC:', user);
+
+        // Parse the roles JSON array
+        const roles = user.roles && Array.isArray(user.roles)
+          ? user.roles.map(role => ({
+              id: role.id,
+              name: role.name,
+              description: role.description
+            }))
+          : [];
+
+        // Transform to match our User interface
         return {
-          ...userData,
-          roles: roleData.map((r) => r.roles),
+          id: user.user_id,
+          email: user.email,
+          created_at: user.created_at,
+          last_sign_in_at: user.last_sign_in_at,
+          email_confirmed_at: user.email_confirmed_at,
+          user_metadata: { name: user.name },
+          roles: roles
         };
       } catch (error) {
         console.error('Error fetching user details:', error);
@@ -256,7 +253,7 @@ const UsersPage: React.FC = () => {
         }
 
         // Call the confirm_user_email function
-        const { data, error } = await supabase
+        const { error } = await supabase
           .rpc('confirm_user_email', {
             in_user_id: user.id
           });
@@ -281,6 +278,66 @@ const UsersPage: React.FC = () => {
     onError: () => {
       setEmailConfirmStatus('error');
     }
+  });
+
+  // Assign admin role mutation
+  const assignAdminRoleMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      try {
+        console.log('Assigning admin role to user:', userId);
+
+        // First try using the assign_admin_role function
+        try {
+          const { data, error } = await supabase
+            .rpc('assign_admin_role', {
+              in_user_id: userId
+            });
+
+          if (error) {
+            throw new Error(error.message);
+          }
+
+          console.log('Admin role assigned successfully:', data);
+          return { success: true, method: 'assign_admin_role' };
+        } catch (error) {
+          console.error('Error using assign_admin_role, trying direct insert:', error);
+
+          // If assign_admin_role fails, try direct insert
+          // First, get the admin role ID
+          const { data: roles, error: rolesError } = await supabase
+            .from('roles')
+            .select('id')
+            .eq('name', 'admin')
+            .limit(1);
+
+          if (rolesError || !roles || roles.length === 0) {
+            throw new Error('Could not find admin role');
+          }
+
+          const adminRoleId = roles[0].id;
+
+          // Now directly insert the role
+          const { data: directInsertData, error: directInsertError } = await supabase
+            .rpc('direct_insert_role', {
+              in_user_id: userId,
+              in_role_id: adminRoleId
+            });
+
+          if (directInsertError) {
+            throw new Error(directInsertError.message);
+          }
+
+          console.log('Admin role assigned successfully via direct insert:', directInsertData);
+          return { success: true, method: 'direct_insert_role' };
+        }
+      } catch (error) {
+        console.error('Error assigning admin role:', error);
+        throw new Error('Failed to assign admin role. You may not have the required permissions.');
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
   });
 
   // Delete role mutation
@@ -321,6 +378,105 @@ const UsersPage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['roles'] });
     },
   });
+
+  // Handle assigning admin role to a user
+  const handleAssignAdminRole = async (userId: string) => {
+    try {
+      // Find the user's email for the success message
+      const user = users?.find(u => u.id === userId);
+      setRoleAssignedUser(user?.email || 'User');
+
+      await assignAdminRoleMutation.mutateAsync(userId);
+
+      // Force a refresh of the users list
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+
+      // Show success modal instead of alert
+      setShowRoleAssignedModal(true);
+    } catch (error) {
+      console.error('Error assigning admin role:', error);
+      setDeleteErrorMessage(error instanceof Error ? error.message : 'An error occurred while assigning the admin role');
+    }
+  };
+
+  // Handle assigning any role to a user
+  const handleAssignRole = async (userId: string, roleId: string) => {
+    try {
+      // Find the user's email and role name for the success message
+      const user = users?.find(u => u.id === userId);
+      const role = roles?.find(r => r.id === roleId);
+      console.log('Found user and role:', { user, role });
+
+      if (!user) {
+        console.error('User not found:', userId);
+        setDeleteErrorMessage('User not found. Please refresh the page and try again.');
+        return;
+      }
+
+      if (!role) {
+        console.error('Role not found:', roleId);
+        setDeleteErrorMessage('Role not found. Please refresh the page and try again.');
+        return;
+      }
+
+      setRoleAssignedUser(`${user.email || 'User'} (${role.name || 'Role'})`);
+
+      console.log(`Assigning role ${roleId} to user ${userId}`);
+      console.log('Available roles:', roles);
+
+      // Use the simplest approach first - direct database operations
+      try {
+        console.log('Using direct database operations');
+
+        // First, delete existing roles
+        const { error: deleteError } = await supabase
+          .from('user_roles')
+          .delete()
+          .eq('user_id', userId);
+
+        if (deleteError) {
+          console.error('Error deleting existing roles:', deleteError);
+          throw deleteError;
+        }
+
+        // Then insert the new role
+        const { error: insertError } = await supabase
+          .from('user_roles')
+          .insert({
+            user_id: userId,
+            role_id: roleId
+          });
+
+        if (insertError) {
+          console.error('Error inserting new role:', insertError);
+          throw insertError;
+        }
+
+        console.log('Role assigned successfully via direct database operations');
+      } catch (dbError) {
+        console.error('Error in direct database operations:', dbError);
+        setDeleteErrorMessage('Error assigning role. Please try again.');
+        return;
+      }
+
+      // Try to refresh the user roles cache, but don't fail if it doesn't work
+      try {
+        await supabase.rpc('refresh_user_roles_cache');
+        console.log('User roles cache refreshed after assigning role');
+      } catch (error) {
+        console.warn('Error refreshing user roles cache, but continuing:', error);
+      }
+
+      // Force a refresh of the users list
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+
+      // Show success modal instead of alert
+      setShowRoleAssignedModal(true);
+    } catch (error) {
+      console.error('Error assigning role:', error);
+      setDeleteErrorMessage(error instanceof Error ? error.message : 'An error occurred while assigning the role');
+    }
+  };
 
   // Handle delete confirmation
   const handleDeleteConfirm = async () => {
@@ -463,6 +619,8 @@ const UsersPage: React.FC = () => {
                 setShowEmailConfirmModal(true);
                 confirmEmailMutation.mutate(user);
               }}
+              onAssignAdminRole={handleAssignAdminRole}
+              onAssignRole={handleAssignRole}
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
             />
@@ -614,6 +772,18 @@ const UsersPage: React.FC = () => {
         onClose={() => setDeleteErrorMessage(null)}
         variant="primary"
         icon={<ExclamationCircleIcon className="h-6 w-6 text-red-500" />}
+      />
+
+      {/* Role Assigned Success Modal */}
+      <ConfirmModal
+        isOpen={showRoleAssignedModal}
+        title="Role Assigned"
+        message={`Role has been successfully assigned to ${roleAssignedUser}.`}
+        confirmLabel="OK"
+        onConfirm={() => setShowRoleAssignedModal(false)}
+        onClose={() => setShowRoleAssignedModal(false)}
+        variant="primary"
+        icon={<CheckCircleIcon className="h-6 w-6 text-green-500" />}
       />
     </div>
   );

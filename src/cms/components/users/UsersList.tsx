@@ -32,6 +32,7 @@ interface UsersListProps {
   onEditUser: (userId: string) => void;
   onDeleteUser: (userId: string) => void;
   onConfirmEmail: (user: User) => void;
+  onAssignRole: (userId: string, roleId: string) => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
 }
@@ -42,6 +43,12 @@ const getBadgeColor = (roleName: string): BadgeColor => {
   return 'gray';
 };
 
+// Helper function to check if a user's email is confirmed
+const isEmailConfirmed = (user: User): boolean => {
+  // Check if email_confirmed_at exists and is not null
+  return !!user.email_confirmed_at && user.email_confirmed_at !== null;
+};
+
 const UsersList: React.FC<UsersListProps> = ({
   users,
   roles,
@@ -49,6 +56,8 @@ const UsersList: React.FC<UsersListProps> = ({
   onEditUser,
   onDeleteUser,
   onConfirmEmail,
+  onAssignAdminRole,
+  onAssignRole,
   searchQuery,
   setSearchQuery,
 }) => {
@@ -182,6 +191,12 @@ const UsersList: React.FC<UsersListProps> = ({
               </th>
               <th
                 scope="col"
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+              >
+                Email Status
+              </th>
+              <th
+                scope="col"
                 className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
               >
                 Actions
@@ -211,20 +226,45 @@ const UsersList: React.FC<UsersListProps> = ({
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex flex-wrap gap-2">
-                      {user.roles && user.roles.length > 0 ? (
-                        user.roles.map((role) => (
-                          <Badge
-                            key={role.id}
-                            color={getBadgeColor(role.name)}
-                          >
-                            {role.name}
+                      <div className="flex items-center gap-2">
+                        {user.roles && user.roles.length > 0 ? (
+                          <>
+                            {user.roles.map((role) => (
+                              <Badge
+                                key={role.id}
+                                color={getBadgeColor(role.name)}
+                              >
+                                {role.name}
+                              </Badge>
+                            ))}
+                          </>
+                        ) : (
+                          <Badge color="gray">
+                            No Roles
                           </Badge>
-                        ))
-                      ) : (
-                        <Badge color="gray">
-                          No Roles
-                        </Badge>
-                      )}
+                        )}
+
+                        {/* Role Assignment Buttons */}
+                        <div className="flex flex-wrap gap-1">
+                          {roles.map((role) => (
+                            <button
+                              key={role.id}
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                console.log(`Clicked to assign role ${role.name} (${role.id}) to user ${user.email} (${user.id})`);
+                                onAssignRole(user.id, role.id);
+                              }}
+                              className="px-2 py-1 text-xs font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800"
+                            >
+                              {role.name}
+                            </button>
+                          ))}
+                        </div>
+
+
+                      </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
@@ -234,6 +274,18 @@ const UsersList: React.FC<UsersListProps> = ({
                     {user.last_sign_in_at
                       ? format(new Date(user.last_sign_in_at), 'MMM d, yyyy')
                       : 'Never'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {/* Use the helper function to check email confirmation status */}
+                    {isEmailConfirmed(user) ? (
+                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100">
+                        Confirmed
+                      </span>
+                    ) : (
+                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100">
+                        Unconfirmed
+                      </span>
+                    )}
                   </td>
                   <UserActions
                     user={user}
@@ -245,7 +297,7 @@ const UsersList: React.FC<UsersListProps> = ({
               ))
             ) : (
               <tr>
-                <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
                   No users found
                 </td>
               </tr>

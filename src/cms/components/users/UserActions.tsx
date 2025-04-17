@@ -4,7 +4,13 @@ import { PencilIcon, TrashIcon, EnvelopeIcon } from '@heroicons/react/24/outline
 interface User {
   id: string;
   email: string;
+  created_at: string;
+  last_sign_in_at?: string;
   email_confirmed_at?: string | null;
+  user_metadata?: {
+    name?: string;
+  };
+  roles: { id: string; name: string; description?: string }[];
 }
 
 interface UserActionsProps {

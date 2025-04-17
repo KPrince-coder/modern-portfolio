@@ -73,23 +73,58 @@ const UserForm: React.FC<UserFormProps> = ({
   // Initialize form data when user changes
   useEffect(() => {
     if (user) {
-      // Safely extract role IDs from user object
-      let roleIds: string[] = [];
-      try {
-        if (user.roles && Array.isArray(user.roles)) {
-          roleIds = user.roles.map(role => role.id).filter(id => id);
-        }
-      } catch (error) {
-        console.error('Error extracting role IDs:', error);
-      }
+      // Fetch the latest roles directly from the database
+      const fetchCurrentRoles = async () => {
+        try {
+          console.log('Fetching current roles for user:', user.id);
 
-      setFormData({
-        email: user.email ?? '',
-        name: user.user_metadata?.name ?? '',
-        password: '',
-        confirmPassword: '',
-        roleIds: roleIds,
-      });
+          // First try using the check_user_roles function
+          const { data: directRoles, error } = await supabase
+            .rpc('check_user_roles', { in_user_id: user.id });
+
+          if (error) {
+            console.error('Error fetching roles with check_user_roles:', error);
+            throw error;
+          }
+
+          console.log('Current roles from database:', directRoles);
+
+          // Extract role IDs from the result
+          const roleIds = directRoles?.map((role: { role_id: string }) => role.role_id) ?? [];
+          console.log('Extracted role IDs:', roleIds);
+
+          // Update form data with the latest roles
+          setFormData({
+            email: user.email ?? '',
+            name: user.user_metadata?.name ?? '',
+            password: '',
+            confirmPassword: '',
+            roleIds: roleIds,
+          });
+        } catch (error) {
+          console.error('Error fetching current roles:', error);
+
+          // Fallback to roles from the user object
+          let roleIds: string[] = [];
+          try {
+            if (user.roles && Array.isArray(user.roles)) {
+              roleIds = user.roles.map(role => role.id).filter(id => id);
+            }
+          } catch (extractError) {
+            console.error('Error extracting role IDs:', extractError);
+          }
+
+          setFormData({
+            email: user.email ?? '',
+            name: user.user_metadata?.name ?? '',
+            password: '',
+            confirmPassword: '',
+            roleIds: roleIds,
+          });
+        }
+      };
+
+      fetchCurrentRoles();
     } else {
       setFormData({
         email: '',
@@ -181,22 +216,83 @@ const UserForm: React.FC<UserFormProps> = ({
           roles: user?.roles?.map(role => role.id) || [],
         };
 
-        // Ensure roleIds is an array
-        const roleIds = Array.isArray(formData.roleIds) ? formData.roleIds : [];
+        // Ensure roleIds is an array of valid UUIDs
+        const roleIds = Array.isArray(formData.roleIds)
+          ? formData.roleIds.filter(id => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id))
+          : [];
 
-        // Call the update_user function with the correct parameter names
+        console.log('Updating user with roles:', roleIds);
+
+        // Update user details first
         const { error: updateError } = await supabase
           .rpc('update_user', {
             in_user_id: user?.id ?? '',
             user_email: formData.email,
             user_password: formData.password || null,
             user_name: formData.name,
-            user_roles: roleIds // Send as direct array
+            user_roles: [] // Empty array since we'll update roles separately
           });
 
         if (updateError) {
-          console.error('Error updating user:', updateError);
-          throw new Error(updateError.message);
+          console.error('Error updating user details:', updateError);
+          throw new Error(`Error updating user details: ${updateError.message}`);
+        }
+
+        // Debug role IDs before sending
+        console.log('Role IDs before sending:', roleIds);
+        console.log('Role IDs type:', typeof roleIds);
+        console.log('Is array?', Array.isArray(roleIds));
+
+        // Debug the roles to be assigned
+        try {
+          const { data: debugData } = await supabase
+            .rpc('debug_role_assignment', {
+              in_user_id: user?.id ?? '',
+              in_role_ids: roleIds
+            });
+          console.log('Debug role assignment:', debugData);
+        } catch (error) {
+          console.error('Error debugging role assignment:', error);
+        }
+
+        // Use direct database operations for role assignment
+        try {
+          console.log('Using direct database operations for role assignment');
+
+          // First, delete existing roles
+          const { error: deleteError } = await supabase
+            .from('user_roles')
+            .delete()
+            .eq('user_id', user?.id ?? '');
+
+          if (deleteError) {
+            console.error('Error deleting existing roles:', deleteError);
+            throw deleteError;
+          }
+
+          // Then insert the new roles
+          if (roleIds.length > 0) {
+            const rolesToInsert = roleIds.map(roleId => ({
+              user_id: user?.id ?? '',
+              role_id: roleId
+            }));
+
+            const { error: insertError } = await supabase
+              .from('user_roles')
+              .insert(rolesToInsert);
+
+            if (insertError) {
+              console.error('Error inserting new roles:', insertError);
+              throw insertError;
+            }
+
+            console.log('Roles assigned successfully via direct database operations');
+          } else {
+            console.log('No roles to assign');
+          }
+        } catch (dbError) {
+          console.error('Error in direct database operations:', dbError);
+          throw new Error(`Error updating user roles: ${dbError instanceof Error ? dbError.message : 'Unknown error'}`);
         }
 
         // Log the update for audit purposes
@@ -251,9 +347,18 @@ const UserForm: React.FC<UserFormProps> = ({
           .map(option => option.value)
           .filter(value => value); // Filter out empty values
 
+        console.log('Selected role values:', selectedValues);
+
+        // Ensure all values are valid UUIDs
+        const validUuids = selectedValues.filter(id =>
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+        );
+
+        console.log('Valid UUIDs:', validUuids);
+
         setFormData(prev => ({
           ...prev,
-          roleIds: selectedValues,
+          roleIds: validUuids,
         }));
       } catch (error) {
         console.error('Error handling role selection:', error);
@@ -392,7 +497,43 @@ const UserForm: React.FC<UserFormProps> = ({
 
       console.log('After validation - roleIds:', safeFormData.roleIds);
 
+      // Log the exact parameters being sent to the update_user function
+      console.log('Sending to update_user:', {
+        in_user_id: user?.id,
+        user_email: safeFormData.email,
+        user_password: safeFormData.password || null,
+        user_name: safeFormData.name,
+        user_roles: safeFormData.roleIds
+      });
+
+      // Debug user roles before update
+      try {
+        const { data: beforeRoles } = await supabase
+          .rpc('debug_user_roles', { in_user_id: user?.id });
+        console.log('User roles before update:', beforeRoles);
+      } catch (error) {
+        console.error('Error debugging user roles before update:', error);
+      }
+
       await updateUserMutation.mutateAsync({ formData: safeFormData, adminPassword });
+
+      // Debug user roles after update
+      try {
+        const { data: afterRoles } = await supabase
+          .rpc('debug_user_roles', { in_user_id: user?.id });
+        console.log('User roles after update:', afterRoles);
+
+        // Directly check the user_roles table
+        const { data: directRoles } = await supabase
+          .rpc('check_user_roles', { in_user_id: user?.id });
+        console.log('Direct check of user_roles table:', directRoles);
+
+        // Force a refresh of the users list
+        console.log('Role assignment complete');
+      } catch (error) {
+        console.error('Error debugging user roles after update:', error);
+      }
+
       setShowVerificationModal(false);
     } catch (error) {
       console.error('Error updating user:', error);
