@@ -148,13 +148,6 @@ export const usePersonalData = () => {
   return useQuery({
     queryKey: ['personalData'],
     queryFn: api.getPersonalData,
-    placeholderData: {
-      // Fallback data if API fails
-      name: 'John Doe',
-      title: 'Full Stack Developer',
-      bio: 'Passionate about creating beautiful and functional web applications. Specializing in React, TypeScript, and modern web technologies.',
-      profile_image_url: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-    },
   });
 };
 

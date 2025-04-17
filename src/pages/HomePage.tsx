@@ -5,8 +5,21 @@ import SectionDivider from '../components/ui/SectionDivider';
 import SkillCard from '../components/ui/SkillCard';
 import ProjectCard from '../components/ui/ProjectCard';
 import FeaturedBlogPosts from '../components/home/FeaturedBlogPosts';
+import ProfileImage from '../components/ui/ProfileImage';
+import { usePersonalData } from '../hooks/useSupabase';
 
 const HomePage = () => {
+  // Fetch personal data for profile image
+  const { data: personalData, isLoading: isLoadingPersonal } = usePersonalData();
+
+  // Use personal data or fallback
+  const personalInfo = personalData || {
+    name: 'John Doe',
+    title: 'Creative Developer & Designer',
+    bio: 'I build exceptional digital experiences that are fast, accessible, and visually appealing.',
+    profile_image_url: '',
+  };
+
   return (
     <Container>
       <div className="py-20">
@@ -16,15 +29,16 @@ const HomePage = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+              transition={{ duration: 0.6 }}
+              className="mb-12 lg:text-start md:text-center sm:text-center"
           >
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-800 dark:text-white mb-6">
               Creative Developer & Designer
             </h1>
-            <p className="text-xl text-gray-600 dark:text-gray-300 mb-8">
+            <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 ">
               I build exceptional digital experiences that are fast, accessible, and visually appealing.
             </p>
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-wrap gap-4 lg:justify-start md:justify-center sm:justify-center">
               <a
                 href="#projects"
                 className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
@@ -40,35 +54,13 @@ const HomePage = () => {
             </div>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="relative flex items-center justify-center"
-          >
-            {/* Container with max width to make image more professional and not too big */}
-            <div className="max-w-xs md:max-w-sm relative mx-auto">
-              {/* Gradient border */}
-              <div className="aspect-square rounded-full bg-gradient-to-br from-indigo-400 to-purple-600 p-1 shadow-lg">
-                <div className="w-full h-full rounded-full bg-white dark:bg-gray-900 flex items-center justify-center overflow-hidden">
-                  {/* Placeholder for profile image */}
-                  <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400">
-                    <svg className="w-1/3 h-1/3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                      <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-
-              {/* Decorative elements */}
-              <div className="absolute -z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] rounded-full border-2 border-dashed border-indigo-200 dark:border-indigo-900 animate-spin-slow"></div>
-
-              {/* Additional decorative elements */}
-              <div className="absolute -z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140%] h-[140%] rounded-full border border-indigo-100 dark:border-indigo-800 opacity-70"></div>
-              <div className="absolute -z-20 -bottom-6 -right-6 w-24 h-24 bg-purple-200 dark:bg-purple-900/30 rounded-full blur-xl"></div>
-              <div className="absolute -z-20 -top-6 -left-6 w-20 h-20 bg-indigo-200 dark:bg-indigo-900/30 rounded-full blur-xl"></div>
-            </div>
-          </motion.div>
+          {/* Profile Image Component */}
+          <ProfileImage
+            imageUrl={personalInfo.profile_image_url}
+            name={personalInfo.name}
+            isLoading={isLoadingPersonal}
+            size="sm"
+          />
         </div>
       </section>
 
