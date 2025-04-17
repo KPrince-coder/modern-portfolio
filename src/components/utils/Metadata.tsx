@@ -1,4 +1,5 @@
 import React from 'react';
+import { Helmet } from 'react-helmet-async';
 
 interface MetadataProps {
   title: string;
@@ -40,7 +41,7 @@ interface MetadataProps {
 }
 
 /**
- * Metadata component using React 19's native metadata support
+ * Metadata component using react-helmet-async for managing document head
  */
 const Metadata: React.FC<MetadataProps> = ({
   title,
@@ -84,7 +85,7 @@ const Metadata: React.FC<MetadataProps> = ({
   const formattedKeywords = Array.isArray(keywords) ? keywords.join(', ') : keywords;
 
   return (
-    <>
+    <Helmet>
       {/* Basic metadata */}
       <title>{title}</title>
       <meta name="viewport" content={viewport} />
@@ -143,7 +144,7 @@ const Metadata: React.FC<MetadataProps> = ({
 
       {/* Additional metadata */}
       {children}
-    </>
+    </Helmet>
   );
 };
 
