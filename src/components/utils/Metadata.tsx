@@ -15,8 +15,12 @@ interface MetadataProps {
   ogUrl?: string;
   ogImage?: string;
   ogImageAlt?: string;
+  ogImageWidth?: number;
+  ogImageHeight?: number;
+  ogImageType?: string;
   ogSiteName?: string;
   ogLocale?: string;
+  fbAppId?: string;
   twitterCard?: 'summary' | 'summary_large_image' | 'app' | 'player';
   twitterTitle?: string;
   twitterDescription?: string;
@@ -53,14 +57,18 @@ const Metadata: React.FC<MetadataProps> = ({
   ogUrl,
   ogImage,
   ogImageAlt,
+  ogImageWidth = 1200,
+  ogImageHeight = 630,
+  ogImageType = 'image/jpeg',
   ogSiteName = 'Modern Portfolio',
   ogLocale = 'en_US',
+  fbAppId,
   twitterCard = 'summary_large_image',
   twitterTitle,
   twitterDescription,
   twitterImage,
   twitterImageAlt,
-  twitterSite = '@portfoliosite',
+  twitterSite = '@modernportfolio',
   twitterCreator,
   articlePublishedTime,
   articleModifiedTime,
@@ -102,9 +110,13 @@ const Metadata: React.FC<MetadataProps> = ({
       <meta property="og:type" content={ogType} />
       <meta property="og:url" content={ogUrl ?? canonical ?? window.location.href} />
       {ogImage && <meta property="og:image" content={ogImage} />}
+      {ogImage && <meta property="og:image:width" content={String(ogImageWidth)} />}
+      {ogImage && <meta property="og:image:height" content={String(ogImageHeight)} />}
+      {ogImage && <meta property="og:image:type" content={ogImageType} />}
       {ogImageAlt && <meta property="og:image:alt" content={ogImageAlt} />}
       <meta property="og:site_name" content={ogSiteName} />
       <meta property="og:locale" content={ogLocale} />
+      {fbAppId && <meta property="fb:app_id" content={fbAppId} />}
 
       {/* Twitter Card metadata */}
       <meta name="twitter:card" content={twitterCard} />
@@ -114,6 +126,7 @@ const Metadata: React.FC<MetadataProps> = ({
       {twitterImageAlt && <meta name="twitter:image:alt" content={twitterImageAlt} />}
       <meta name="twitter:site" content={twitterSite} />
       {twitterCreator && <meta name="twitter:creator" content={twitterCreator} />}
+      <meta name="twitter:domain" content={window.location.hostname} />
 
       {/* Article metadata (for og:type="article") */}
       {articlePublishedTime && <meta property="article:published_time" content={articlePublishedTime} />}

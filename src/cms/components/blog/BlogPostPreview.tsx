@@ -101,6 +101,9 @@ const BlogPostPreview: React.FC<BlogPostPreviewProps> = ({ post, onClose }) => {
               url={currentUrl}
               imageUrl={post.featured_image_url}
               imageAlt={post.title}
+              imageWidth={1200}
+              imageHeight={630}
+              imageType="image/jpeg"
               publishedTime={post.published_at}
               modifiedTime={post.updated_at}
               author={'Admin'}

@@ -126,7 +126,7 @@ const BlogPage = () => {
         canonical={window.location.href}
         author="Modern Portfolio Team"
         keywords={["blog", "technology", "design", "development", "portfolio", "web development"]}
-        robots="index, follow, max-image-preview:large"
+        robots="index, follow, max-image-preview:large, max-snippet:-1"
         category="Technology"
         ogTitle="Blog | Modern Portfolio"
         ogDescription="Explore our blog for insights on technology, design, and development."
@@ -134,9 +134,15 @@ const BlogPage = () => {
         ogUrl={window.location.href}
         ogImage="/images/blog-og-image.jpg"
         ogImageAlt="Modern Portfolio Blog"
+        ogImageWidth={1200}
+        ogImageHeight={630}
+        ogImageType="image/jpeg"
+        ogSiteName="Modern Portfolio"
+        fbAppId="123456789012345"
         twitterCard="summary_large_image"
         twitterImage="/images/blog-twitter-image.jpg"
         twitterImageAlt="Modern Portfolio Blog"
+        twitterSite="@modernportfolio"
         twitterCreator="@modernportfolio"
       />
 

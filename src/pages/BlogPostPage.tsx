@@ -136,14 +136,18 @@ const BlogPostPage: React.FC = () => {
         url={currentUrl}
         imageUrl={post.featured_image_url}
         imageAlt={post.title}
+        imageWidth={1200}
+        imageHeight={630}
+        imageType="image/jpeg"
         publishedTime={post.published_at}
         modifiedTime={post.updated_at}
-        author={post.author?.name || 'Admin'}
+        author={post.author?.name ?? 'Admin'}
         tags={post.tags?.map(tag => tag.name) || []}
         type="article"
         readingTime={readTime}
         category={post.category?.name}
         robots="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+        fbAppId="123456789012345"
       />
 
       {/* Blog content */}

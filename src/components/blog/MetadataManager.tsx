@@ -7,6 +7,9 @@ interface MetadataManagerProps {
   url: string;
   imageUrl?: string;
   imageAlt?: string;
+  imageWidth?: number;
+  imageHeight?: number;
+  imageType?: string;
   publishedTime?: string;
   modifiedTime?: string;
   author?: string;
@@ -16,6 +19,7 @@ interface MetadataManagerProps {
   category?: string;
   locale?: string;
   robots?: string;
+  fbAppId?: string;
 }
 
 /**
@@ -28,6 +32,9 @@ const MetadataManager: React.FC<MetadataManagerProps> = ({
   url,
   imageUrl,
   imageAlt,
+  imageWidth = 1200,
+  imageHeight = 630,
+  imageType = 'image/jpeg',
   publishedTime,
   modifiedTime,
   author = 'Admin',
@@ -37,19 +44,21 @@ const MetadataManager: React.FC<MetadataManagerProps> = ({
   category,
   locale = 'en_US',
   robots = 'index, follow, max-image-preview:large',
+  fbAppId,
 }) => {
   // Format the site name
   const siteName = 'Modern Portfolio Blog';
 
   // Format the canonical URL
-  const canonicalUrl = url.startsWith('http') ? url : `https://example.com${url}`;
+  const canonicalUrl = url.startsWith('http') ? url : `https://modernportfolio.com${url}`;
 
   // Format the image URL
-  const formattedImageUrl = imageUrl?.startsWith('http')
-    ? imageUrl
-    : imageUrl
-      ? `https://example.com${imageUrl}`
-      : 'https://example.com/default-og-image.jpg';
+  let formattedImageUrl = 'https://modernportfolio.com/default-og-image.jpg';
+  if (imageUrl) {
+    formattedImageUrl = imageUrl.startsWith('http')
+      ? imageUrl
+      : `https://modernportfolio.com${imageUrl}`;
+  }
 
   return (
     <Metadata
@@ -66,15 +75,19 @@ const MetadataManager: React.FC<MetadataManagerProps> = ({
       ogTitle={title}
       ogDescription={description}
       ogImage={formattedImageUrl}
-      ogImageAlt={imageAlt || title}
+      ogImageAlt={imageAlt ?? title}
+      ogImageWidth={imageWidth}
+      ogImageHeight={imageHeight}
+      ogImageType={imageType}
       ogSiteName={siteName}
       ogLocale={locale}
+      fbAppId={fbAppId}
       twitterCard="summary_large_image"
       twitterTitle={title}
       twitterDescription={description}
       twitterImage={formattedImageUrl}
-      twitterImageAlt={imageAlt || title}
-      twitterSite="@portfoliosite"
+      twitterImageAlt={imageAlt ?? title}
+      twitterSite="@modernportfolio"
       twitterCreator={author ? `@${author.replace(/\s+/g, '').toLowerCase()}` : undefined}
       articlePublishedTime={type === 'article' ? publishedTime : undefined}
       articleModifiedTime={type === 'article' ? modifiedTime : undefined}

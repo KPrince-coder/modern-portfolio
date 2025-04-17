@@ -25,7 +25,7 @@ const BlogPostMeta: React.FC<BlogPostMetaProps> = ({ post, url }) => {
       description={metaDescription}
       keywords={post.meta_keywords}
       canonical={url}
-      author={post.author?.name || 'Admin'}
+      author={post.author?.name ?? 'Admin'}
       robots="index, follow, max-image-preview:large"
       category={post.category?.name}
       ogTitle={metaTitle}
@@ -34,11 +34,16 @@ const BlogPostMeta: React.FC<BlogPostMetaProps> = ({ post, url }) => {
       ogUrl={url}
       ogImage={post.featured_image_url}
       ogImageAlt={post.title}
+      ogImageWidth={1200}
+      ogImageHeight={630}
+      ogImageType="image/jpeg"
+      ogSiteName="Modern Portfolio Blog"
       twitterCard="summary_large_image"
       twitterTitle={metaTitle}
       twitterDescription={metaDescription}
       twitterImage={post.featured_image_url}
       twitterImageAlt={post.title}
+      twitterSite="@modernportfolio"
       articlePublishedTime={post.published_at}
       articleModifiedTime={post.updated_at}
       articleSection={post.category?.name}
