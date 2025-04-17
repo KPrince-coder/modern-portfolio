@@ -13,7 +13,7 @@ const NotFoundPage = lazy(() => import('../pages/NotFoundPage'));
 // Route configuration
 export interface RouteConfig {
   path: string;
-  element: React.LazyExoticComponent<() => JSX.Element>;
+  element: React.LazyExoticComponent<React.ComponentType<any>>;
   children?: RouteConfig[];
 }
 

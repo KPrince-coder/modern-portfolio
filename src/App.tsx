@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react';
+import { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
@@ -13,6 +13,9 @@ import { routes } from './routes';
 import CMSRoutes from './cms/CMSRoutes';
 import { CMSProvider } from './cms/CMSProvider';
 import './App.css';
+
+// Lazy-load the BlogPostPage component
+const BlogPostPage = lazy(() => import('./pages/BlogPostPage'));
 
 // Create a client for React Query
 const queryClient = new QueryClient({
@@ -57,7 +60,7 @@ const AppContent = () => {
       ) : isBlogPostRoute ? (
         <Suspense fallback={<BlogSuspenseFallback />}>
           <Routes>
-            <Route path="/blog/:slug" element={React.createElement(routes.find(r => r.path === '/blog/:slug')?.element || (() => <div>Not found</div>))} />
+            <Route path="/blog/:slug" element={<BlogPostPage />} />
           </Routes>
         </Suspense>
       ) : (
