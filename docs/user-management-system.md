@@ -1,5 +1,7 @@
 # User Management System Documentation
 
+> **Recent Updates**: For detailed information about the latest improvements to the role management system, including password verification, permission checking, and the dynamic role color system, please see the [Role Management Updates](./role-management-updates.md) documentation.
+
 ## Overview
 
 The User Management System provides a comprehensive solution for managing users, roles, and permissions within the portfolio application. It enables administrators to create, update, and delete users, assign roles with specific permissions, and maintain a secure audit trail of all user-related activities.
