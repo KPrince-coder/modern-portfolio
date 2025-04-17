@@ -49,37 +49,49 @@ const AppContent = () => {
   const isAdminRoute = location.pathname.startsWith('/admin');
   const isBlogPostRoute = /^\/blog\/[\w-]+$/.test(location.pathname);
 
-  return (
-    <CMSProvider>
-      {isAdminRoute ? (
+  const renderRouteContent = () => {
+    if (isAdminRoute) {
+      return (
         <Suspense fallback={<LoadingSpinner size="lg" text="Loading page..." />}>
           <Routes>
             <Route path="/admin/*" element={<CMSRoutes />} />
           </Routes>
         </Suspense>
-      ) : isBlogPostRoute ? (
+      );
+    }
+
+    if (isBlogPostRoute) {
+      return (
         <Suspense fallback={<BlogSuspenseFallback />}>
           <Routes>
             <Route path="/blog/:slug" element={<BlogPostPage />} />
           </Routes>
         </Suspense>
-      ) : (
-        <Layout>
-          <Header />
-          <Suspense fallback={<LoadingSpinner size="lg" text="Loading page..." />}>
-            <Routes>
-              {routes.map((route) => (
-                <Route
-                  key={route.path}
-                  path={route.path}
-                  element={<route.element />}
-                />
-              ))}
-            </Routes>
-          </Suspense>
-          <Footer />
-        </Layout>
-      )}
+      );
+    }
+
+    return (
+      <Layout>
+        <Header />
+        <Suspense fallback={<LoadingSpinner size="lg" text="Loading page..." />}>
+          <Routes>
+            {routes.map((route) => (
+              <Route
+                key={route.path}
+                path={route.path}
+                element={<route.element />}
+              />
+            ))}
+          </Routes>
+        </Suspense>
+        <Footer />
+      </Layout>
+    );
+  };
+
+  return (
+    <CMSProvider>
+      {renderRouteContent()}
     </CMSProvider>
   );
 }
