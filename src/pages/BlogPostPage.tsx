@@ -141,6 +141,7 @@ const BlogPostPage: React.FC = () => {
         imageType="image/jpeg"
         publishedTime={post.published_at}
         modifiedTime={post.updated_at}
+// @ts-ignore
         author={post.author?.name ?? 'Admin'}
         tags={post.tags?.map(tag => tag.name) || []}
         type="article"

@@ -3,6 +3,7 @@ interface LoadingSpinnerProps {
   color?: string;
   text?: string;
   fullPage?: boolean;
+  className?: string;
 }
 
 const LoadingSpinner = ({
@@ -10,6 +11,7 @@ const LoadingSpinner = ({
   color = 'indigo-600',
   text = 'Loading...',
   fullPage = false,
+  className = '',
 }: LoadingSpinnerProps) => {
   // Size mappings
   const sizeMap = {
@@ -44,7 +46,7 @@ const LoadingSpinner = ({
   }
 
   return (
-    <div className="flex flex-col items-center justify-center py-8">
+    <div className={`flex flex-col items-center justify-center py-8 ${className}`}>
       {content}
     </div>
   );

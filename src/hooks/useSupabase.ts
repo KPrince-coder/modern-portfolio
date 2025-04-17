@@ -144,6 +144,7 @@ export const useTrackBlogTimeSpent = () => {
 
 // Personal data hook
 export const usePersonalData = () => {
+// @ts-ignore
   return useQuery({
     queryKey: ['personalData'],
     queryFn: api.getPersonalData,

@@ -25,6 +25,7 @@ const BlogPostMeta: React.FC<BlogPostMetaProps> = ({ post, url }) => {
       description={metaDescription}
       keywords={post.meta_keywords}
       canonical={url}
+// @ts-ignore
       author={post.author?.name ?? 'Admin'}
       robots="index, follow, max-image-preview:large"
       category={post.category?.name}

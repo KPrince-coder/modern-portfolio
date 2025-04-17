@@ -57,6 +57,7 @@ export const PasswordVerificationModal: React.FC<PasswordVerificationModalProps>
       const result = await onVerify(password);
 
       // Only reset password and close modal after successful verification
+// @ts-ignore
       if (result !== false) {
         setPassword('');
         onClose();

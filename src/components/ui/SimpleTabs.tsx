@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 interface TabProps {
   children: React.ReactNode;
-  className?: string;
+  className?: string | ((props: { selected: boolean }) => string);
 }
 
 interface TabsProps {
@@ -37,9 +37,9 @@ const TabContext = React.createContext<{
   registerTab: () => {},
 });
 
-export const Tabs: React.FC<TabsProps> = ({ 
-  children, 
-  selectedIndex = 0, 
+export const Tabs: React.FC<TabsProps> = ({
+  children,
+  selectedIndex = 0,
   onChange,
   className = ''
 }) => {
@@ -87,8 +87,8 @@ export const TabList: React.FC<TabListProps> = ({ children, className = '' }) =>
   );
 };
 
-export const Tab: React.FC<TabProps & { index?: number }> = ({ 
-  children, 
+export const Tab: React.FC<TabProps & { index?: number }> = ({
+  children,
   className = '',
   index = 0
 }) => {
@@ -107,8 +107,8 @@ export const Tab: React.FC<TabProps & { index?: number }> = ({
   };
 
   // If className is a function, call it with the selected state
-  const resolvedClassName = typeof className === 'function' 
-    ? className({ selected: isSelected }) 
+  const resolvedClassName = typeof className === 'function'
+    ? className({ selected: isSelected })
     : className;
 
   return (
@@ -140,8 +140,8 @@ export const TabPanels: React.FC<TabPanelsProps> = ({ children, className = '' }
   );
 };
 
-export const TabPanel: React.FC<TabPanelProps & { index?: number }> = ({ 
-  children, 
+export const TabPanel: React.FC<TabPanelProps & { index?: number }> = ({
+  children,
   className = '',
   index = 0
 }) => {

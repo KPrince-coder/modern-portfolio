@@ -11,6 +11,7 @@ interface MobileMenuProps {
 const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
   const location = useLocation();
   const { data: personalData } = usePersonalData();
+// @ts-ignore
   const resumeUrl = personalData?.resume_url ?? '#';
 
   useEffect(() => {

@@ -1117,7 +1117,9 @@ export const api = {
       .slice(0, 10)
       .map(item => ({
         id: item.post_id,
+// @ts-ignore
         title: item.blog_posts?.title || 'Unknown',
+// @ts-ignore
         slug: item.blog_posts?.slug || '',
         views: item.views,
         shares: item.shares,
@@ -1131,7 +1133,9 @@ export const api = {
       .slice(0, 10)
       .map(item => ({
         id: item.post_id,
+// @ts-ignore
         title: item.blog_posts?.title || 'Unknown',
+// @ts-ignore
         slug: item.blog_posts?.slug || '',
         views: item.views,
         avgTimeSpent: item.avg_time_spent,

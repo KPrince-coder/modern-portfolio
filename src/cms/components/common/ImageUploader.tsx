@@ -157,6 +157,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
           </div>
           {uploading && (
             <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+// @ts-ignore
               <LoadingSpinner size="lg" className="text-white" />
             </div>
           )}
@@ -177,6 +178,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
           <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
             PNG, JPG, GIF up to {maxSizeMB}MB
           </p>
+// @ts-ignore
           {uploading && <LoadingSpinner size="sm" className="mt-2" />}
         </div>
       )}

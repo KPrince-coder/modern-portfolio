@@ -925,16 +925,19 @@ For now, please manually copy and paste the content or use a TXT/DOCX file inste
                   components={{
                     // Custom renderer for div elements to handle video embeds
                     div: ({ node, className, children, ...props }) => {
+                      // Extract data attributes safely
+                      const dataLocalVideo = props['data-local-video' as keyof typeof props] as string;
+                      const dataVideoUrl = props['data-video-url' as keyof typeof props] as string;
+
                       // Handle video containers
                       if (className === 'video-container') {
                         // Check if it's a local video
-                        if (props['data-local-video'] === 'true' && props['data-video-url']) {
-                          const videoUrl = props['data-video-url'] as string;
+                        if (dataLocalVideo === 'true' && dataVideoUrl) {
                           return (
                             <div className="video-container">
                               <video
                                 controls
-                                src={videoUrl}
+                                src={dataVideoUrl}
                                 className="w-full h-full"
                               >
                                 Your browser does not support the video tag.

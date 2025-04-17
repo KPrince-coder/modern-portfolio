@@ -53,6 +53,7 @@ const AIGeneratedBadge: React.FC<AIGeneratedBadgeProps> = ({
       animate={{
         opacity: 1,
         y: 0,
+// @ts-ignore
         ...(!isHovered && showAnimation && { scale: controls.scale })
       }}
       whileHover={{

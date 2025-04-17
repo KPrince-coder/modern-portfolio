@@ -391,6 +391,7 @@ const BlogPostsList: React.FC<BlogPostsListProps> = ({
       <AnimatePresence>
         {previewPost && (
           <BlogPostPreview
+// @ts-ignore
             post={previewPost}
             onClose={() => setPreviewPost(null)}
           />

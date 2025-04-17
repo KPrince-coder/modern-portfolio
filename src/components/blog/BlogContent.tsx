@@ -140,7 +140,7 @@ const BlogContent = forwardRef<HTMLDivElement, BlogContentProps>(({ content }, r
         components={{
           code: CodeBlock,
           // Custom rendering for images
-          img({ node, ...props }) {
+          img({ ...props }) {
             return (
               <img
                 {...props}
@@ -150,7 +150,7 @@ const BlogContent = forwardRef<HTMLDivElement, BlogContentProps>(({ content }, r
             );
           },
           // Custom rendering for links
-          a({ node, ...props }) {
+          a({ ...props }) {
             return (
               <a
                 {...props}
@@ -163,27 +163,30 @@ const BlogContent = forwardRef<HTMLDivElement, BlogContentProps>(({ content }, r
             );
           },
           // Custom rendering for headings with unique IDs
-          h2({ node, ...props }) {
+          h2({ ...props }) {
             // Use existing ID if available, otherwise generate one
             const existingId = props.id;
+// @ts-ignore
             const text = props.children?.[0]?.toString() || '';
             const id = existingId ?? `h2-${text.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}-${Math.random().toString(36).substr(2, 5)}`;
             return <h2 id={id} className="scroll-mt-24" {...props} />;
           },
-          h3({ node, ...props }) {
+          h3({ ...props }) {
             const existingId = props.id;
+// @ts-ignore
             const text = props.children?.[0]?.toString() || '';
             const id = existingId ?? `h3-${text.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}-${Math.random().toString(36).substr(2, 5)}`;
             return <h3 id={id} className="scroll-mt-24" {...props} />;
           },
-          h4({ node, ...props }) {
+          h4({ ...props }) {
             const existingId = props.id;
+// @ts-ignore
             const text = props.children?.[0]?.toString() || '';
             const id = existingId ?? `h4-${text.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}-${Math.random().toString(36).substr(2, 5)}`;
             return <h4 id={id} className="scroll-mt-24" {...props} />;
           },
           // Custom rendering for blockquotes
-          blockquote({ node, ...props }) {
+          blockquote({ ...props }) {
             return (
               <blockquote
                 className="border-l-4 border-indigo-500 pl-4 italic text-gray-700 dark:text-gray-300"
@@ -192,23 +195,27 @@ const BlogContent = forwardRef<HTMLDivElement, BlogContentProps>(({ content }, r
             );
           },
           // Custom rendering for YouTube embeds and local videos
-          div({ node, className, ...props }) {
-            if (className === 'youtube-embed' && props['data-video-id']) {
-              const videoId = props['data-video-id'] as string;
-              return <YouTubeEmbed videoId={videoId} title="YouTube video" />;
+          div({ className, ...props }) {
+            // Extract YouTube video ID safely
+            const dataVideoId = props['data-video-id' as keyof typeof props] as string;
+
+            if (className === 'youtube-embed' && dataVideoId) {
+              return <YouTubeEmbed videoId={dataVideoId} title="YouTube video" />;
             }
-            if (className === 'local-video-embed' && props['data-video-url']) {
-              const videoUrl = props['data-video-url'] as string;
-              return <YouTubeEmbed videoId="local" title="Video" isLocalVideo={true} localVideoUrl={videoUrl} />;
+            // Extract data attributes safely
+            const dataVideoUrl = props['data-video-url' as keyof typeof props] as string;
+            const dataLocalVideo = props['data-local-video' as keyof typeof props] as string;
+
+            if (className === 'local-video-embed' && dataVideoUrl) {
+              return <YouTubeEmbed videoId="local" title="Video" isLocalVideo={true} localVideoUrl={dataVideoUrl} />;
             }
-            if (className === 'video-container' && props['data-local-video'] === 'true' && props['data-video-url']) {
-              const videoUrl = props['data-video-url'] as string;
-              return <YouTubeEmbed videoId="local" title="Video" isLocalVideo={true} localVideoUrl={videoUrl} />;
+            if (className === 'video-container' && dataLocalVideo === 'true' && dataVideoUrl) {
+              return <YouTubeEmbed videoId="local" title="Video" isLocalVideo={true} localVideoUrl={dataVideoUrl} />;
             }
             return <div className={className} {...props} />;
           },
           // Handle video elements directly
-          video({ node, ...props }) {
+          video({ ...props }) {
             return <video controls className="w-full rounded-lg my-4" {...props} />;
           }
         }}

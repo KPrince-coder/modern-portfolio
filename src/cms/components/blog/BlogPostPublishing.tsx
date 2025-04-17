@@ -7,6 +7,8 @@ interface BlogPost {
   published_at?: string;
   is_featured: boolean;
   ai_generated: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface BlogTag {
@@ -77,8 +79,8 @@ const BlogPostPublishing: React.FC<BlogPostPublishingProps> = ({
             }`}
           />
           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            {formData.status === 'published' 
-              ? 'Leave empty to use current date and time' 
+            {formData.status === 'published'
+              ? 'Leave empty to use current date and time'
               : 'Only available when status is set to Published'}
           </p>
         </div>
@@ -151,8 +153,8 @@ const BlogPostPublishing: React.FC<BlogPostPublishingProps> = ({
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-gray-600 dark:text-gray-400">
             <div>
-              <p><strong>Created:</strong> {formData.created_at ? format(new Date(formData.created_at), 'MMM d, yyyy h:mm a') : 'Not created yet'}</p>
-              <p><strong>Last Updated:</strong> {formData.updated_at ? format(new Date(formData.updated_at), 'MMM d, yyyy h:mm a') : 'Not updated yet'}</p>
+              <p><strong>Created:</strong> {formData.created_at ? format(new Date(formData.created_at as string), 'MMM d, yyyy h:mm a') : 'Not created yet'}</p>
+              <p><strong>Last Updated:</strong> {formData.updated_at ? format(new Date(formData.updated_at as string), 'MMM d, yyyy h:mm a') : 'Not updated yet'}</p>
             </div>
             <div>
               <p><strong>Status:</strong> {formData.status.charAt(0).toUpperCase() + formData.status.slice(1)}</p>

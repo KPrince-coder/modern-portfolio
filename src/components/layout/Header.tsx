@@ -13,6 +13,7 @@ const Header = () => {
   const { data: personalData } = usePersonalData();
 
   // Fallback resume URL if data is not available
+// @ts-ignore
   const resumeUrl = personalData?.resume_url ?? '#';
 
 

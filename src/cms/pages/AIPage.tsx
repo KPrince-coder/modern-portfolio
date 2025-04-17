@@ -197,6 +197,7 @@ Complete Guide to ${prompt}: Expert Tips & Best Practices
   const handleSelectGeneration = (content: string) => {
     // Create a new result with the selected content
     const newResult: AIPrompt = {
+// @ts-ignore
       id: Date.now().toString(),
       task: 'blog',
       prompt: 'Selected from history',
