@@ -17,6 +17,9 @@ interface ShareWidgetProps {
   title: string;
   summary?: string;
   imageUrl?: string;
+  imageAlt?: string;
+  hashtags?: string[];
+  via?: string;
   className?: string;
   compact?: boolean;
 }
@@ -29,6 +32,9 @@ const ShareWidget: React.FC<ShareWidgetProps> = ({
   title,
   summary = '',
   imageUrl = '',
+  imageAlt = '',
+  hashtags = [],
+  via = 'modernportfolio',
   className = '',
   compact = false,
 }) => {
@@ -78,12 +84,14 @@ const ShareWidget: React.FC<ShareWidgetProps> = ({
   const encodedTitle = encodeURIComponent(title);
   const encodedSummary = encodeURIComponent(summary);
   const encodedImageUrl = encodeURIComponent(imageUrl);
+  const encodedImageAlt = encodeURIComponent(imageAlt);
+  const encodedHashtags = hashtags.length > 0 ? encodeURIComponent(hashtags.join(',')) : '';
 
   // Share URLs for different platforms
   const shareUrls = {
-    twitter: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`,
+    twitter: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}${encodedHashtags ? `&hashtags=${encodedHashtags}` : ''}${via ? `&via=${via}` : ''}`,
     facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
-    linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
+    linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}&title=${encodedTitle}&summary=${encodedSummary}`,
     reddit: `https://www.reddit.com/submit?url=${encodedUrl}&title=${encodedTitle}`,
     pinterest: `https://pinterest.com/pin/create/button/?url=${encodedUrl}&media=${encodedImageUrl}&description=${encodedTitle}`,
     telegram: `https://t.me/share/url?url=${encodedUrl}&text=${encodedTitle}`,

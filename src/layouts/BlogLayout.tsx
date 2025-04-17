@@ -161,6 +161,9 @@ const BlogLayout: React.FC<BlogLayoutProps> = ({
                   title={title || ''}
                   summary={summary || ''}
                   imageUrl={coverImage}
+                  imageAlt={title || 'Blog post image'}
+                  hashtags={tags?.map(tag => tag.name.replace(/\s+/g, '')) || []}
+                  via="modernportfolio"
                 />
               </div>
 
@@ -235,6 +238,11 @@ const BlogLayout: React.FC<BlogLayoutProps> = ({
               <ShareWidget
                 url={currentUrl}
                 title={title || ''}
+                summary={summary || ''}
+                imageUrl={coverImage}
+                imageAlt={title || 'Blog post image'}
+                hashtags={tags?.map(tag => tag.name.replace(/\s+/g, '')) || []}
+                via="modernportfolio"
                 compact
               />
               <BlogThemeToggler />

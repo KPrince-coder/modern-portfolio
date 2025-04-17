@@ -134,6 +134,8 @@ const BlogNavHeader: React.FC<BlogNavHeaderProps> = ({ title, url, imageUrl, sum
                 title={title}
                 summary={summary}
                 imageUrl={imageUrl}
+                imageAlt={title}
+                via="modernportfolio"
                 compact
               />
 
