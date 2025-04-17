@@ -1,13 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Button from '../../../components/ui/Button';
-import { UserPlusIcon, MagnifyingGlassIcon, ChevronDownIcon, ShieldExclamationIcon } from '@heroicons/react/24/outline';
+import { UserPlusIcon, MagnifyingGlassIcon, ChevronDownIcon, ShieldExclamationIcon, NoSymbolIcon } from '@heroicons/react/24/outline';
 import { format } from 'date-fns';
 import Badge, { BadgeColor } from '../../../components/ui/Badge';
 import UserActions from './UserActions';
 import SortIcon, { SortConfig, SortableField } from './SortIcon';
 import { useCMS } from '../../CMSProvider';
 import { ConfirmModal } from '../../../components/ui/modals';
+import { PasswordVerificationModal } from './PasswordVerificationModal';
+import { supabase } from '../../../lib/supabase';
 
 interface Role {
   id: string;
@@ -34,7 +36,7 @@ interface UsersListProps {
   onEditUser: (userId: string) => void;
   onDeleteUser: (userId: string) => void;
   onConfirmEmail: (user: User) => void;
-  onAssignRole: (userId: string, roleId: string) => void;
+  onAssignRole: (userId: string, roleId: string) => Promise<void>;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
 }
@@ -44,13 +46,15 @@ interface RoleDropdownProps {
   roles: Role[];
   userId: string;
   userEmail: string;
-  onAssignRole: (userId: string, roleId: string) => void;
+  onAssignRole: (userId: string, roleId: string) => Promise<void>;
 }
 
 const RoleDropdown: React.FC<RoleDropdownProps> = ({ roles, userId, userEmail, onAssignRole }) => {
   const { user: currentUser } = useCMS();
   const [isOpen, setIsOpen] = useState(false);
   const [showSelfRoleChangeModal, setShowSelfRoleChangeModal] = useState(false);
+  const [showPasswordVerificationModal, setShowPasswordVerificationModal] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<{ id: string, name: string } | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
@@ -70,17 +74,55 @@ const RoleDropdown: React.FC<RoleDropdownProps> = ({ roles, userId, userEmail, o
   // Check if this is the current user
   const isSelf = currentUser?.id === userId;
 
-  // Handle role assignment with self-check
-  const handleRoleAssign = (roleId: string, roleName: string) => {
+  // State for permission error modal
+  const [showPermissionErrorModal, setShowPermissionErrorModal] = useState(false);
+
+  // Handle role selection
+  const handleRoleSelect = async (roleId: string, roleName: string) => {
     if (isSelf) {
       // Show modal instead of proceeding with role change
       setShowSelfRoleChangeModal(true);
     } else {
-      // Proceed with role assignment for other users
-      console.log(`Assigning role ${roleName} (${roleId}) to user ${userEmail} (${userId})`);
-      onAssignRole(userId, roleId);
+      // Check if user has permission to manage users
+      try {
+        const { data: hasPermission, error: permissionError } = await supabase
+          .rpc('has_permission', { permission_name: 'manage_users' });
+
+        if (permissionError) {
+          console.error('Error checking permissions:', permissionError);
+          setShowPermissionErrorModal(true);
+        } else if (!hasPermission) {
+          // User doesn't have permission
+          setShowPermissionErrorModal(true);
+        } else {
+          // User has permission, proceed with password verification
+          setSelectedRole({ id: roleId, name: roleName });
+          setShowPasswordVerificationModal(true);
+        }
+      } catch (error) {
+        console.error('Error checking permissions:', error);
+        setShowPermissionErrorModal(true);
+      }
     }
     setIsOpen(false);
+  };
+
+  // Handle password verification
+  const handlePasswordVerified = async (password: string) => {
+    if (selectedRole) {
+      try {
+        // Proceed with role assignment after password verification
+        console.log(`Assigning role ${selectedRole.name} (${selectedRole.id}) to user ${userEmail} (${userId})`);
+        await onAssignRole(userId, selectedRole.id);
+        setSelectedRole(null);
+        return true; // Indicate success to close the modal
+      } catch (error) {
+        console.error('Error assigning role:', error);
+        // Error will be shown in the password verification modal
+        throw new Error('Failed to assign role. Please try again.');
+      }
+    }
+    return false;
   };
 
   return (
@@ -109,7 +151,7 @@ const RoleDropdown: React.FC<RoleDropdownProps> = ({ roles, userId, userEmail, o
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    handleRoleAssign(role.id, role.name);
+                    handleRoleSelect(role.id, role.name);
                   }}
                   className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white"
                   role="menuitem"
@@ -143,6 +185,39 @@ const RoleDropdown: React.FC<RoleDropdownProps> = ({ roles, userId, userEmail, o
         onConfirm={() => setShowSelfRoleChangeModal(false)}
         onClose={() => setShowSelfRoleChangeModal(false)}
         variant="warning"
+      />
+
+      {/* Password Verification Modal */}
+      <PasswordVerificationModal
+        isOpen={showPasswordVerificationModal}
+        onClose={() => {
+          setShowPasswordVerificationModal(false);
+          setSelectedRole(null);
+        }}
+        onVerify={handlePasswordVerified}
+        title="Verify Your Password"
+        message={`For security reasons, please enter your password to assign the ${selectedRole?.name || ''} role to ${userEmail}.`}
+      />
+
+      {/* Permission Error Modal */}
+      <ConfirmModal
+        isOpen={showPermissionErrorModal}
+        title="Permission Denied"
+        message={
+          <div className="text-center">
+            <div className="mb-4">
+              <NoSymbolIcon className="h-12 w-12 text-red-500 mx-auto" />
+            </div>
+            <p className="mb-2">You do not have permission to assign roles.</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Please contact an administrator if you need this access.
+            </p>
+          </div>
+        }
+        confirmLabel="I Understand"
+        onConfirm={() => setShowPermissionErrorModal(false)}
+        onClose={() => setShowPermissionErrorModal(false)}
+        variant="danger"
       />
     </>
   );

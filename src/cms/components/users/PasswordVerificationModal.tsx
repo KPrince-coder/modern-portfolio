@@ -2,6 +2,8 @@ import React, { useState, Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import Button from '../../../components/ui/Button';
 import { EyeIcon, EyeSlashIcon, LockClosedIcon } from '@heroicons/react/24/outline';
+import { useCMS } from '../../CMSProvider';
+import { supabase } from '../../../lib/supabase';
 
 interface PasswordVerificationModalProps {
   isOpen: boolean;
@@ -23,6 +25,8 @@ export const PasswordVerificationModal: React.FC<PasswordVerificationModalProps>
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  const { user } = useCMS();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -35,14 +39,43 @@ export const PasswordVerificationModal: React.FC<PasswordVerificationModalProps>
       setIsLoading(true);
       setError(null);
 
-      // Call onVerify with the password
-      await onVerify(password);
+      // First verify the password with Supabase
+      if (!user?.email) {
+        throw new Error('User email not found. Please sign in again.');
+      }
 
-      // Only reset password after successful verification
-      setPassword('');
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: password,
+      });
+
+      if (signInError) {
+        throw signInError;
+      }
+
+      // If password verification succeeds, call onVerify
+      const result = await onVerify(password);
+
+      // Only reset password and close modal after successful verification
+      if (result !== false) {
+        setPassword('');
+        onClose();
+      }
     } catch (error) {
       console.error('Password verification error:', error);
-      setError(error instanceof Error ? error.message : 'Verification failed');
+      // Provide a more user-friendly error message
+      if (error instanceof Error) {
+        // Check for specific error messages and provide more user-friendly versions
+        if (error.message.includes('Invalid login credentials')) {
+          setError('Incorrect password. Please try again.');
+        } else if (error.message.includes('permission')) {
+          setError('You do not have permission to perform this action.');
+        } else {
+          setError(error.message);
+        }
+      } else {
+        setError('Verification failed. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }

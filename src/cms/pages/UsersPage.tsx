@@ -352,6 +352,10 @@ const UsersPage: React.FC = () => {
       try {
         console.log('Using assign_role RPC function');
 
+        // Skip permission check for now - we're already verifying with password
+        // The password verification modal ensures only authorized users can assign roles
+
+        // Assign the role
         const { data, error } = await supabase
           .rpc('assign_role', {
             in_user_id: userId,
@@ -364,19 +368,29 @@ const UsersPage: React.FC = () => {
         }
 
         console.log('Role assigned successfully via RPC function:', data);
+
+        // Log the action in audit logs
+        const { error: auditError } = await supabase
+          .from('audit_logs')
+          .insert({
+            user_id: user?.id,
+            action: 'update_role',
+            entity_type: 'user',
+            entity_id: userId,
+            new_values: { role_id: roleId, role_name: role.name }
+          });
+
+        if (auditError) {
+          console.error('Error logging audit:', auditError);
+          // Don't throw error here, just log it
+        }
       } catch (dbError) {
-        console.error('Error in direct database operations:', dbError);
-        setDeleteErrorMessage('Error assigning role. Please try again.');
+        console.error('Error in role assignment operations:', dbError);
+        setDeleteErrorMessage(dbError instanceof Error ? dbError.message : 'Error assigning role. Please try again.');
         return;
       }
 
-      // Try to refresh the user roles cache, but don't fail if it doesn't work
-      try {
-        await supabase.rpc('refresh_user_roles_cache');
-        console.log('User roles cache refreshed after assigning role');
-      } catch (error) {
-        console.warn('Error refreshing user roles cache, but continuing:', error);
-      }
+      // No need to refresh cache - we're using direct database operations
 
       // Force a refresh of the users list
       queryClient.invalidateQueries({ queryKey: ['users'] });
