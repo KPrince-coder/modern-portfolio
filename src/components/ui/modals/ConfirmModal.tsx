@@ -6,10 +6,10 @@ interface ConfirmModalProps {
   onClose: () => void;
   onConfirm: () => void;
   title: string;
-  message: string;
+  message: React.ReactNode;
   confirmLabel?: string;
   cancelLabel?: string;
-  variant?: 'primary' | 'danger';
+  variant?: 'primary' | 'danger' | 'warning';
   icon?: React.ReactNode;
   secondaryAction?: {
     label: string;
@@ -48,14 +48,16 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
       <div className="flex items-start space-x-4">
         {icon && (
           <div className={`flex-shrink-0 ${
-            variant === 'danger' ? 'text-red-500' : 'text-indigo-500'
+            variant === 'danger' ? 'text-red-500' :
+            variant === 'warning' ? 'text-yellow-500' :
+            'text-indigo-500'
           }`}>
             {icon}
           </div>
         )}
-        <p className="text-sm text-gray-700 dark:text-gray-300">
+        <div className="text-sm text-gray-700 dark:text-gray-300">
           {message}
-        </p>
+        </div>
       </div>
     </BasicModal>
   );

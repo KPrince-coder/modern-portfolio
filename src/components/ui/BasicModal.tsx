@@ -9,7 +9,7 @@ interface BasicModalProps {
   primaryAction?: {
     label: string;
     onClick: () => void;
-    variant?: 'primary' | 'secondary' | 'danger';
+    variant?: 'primary' | 'secondary' | 'danger' | 'warning';
     isLoading?: boolean;
   };
   secondaryAction?: {
@@ -94,14 +94,14 @@ const BasicModal: React.FC<BasicModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4">
-      <div 
+      <div
         ref={modalRef}
-        className={`${getModalWidth()} w-full bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6`}
+        className={`${getModalWidth()}  bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6`}
       >
         <h3 className="text-lg font-medium text-gray-900 dark:text-white">
           {title}
         </h3>
-        
+
         <div className="mt-4">
           {children}
         </div>
