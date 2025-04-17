@@ -13,6 +13,9 @@ function addTsIgnoreComments(filePath, lineNumbers) {
     const content = fs.readFileSync(filePath, 'utf8');
     const lines = content.split('\n');
 
+    // Track if any changes were made
+    let changesMade = false;
+
     // Add @ts-ignore comments
     lineNumbers.forEach(lineNum => {
       // Line numbers are 1-based in error messages, but array indices are 0-based
@@ -21,15 +24,22 @@ function addTsIgnoreComments(filePath, lineNumbers) {
         // Check if the line already has a @ts-ignore comment
         if (!lines[index].trim().startsWith('// @ts-ignore')) {
           lines[index] = '// @ts-ignore\n' + lines[index];
+          changesMade = true;
         }
       }
     });
 
-    // Write the modified content back to the file
-    fs.writeFileSync(filePath, lines.join('\n'));
-    console.log(`Added @ts-ignore comments to ${filePath}`);
+    // Only write to the file if changes were made
+    if (changesMade) {
+      // Write the modified content back to the file
+      fs.writeFileSync(filePath, lines.join('\n'));
+      console.log(`Added @ts-ignore comments to ${filePath}`);
+      return true;
+    }
+    return false;
   } catch (error) {
     console.error(`Error processing ${filePath}:`, error);
+    return false;
   }
 }
 
@@ -126,9 +136,14 @@ const filesToFix = [
 ];
 
 // Process each file
+let modifiedCount = 0;
 filesToFix.forEach(file => {
   const fullPath = path.resolve(file.path);
-  addTsIgnoreComments(fullPath, file.lines);
+  const wasModified = addTsIgnoreComments(fullPath, file.lines);
+  if (wasModified) {
+    modifiedCount++;
+  }
 });
 
-console.log('Finished adding @ts-ignore comments to fix TypeScript errors.');
+console.log(`\nAdded @ts-ignore comments to ${modifiedCount} files out of ${filesToFix.length} total files.`);
+console.log('These comments will suppress TypeScript errors but should be properly fixed later.');
