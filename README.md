@@ -73,6 +73,14 @@ npm run build
 
 The built files will be in the `dist` directory.
 
+### Deployment
+
+For detailed deployment instructions, see the [Deployment Guide](docs/deployment-guide.md).
+
+If you're deploying to Netlify and encounter "Page not found" errors, see the [Netlify SPA Routing](docs/netlify-spa-routing.md) guide.
+
+For a technical explanation of SPA routing and how to solve routing issues on various platforms, see [SPA Routing Explained](docs/spa-routing-explained.md).
+
 ## Supabase Setup
 
 1. Create a new Supabase project
