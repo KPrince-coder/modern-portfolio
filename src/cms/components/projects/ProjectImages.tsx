@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { supabase } from '../../../lib/supabase';
 import Button from '../../../components/ui/Button';
 import LoadingSpinner from '../../../components/ui/LoadingSpinner';
@@ -211,6 +211,7 @@ const ProjectImages: React.FC<ProjectImagesProps> = ({
                                 <button
                                   type="button"
                                   onClick={() => handleRemoveImage(index)}
+                                  aria-label="Remove image"
                                   className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
                                 >
                                   <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
