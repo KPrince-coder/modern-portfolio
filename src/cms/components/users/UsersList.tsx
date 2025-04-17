@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Button from '../../../components/ui/Button';
-import { UserPlusIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { UserPlusIcon, MagnifyingGlassIcon, ChevronDownIcon, ShieldExclamationIcon } from '@heroicons/react/24/outline';
 import { format } from 'date-fns';
 import Badge, { BadgeColor } from '../../../components/ui/Badge';
 import UserActions from './UserActions';
 import SortIcon, { SortConfig, SortableField } from './SortIcon';
+import { useCMS } from '../../CMSProvider';
+import { ConfirmModal } from '../../../components/ui/modals';
 
 interface Role {
   id: string;
@@ -37,10 +39,168 @@ interface UsersListProps {
   setSearchQuery: (query: string) => void;
 }
 
+// Role Dropdown Component
+interface RoleDropdownProps {
+  roles: Role[];
+  userId: string;
+  userEmail: string;
+  onAssignRole: (userId: string, roleId: string) => void;
+}
+
+const RoleDropdown: React.FC<RoleDropdownProps> = ({ roles, userId, userEmail, onAssignRole }) => {
+  const { user: currentUser } = useCMS();
+  const [isOpen, setIsOpen] = useState(false);
+  const [showSelfRoleChangeModal, setShowSelfRoleChangeModal] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Check if this is the current user
+  const isSelf = currentUser?.id === userId;
+
+  // Handle role assignment with self-check
+  const handleRoleAssign = (roleId: string, roleName: string) => {
+    if (isSelf) {
+      // Show modal instead of proceeding with role change
+      setShowSelfRoleChangeModal(true);
+    } else {
+      // Proceed with role assignment for other users
+      console.log(`Assigning role ${roleName} (${roleId}) to user ${userEmail} (${userId})`);
+      onAssignRole(userId, roleId);
+    }
+    setIsOpen(false);
+  };
+
+  return (
+    <>
+      <div className="relative inline-block text-left" ref={dropdownRef}>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setIsOpen(!isOpen);
+          }}
+          className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800"
+        >
+          Assign Role
+          <ChevronDownIcon className="ml-1 -mr-1 h-4 w-4" aria-hidden="true" />
+        </button>
+
+        {isOpen && (
+          <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
+            <div className="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
+              {roles.map((role) => (
+                <button
+                  key={role.id}
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleRoleAssign(role.id, role.name);
+                  }}
+                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white"
+                  role="menuitem"
+                >
+                  <span className={`inline-flex items-center px-2 mr-2 py-0.5 rounded-full text-xs font-medium ${getBadgeColorClasses(role.name)}`}>
+                    {role.name}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Self Role Change Modal */}
+      <ConfirmModal
+        isOpen={showSelfRoleChangeModal}
+        title="Cannot Change Your Own Role"
+        message={
+          <div className="text-center">
+            <div className="mb-4">
+              <ShieldExclamationIcon className="h-12 w-12 text-yellow-500 mx-auto" />
+            </div>
+            <p className="mb-2">For security reasons, you cannot change your own role.</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Please ask another administrator to change your role if needed.
+            </p>
+          </div>
+        }
+        confirmLabel="I Understand"
+        onConfirm={() => setShowSelfRoleChangeModal(false)}
+        onClose={() => setShowSelfRoleChangeModal(false)}
+        variant="warning"
+      />
+    </>
+  );
+};
+
+// Map to store role name to color associations
+const roleColorMap = new Map<string, BadgeColor>([
+  ['admin', 'red'],
+  ['editor', 'blue'],
+  ['viewer', 'green'],
+  ['content_editor', 'indigo'],
+  ['author', 'purple'],
+  ['moderator', 'yellow'],
+  ['analyst', 'pink']
+]);
+
+// Function to generate a consistent color based on role name
+const generateColorFromName = (name: string): BadgeColor => {
+  // List of available colors (excluding gray which is our default)
+  const availableColors: BadgeColor[] = ['blue', 'green', 'indigo', 'purple', 'pink', 'yellow', 'red'];
+
+  // Generate a hash from the role name
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = ((hash << 5) - hash) + name.charCodeAt(i);
+    hash |= 0; // Convert to 32bit integer
+  }
+
+  // Use the hash to pick a color from the available colors
+  const colorIndex = Math.abs(hash) % availableColors.length;
+  return availableColors[colorIndex];
+};
+
+// Get badge color for a role
 const getBadgeColor = (roleName: string): BadgeColor => {
-  if (roleName === 'admin') return 'red';
-  if (roleName === 'content_editor') return 'blue';
-  return 'gray';
+  // If we have a predefined color for this role, use it
+  if (roleColorMap.has(roleName)) {
+    return roleColorMap.get(roleName)!;
+  }
+
+  // Otherwise, generate a color based on the role name
+  return generateColorFromName(roleName);
+};
+
+// Get badge color classes directly for a role
+const getBadgeColorClasses = (roleName: string): string => {
+  const color = getBadgeColor(roleName);
+  const colorClasses = {
+    gray: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+    red: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+    yellow: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
+    green: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+    blue: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+    indigo: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300',
+    purple: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
+    pink: 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-300',
+  };
+  return colorClasses[color];
 };
 
 // Helper function to check if a user's email is confirmed
@@ -56,7 +216,6 @@ const UsersList: React.FC<UsersListProps> = ({
   onEditUser,
   onDeleteUser,
   onConfirmEmail,
-  onAssignAdminRole,
   onAssignRole,
   searchQuery,
   setSearchQuery,
@@ -244,24 +403,13 @@ const UsersList: React.FC<UsersListProps> = ({
                           </Badge>
                         )}
 
-                        {/* Role Assignment Buttons */}
-                        <div className="flex flex-wrap gap-1">
-                          {roles.map((role) => (
-                            <button
-                              key={role.id}
-                              type="button"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                console.log(`Clicked to assign role ${role.name} (${role.id}) to user ${user.email} (${user.id})`);
-                                onAssignRole(user.id, role.id);
-                              }}
-                              className="px-2 py-1 text-xs font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800"
-                            >
-                              {role.name}
-                            </button>
-                          ))}
-                        </div>
+                        {/* Role Assignment Dropdown */}
+                        <RoleDropdown
+                          roles={roles}
+                          userId={user.id}
+                          userEmail={user.email}
+                          onAssignRole={onAssignRole}
+                        />
 
 
                       </div>

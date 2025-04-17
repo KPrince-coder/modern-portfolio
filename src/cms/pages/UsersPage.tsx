@@ -280,65 +280,7 @@ const UsersPage: React.FC = () => {
     }
   });
 
-  // Assign admin role mutation
-  const assignAdminRoleMutation = useMutation({
-    mutationFn: async (userId: string) => {
-      try {
-        console.log('Assigning admin role to user:', userId);
 
-        // First try using the assign_admin_role function
-        try {
-          const { data, error } = await supabase
-            .rpc('assign_admin_role', {
-              in_user_id: userId
-            });
-
-          if (error) {
-            throw new Error(error.message);
-          }
-
-          console.log('Admin role assigned successfully:', data);
-          return { success: true, method: 'assign_admin_role' };
-        } catch (error) {
-          console.error('Error using assign_admin_role, trying direct insert:', error);
-
-          // If assign_admin_role fails, try direct insert
-          // First, get the admin role ID
-          const { data: roles, error: rolesError } = await supabase
-            .from('roles')
-            .select('id')
-            .eq('name', 'admin')
-            .limit(1);
-
-          if (rolesError || !roles || roles.length === 0) {
-            throw new Error('Could not find admin role');
-          }
-
-          const adminRoleId = roles[0].id;
-
-          // Now directly insert the role
-          const { data: directInsertData, error: directInsertError } = await supabase
-            .rpc('direct_insert_role', {
-              in_user_id: userId,
-              in_role_id: adminRoleId
-            });
-
-          if (directInsertError) {
-            throw new Error(directInsertError.message);
-          }
-
-          console.log('Admin role assigned successfully via direct insert:', directInsertData);
-          return { success: true, method: 'direct_insert_role' };
-        }
-      } catch (error) {
-        console.error('Error assigning admin role:', error);
-        throw new Error('Failed to assign admin role. You may not have the required permissions.');
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-    },
-  });
 
   // Delete role mutation
   const deleteRoleMutation = useMutation({
@@ -379,25 +321,7 @@ const UsersPage: React.FC = () => {
     },
   });
 
-  // Handle assigning admin role to a user
-  const handleAssignAdminRole = async (userId: string) => {
-    try {
-      // Find the user's email for the success message
-      const user = users?.find(u => u.id === userId);
-      setRoleAssignedUser(user?.email || 'User');
 
-      await assignAdminRoleMutation.mutateAsync(userId);
-
-      // Force a refresh of the users list
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-
-      // Show success modal instead of alert
-      setShowRoleAssignedModal(true);
-    } catch (error) {
-      console.error('Error assigning admin role:', error);
-      setDeleteErrorMessage(error instanceof Error ? error.message : 'An error occurred while assigning the admin role');
-    }
-  };
 
   // Handle assigning any role to a user
   const handleAssignRole = async (userId: string, roleId: string) => {
@@ -424,35 +348,22 @@ const UsersPage: React.FC = () => {
       console.log(`Assigning role ${roleId} to user ${userId}`);
       console.log('Available roles:', roles);
 
-      // Use the simplest approach first - direct database operations
+      // Use the assign_role RPC function
       try {
-        console.log('Using direct database operations');
+        console.log('Using assign_role RPC function');
 
-        // First, delete existing roles
-        const { error: deleteError } = await supabase
-          .from('user_roles')
-          .delete()
-          .eq('user_id', userId);
-
-        if (deleteError) {
-          console.error('Error deleting existing roles:', deleteError);
-          throw deleteError;
-        }
-
-        // Then insert the new role
-        const { error: insertError } = await supabase
-          .from('user_roles')
-          .insert({
-            user_id: userId,
-            role_id: roleId
+        const { data, error } = await supabase
+          .rpc('assign_role', {
+            in_user_id: userId,
+            in_role_id: roleId
           });
 
-        if (insertError) {
-          console.error('Error inserting new role:', insertError);
-          throw insertError;
+        if (error) {
+          console.error('Error assigning role:', error);
+          throw error;
         }
 
-        console.log('Role assigned successfully via direct database operations');
+        console.log('Role assigned successfully via RPC function:', data);
       } catch (dbError) {
         console.error('Error in direct database operations:', dbError);
         setDeleteErrorMessage('Error assigning role. Please try again.');
@@ -619,7 +530,6 @@ const UsersPage: React.FC = () => {
                 setShowEmailConfirmModal(true);
                 confirmEmailMutation.mutate(user);
               }}
-              onAssignAdminRole={handleAssignAdminRole}
               onAssignRole={handleAssignRole}
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
