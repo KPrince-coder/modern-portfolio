@@ -108,7 +108,7 @@ const RoleDropdown: React.FC<RoleDropdownProps> = ({ roles, userId, userEmail, o
   };
 
   // Handle password verification
-  const handlePasswordVerified = async (password: string) => {
+  const handlePasswordVerified = async () => {
     if (selectedRole) {
       try {
         // Proceed with role assignment after password verification
@@ -196,7 +196,7 @@ const RoleDropdown: React.FC<RoleDropdownProps> = ({ roles, userId, userEmail, o
         }}
         onVerify={handlePasswordVerified}
         title="Verify Your Password"
-        message={`For security reasons, please enter your password to assign the ${selectedRole?.name || ''} role to ${userEmail}.`}
+        message={`For security reasons, please enter your password to assign the ${selectedRole?.name ?? ''} role to ${userEmail}.`}
       />
 
       {/* Permission Error Modal */}
@@ -491,11 +491,19 @@ const UsersList: React.FC<UsersListProps> = ({
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    {format(new Date(user.created_at), 'MMM d, yyyy')}
+                    <div className="flex flex-col">
+                      <span>{format(new Date(user.created_at), 'EEE, MMM d, yyyy')}</span>
+                      <span className="text-xs">{format(new Date(user.created_at), 'HH:mm')}</span>
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                     {user.last_sign_in_at
-                      ? format(new Date(user.last_sign_in_at), 'MMM d, yyyy')
+                      ? (
+                        <div className="flex flex-col">
+                          <span>{format(new Date(user.last_sign_in_at), 'EEE, MMM d, yyyy')}</span>
+                          <span className="text-xs">{format(new Date(user.last_sign_in_at), 'HH:mm')}</span>
+                        </div>
+                      )
                       : 'Never'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
