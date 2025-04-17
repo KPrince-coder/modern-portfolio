@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Helmet } from 'react-helmet-async';
+import Metadata from '../components/utils/Metadata';
 import Container from '../components/layout/Container';
 import BlogHeader from '../components/blog/BlogHeader';
 import BlogSearch from '../components/blog/BlogSearch';
@@ -120,15 +120,15 @@ const BlogPage = () => {
 
   return (
     <Container>
-      <Helmet>
-        <title>Blog | Modern Portfolio</title>
-        <meta name="description" content="Explore our blog for insights on technology, design, and development." />
-        <meta property="og:title" content="Blog | Modern Portfolio" />
-        <meta property="og:description" content="Explore our blog for insights on technology, design, and development." />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={window.location.href} />
-        <meta name="twitter:card" content="summary_large_image" />
-      </Helmet>
+      <Metadata
+        title="Blog | Modern Portfolio"
+        description="Explore our blog for insights on technology, design, and development."
+        ogTitle="Blog | Modern Portfolio"
+        ogDescription="Explore our blog for insights on technology, design, and development."
+        ogType="website"
+        ogUrl={window.location.href}
+        twitterCard="summary_large_image"
+      />
 
       <div className="py-16">
         {/* Blog Header */}
