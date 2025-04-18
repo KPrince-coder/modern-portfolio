@@ -14,9 +14,10 @@ const ProfileImage: React.FC<ProfileImageProps> = ({
 }) => {
   // Size mappings - drastically reduced sizes
   const sizeMap = {
-    sm: "w-[320px] h-[320px] md:w-[360px] md:h-[360px]",
-    md: "w-[480px] h-[480px] md:w-[500px] md:h-[500px]",
-    lg: "w-[640px] h-[640px] md:w-[720px] md:h-[720px]",
+    //sm: "w-[320px] h-[320px] md:w-[360px] md:h-[360px]",
+    sm: "w-[20rem] h-[20rem] md:w-[22.5rem] md:h-[22.5rem]",
+    md: "w-[25rem] h-[25rem] md:w-[27.5rem] md:h-[27.5rem]",
+    lg: "w-[27.5rem] h-[27.5rem] md:w-[30rem] md:h-[30rem]",
   };
 
   // Particle animation for the decorative elements
@@ -89,7 +90,7 @@ const ProfileImage: React.FC<ProfileImageProps> = ({
             }}
           />
 
-          <div className="w-full h-full rounded-full bg-white dark:bg-gray-900 flex items-center justify-center overflow-hidden relative z-10">
+          <div className="w-full h-full rounded-full bg-white dark:bg-gray-900 flex items-center justify-center overflow-hidden relative z-20">
             {isLoading ? (
               // Skeleton loader (unchanged)
               <div className="w-full h-full bg-gray-200 dark:bg-gray-700 animate-pulse flex items-center justify-center">
@@ -126,7 +127,7 @@ const ProfileImage: React.FC<ProfileImageProps> = ({
 
         {/* Animated particles container  */}
         {/* Positioned relative to the main sized container */}
-        <div className="absolute inset-0">
+        <div className="absolute z-10 inset-0">
           {" "}
           {/* Removed w-full h-full as inset-0 covers parent */}
           {particles}

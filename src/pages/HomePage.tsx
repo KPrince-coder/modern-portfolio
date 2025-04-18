@@ -34,22 +34,22 @@ const HomePage = () => {
               className="mb-12 text-center lg:text-start"
             >
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-800 dark:text-white mb-6">
-                Creative Developer & Designer
+                Innovative Creator & Engineer
               </h1>
               <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 ">
                 I build exceptional digital experiences that are fast,
                 accessible, and visually appealing.
               </p>
-              <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
+              <div className="flex flex-wrap gap-4 justify-center lg:justify-start text-center">
                 <a
                   href="#projects"
-                  className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                  className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors w-[170px]"
                 >
                   View My Work
                 </a>
                 <a
                   href="#contact"
-                  className="px-6 py-3 border border-indigo-600 text-indigo-600 dark:text-indigo-400 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors"
+                  className="px-6 py-3 border border-indigo-600 text-indigo-600 dark:text-indigo-400 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors w-[170px]"
                 >
                   Contact Me
                 </a>
