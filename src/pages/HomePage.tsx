@@ -34,8 +34,12 @@ const HomePage = () => {
               className="mb-12 text-center lg:text-start"
             >
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-800 dark:text-white mb-6">
-                Innovative Creator & Engineer
+                Crafting the Future with Code and Intelligence
               </h1>
+              <h2 className="text-xl md:text-2xl mb-6">
+                Data Engineer | Full Stack Developer | Android Developer | AI
+                Engineer
+              </h2>
               <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 ">
                 I build exceptional digital experiences that are fast,
                 accessible, and visually appealing.

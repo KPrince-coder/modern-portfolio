@@ -1,10 +1,10 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { v4 as uuidv4 } from "uuid";
 import {
   ProfileImageProps,
   ProfileImageContentProps,
 } from "../../types/profile-image";
+import { v4 as uuidv4 } from "uuid";
 
 const ProfileImage: React.FC<ProfileImageProps> = ({
   imageUrl,
@@ -12,12 +12,11 @@ const ProfileImage: React.FC<ProfileImageProps> = ({
   isLoading = false,
   size = "md",
 }) => {
-  // Size mappings - drastically reduced sizes
+  // Size mappings with responsive values using percentages and viewport units
   const sizeMap = {
-    //sm: "w-[320px] h-[320px] md:w-[360px] md:h-[360px]",
-    sm: "w-[20rem] h-[20rem] md:w-[22.5rem] md:h-[22.5rem]",
-    md: "w-[25rem] h-[25rem] md:w-[27.5rem] md:h-[27.5rem]",
-    lg: "w-[27.5rem] h-[27.5rem] md:w-[30rem] md:h-[30rem]",
+    sm: "w-55 h-55 sm:w-80 sm:h-80 md:w-96 md:h-96",
+    md: "w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28",
+    lg: "w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32",
   };
 
   // Particle animation for the decorative elements
@@ -69,13 +68,11 @@ const ProfileImage: React.FC<ProfileImageProps> = ({
       transition={{ duration: 0.6, delay: 0.2 }}
       className="relative flex items-center justify-center"
     >
-      {/* Container with fixed width/height */}
-      {/* --- FIX 1: Apply fixed size classes here --- */}
-      <div className={`${sizeMap[size]} relative mx-auto `}>
+      {/* Container with responsive width/height */}
+      <div className={`${sizeMap[size]} relative mx-auto`}>
         {/* Gradient border with glow effect */}
-        {/* Removed aspect-square as parent now has fixed h/w. Added w-full h-full */}
-        <div className="w-full h-full rounded-full bg-gradient-to-br from-indigo-400 to-purple-600 p-1 shadow-lg relative overflow-hidden">
-          {/* Animated glow effect (unchanged) */}
+        <div className="w-full h-full rounded-full bg-gradient-to-br from-indigo-400 to-purple-600 p-[2px] sm:p-1 shadow-lg relative overflow-hidden">
+          {/* Animated glow effect */}
           <motion.div
             className="absolute inset-0 bg-gradient-to-r from-indigo-500/30 to-purple-500/30"
             animate={{
@@ -92,7 +89,7 @@ const ProfileImage: React.FC<ProfileImageProps> = ({
 
           <div className="w-full h-full rounded-full bg-white dark:bg-gray-900 flex items-center justify-center overflow-hidden relative z-20">
             {isLoading ? (
-              // Skeleton loader (unchanged)
+              // Skeleton loader - responsive sizing and animation duration
               <div className="w-full h-full bg-gray-200 dark:bg-gray-700 animate-pulse flex items-center justify-center">
                 <svg
                   className="w-1/4 h-1/4 text-gray-300 dark:text-gray-600"
@@ -114,8 +111,7 @@ const ProfileImage: React.FC<ProfileImageProps> = ({
           </div>
         </div>
 
-        {/* Decorative elements (unchanged) */}
-        {/* Note: These are positioned relative to the main sized container */}
+        {/* Decorative elements - responsive sizing */}
         {/* Dashed border */}
         <motion.div
           className="absolute  top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[115%] h-[115%] rounded-full border-2 border-dashed border-indigo-200 dark:border-indigo-900"
