@@ -72,6 +72,7 @@ const AboutPage = () => {
                   href={personalInfo.resume_url ?? "#"}
                   variant="primary"
                   isExternal
+                  isDisabled={!personalInfo.resume_url}
                   rightIcon={
                     <svg
                       className="w-5 h-5"
@@ -89,7 +90,9 @@ const AboutPage = () => {
                     </svg>
                   }
                 >
-                  Download CV
+                  {personalInfo.resume_url
+                    ? "Download CV"
+                    : "Resume Not Available"}
                 </Button>
                 <Button href="/contact" variant="outline">
                   Contact Me
@@ -101,7 +104,7 @@ const AboutPage = () => {
               imageUrl={personalInfo.profile_image_url}
               name={personalInfo.name}
               isLoading={isLoadingPersonal}
-              size="md"
+              size="sm"
             />
           </div>
         </motion.div>
