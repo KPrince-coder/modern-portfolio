@@ -5,7 +5,7 @@ import SectionDivider from "../components/ui/SectionDivider";
 import SkillCard from "../components/ui/SkillCard";
 import ProjectCard from "../components/ui/ProjectCard";
 import FeaturedBlogPosts from "../components/home/FeaturedBlogPosts";
-import ProfileImage from "../components/ui/ProfileImage";
+import HeroSection from "../components/home/HeroSection";
 import { usePersonalData } from "../hooks/useSupabase";
 
 const HomePage = () => {
@@ -14,61 +14,23 @@ const HomePage = () => {
     usePersonalData();
 
   // Use personal data or fallback
-  const personalInfo = personalData || {
-    name: "John Doe",
-    title: "Creative Developer & Designer",
-    bio: "I build exceptional digital experiences that are fast, accessible, and visually appealing.",
-    profile_image_url: "",
+  const personalInfo = {
+    name: personalData?.name ?? "John Doe",
+    title: personalData?.title ?? "Creative Developer & Designer",
+    bio:
+      personalData?.bio ??
+      "I build exceptional digital experiences that are fast, accessible, and visually appealing.",
+    profile_image_url: personalData?.profile_image_url ?? "",
   };
 
   return (
     <Container>
-      <div className="py-20">
+      <div className="pt-20">
         {/* Hero Section */}
-        <section className="mb-32">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="mb-12 text-center lg:text-start"
-            >
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-800 dark:text-white mb-6">
-                Crafting the Future with Code and Intelligence
-              </h1>
-              <h2 className="text-xl md:text-2xl mb-6">
-                Data Engineer | Full Stack Developer | Android Developer | AI
-                Engineer
-              </h2>
-              <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 ">
-                I build exceptional digital experiences that are fast,
-                accessible, and visually appealing.
-              </p>
-              <div className="flex flex-wrap gap-4 justify-center lg:justify-start text-center">
-                <a
-                  href="#projects"
-                  className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors w-[170px]"
-                >
-                  View My Work
-                </a>
-                <a
-                  href="#contact"
-                  className="px-6 py-3 border border-indigo-600 text-indigo-600 dark:text-indigo-400 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors w-[170px]"
-                >
-                  Contact Me
-                </a>
-              </div>
-            </motion.div>
-
-            {/* Profile Image Component */}
-            <ProfileImage
-              imageUrl={personalInfo.profile_image_url}
-              name={personalInfo.name}
-              isLoading={isLoadingPersonal}
-              size="sm"
-            />
-          </div>
-        </section>
+        <HeroSection
+          personalInfo={personalInfo}
+          isLoadingPersonal={isLoadingPersonal}
+        />
 
         <SectionDivider />
 
