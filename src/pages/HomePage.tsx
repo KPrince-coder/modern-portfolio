@@ -6,12 +6,23 @@ import SkillCard from "../components/ui/SkillCard";
 import ProjectCard from "../components/ui/ProjectCard";
 import FeaturedBlogPosts from "../components/home/FeaturedBlogPosts";
 import HeroSection from "../components/home/HeroSection";
-import { usePersonalData } from "../hooks/useSupabase";
+import ProjectCardSkeleton from "../components/ui/ProjectCardSkeleton";
+import { usePersonalData, useProjects } from "../hooks/useSupabase";
 
 const HomePage = () => {
   // Fetch personal data for profile image
   const { data: personalData, isLoading: isLoadingPersonal } =
     usePersonalData();
+
+  // Fetch featured projects
+  const {
+    data: featuredProjectsData,
+    isLoading: isLoadingProjects,
+    error: projectsError,
+  } = useProjects({ featured: true, limit: 2 });
+
+  // Extract featured projects from data
+  const featuredProjects = featuredProjectsData || [];
 
   // Use personal data or fallback
   const personalInfo = {
@@ -87,22 +98,53 @@ const HomePage = () => {
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {featuredProjects.map((project, index) => (
-              <ProjectCard
-                key={project.id || project.title}
-                id={
-                  project.id || project.title.toLowerCase().replace(/\s+/g, "-")
-                }
-                title={project.title}
-                description={project.description}
-                imageUrl={
-                  project.imageUrl ||
-                  "https://via.placeholder.com/800x450?text=Project+Image"
-                }
-                tags={project.technologies}
-                delay={index * 0.2}
-              />
-            ))}
+            {/* Loading state with skeletons */}
+            {isLoadingProjects && (
+              <>
+                <ProjectCardSkeleton delay={0} />
+                <ProjectCardSkeleton delay={0.1} />
+              </>
+            )}
+
+            {/* Error state */}
+            {projectsError && (
+              <div className="col-span-2 text-center py-8">
+                <p className="text-red-500 dark:text-red-400 mb-2">
+                  Failed to load projects
+                </p>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Please try again later
+                </p>
+              </div>
+            )}
+
+            {/* Projects display */}
+            {!isLoadingProjects &&
+              !projectsError &&
+              featuredProjects?.length === 0 && (
+                <div className="col-span-2 text-center py-8">
+                  <p className="text-gray-600 dark:text-gray-400">
+                    No featured projects found
+                  </p>
+                </div>
+              )}
+
+            {!isLoadingProjects &&
+              !projectsError &&
+              featuredProjects?.map((project, index) => (
+                <ProjectCard
+                  key={project.id}
+                  id={project.slug}
+                  title={project.title}
+                  description={project.description}
+                  imageUrl={
+                    project.thumbnail_url ||
+                    "https://via.placeholder.com/800x450?text=Project+Image"
+                  }
+                  tags={project.technologies}
+                  delay={index * 0.2}
+                />
+              ))}
           </div>
 
           <div className="text-center mt-12">
@@ -338,49 +380,6 @@ const skills = [
         />
       </svg>
     ),
-  },
-];
-
-const featuredProjects = [
-  {
-    id: "ecommerce-platform",
-    title: "E-commerce Platform",
-    description:
-      "A full-featured e-commerce platform with product management, cart functionality, and payment processing.",
-    technologies: ["React", "Node.js", "MongoDB", "Stripe"],
-    link: "#",
-    imageUrl:
-      "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
-  },
-  {
-    id: "ai-content-generator",
-    title: "AI-Powered Content Generator",
-    description:
-      "A tool that uses AI to generate blog posts, social media content, and marketing copy.",
-    technologies: ["React", "Python", "TensorFlow", "GPT-3"],
-    link: "#",
-    imageUrl:
-      "https://images.unsplash.com/photo-1677442135136-760c813a6f14?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
-  },
-  {
-    id: "portfolio-website",
-    title: "Portfolio Website",
-    description:
-      "A modern portfolio website built with React and Tailwind CSS to showcase projects and skills.",
-    technologies: ["React", "TypeScript", "Tailwind CSS", "Framer Motion"],
-    link: "#",
-    imageUrl:
-      "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
-  },
-  {
-    id: "task-management-app",
-    title: "Task Management App",
-    description:
-      "A collaborative task management application with real-time updates and team features.",
-    technologies: ["React", "Firebase", "Redux", "Material UI"],
-    link: "#",
-    imageUrl:
-      "https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
   },
 ];
 
