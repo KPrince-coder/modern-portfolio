@@ -127,6 +127,15 @@ const HomePage = () => {
                 />
               ))}
           </div>
+
+          <div className="text-center mt-12">
+            <Link
+              to="/about"
+              className="px-6 py-3 border border-indigo-600 text-indigo-600 dark:text-indigo-400 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors"
+            >
+              View All Skills
+            </Link>
+          </div>
         </section>
 
         <SectionDivider />
