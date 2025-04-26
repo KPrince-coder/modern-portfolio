@@ -7,7 +7,7 @@ import ProjectCard from "../components/ui/ProjectCard";
 import FeaturedBlogPosts from "../components/home/FeaturedBlogPosts";
 import HeroSection from "../components/home/HeroSection";
 import ProjectCardSkeleton from "../components/ui/ProjectCardSkeleton";
-import { usePersonalData, useProjects } from "../hooks/useSupabase";
+import { usePersonalData, useProjects, useSkills } from "../hooks/useSupabase";
 
 const HomePage = () => {
   // Fetch personal data for profile image
@@ -21,8 +21,18 @@ const HomePage = () => {
     error: projectsError,
   } = useProjects({ featured: true, limit: 2 });
 
-  // Extract featured projects from data
-  const featuredProjects = featuredProjectsData || [];
+  // Fetch featured skills
+  const {
+    data: skillsData,
+    isLoading: isLoadingSkills,
+    error: skillsError,
+  } = useSkills();
+
+  // Extract featured projects and skills from data
+  const featuredProjects = featuredProjectsData ?? [];
+  // Get all skills and sort them by display_order
+  const featuredSkills =
+    skillsData?.sort((a, b) => a.display_order - b.display_order) ?? [];
 
   // Use personal data or fallback
   const personalInfo = {
@@ -64,16 +74,58 @@ const HomePage = () => {
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {skills.map((skill, index) => (
-              <SkillCard
-                key={skill.name}
-                icon={skill.icon}
-                title={skill.name}
-                description={skill.description}
-                level={skill.level || 3}
-                delay={index * 0.1}
-              />
-            ))}
+            {/* Loading state */}
+            {isLoadingSkills && (
+              <div className="col-span-3 text-center py-8">
+                <div className="inline-block">
+                  <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+                <p className="mt-2 text-gray-600 dark:text-gray-400">
+                  Loading skills...
+                </p>
+              </div>
+            )}
+
+            {/* Error state */}
+            {skillsError && (
+              <div className="col-span-3 text-center py-8">
+                <p className="text-red-500 dark:text-red-400 mb-2">
+                  Failed to load skills
+                </p>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Please try again later
+                </p>
+              </div>
+            )}
+
+            {/* No skills found */}
+            {!isLoadingSkills &&
+              !skillsError &&
+              featuredSkills.length === 0 && (
+                <div className="col-span-3 text-center py-8">
+                  <p className="text-gray-600 dark:text-gray-400">
+                    No featured skills found
+                  </p>
+                </div>
+              )}
+
+            {/* Skills display */}
+            {!isLoadingSkills &&
+              !skillsError &&
+              featuredSkills.map((skill, index) => (
+                <SkillCard
+                  key={skill.id}
+                  icon={
+                    <div
+                      dangerouslySetInnerHTML={{ __html: skill.icon ?? "" }}
+                    />
+                  }
+                  title={skill.name}
+                  description={skill.description}
+                  level={skill.level ?? 3}
+                  delay={index * 0.1}
+                />
+              ))}
           </div>
         </section>
 
@@ -138,7 +190,7 @@ const HomePage = () => {
                   title={project.title}
                   description={project.description}
                   imageUrl={
-                    project.thumbnail_url ||
+                    project.thumbnail_url ??
                     "https://via.placeholder.com/800x450?text=Project+Image"
                   }
                   tags={project.technologies}
@@ -235,152 +287,5 @@ const HomePage = () => {
     </Container>
   );
 };
-
-// Sample data
-const skills = [
-  {
-    name: "Frontend Development",
-    description:
-      "Creating responsive and interactive user interfaces with modern frameworks.",
-    level: 5,
-    icon: (
-      <svg
-        className="w-10 h-10"
-        fill="currentColor"
-        viewBox="0 0 20 20"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          fillRule="evenodd"
-          d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z"
-          clipRule="evenodd"
-        />
-      </svg>
-    ),
-  },
-  {
-    name: "Backend Development",
-    description: "Building robust server-side applications and APIs.",
-    level: 4,
-    icon: (
-      <svg
-        className="w-10 h-10"
-        fill="currentColor"
-        viewBox="0 0 20 20"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          fillRule="evenodd"
-          d="M2 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm3.293 1.293a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 01-1.414-1.414L7.586 10 5.293 7.707a1 1 0 010-1.414zM11 12a1 1 0 100 2h3a1 1 0 100-2h-3z"
-          clipRule="evenodd"
-        />
-      </svg>
-    ),
-  },
-  {
-    name: "UI/UX Design",
-    description: "Designing intuitive and visually appealing user experiences.",
-    level: 4,
-    icon: (
-      <svg
-        className="w-10 h-10"
-        fill="currentColor"
-        viewBox="0 0 20 20"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path d="M10 3.5a1.5 1.5 0 013 0V4a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-.5a1.5 1.5 0 000 3h.5a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-.5a1.5 1.5 0 00-3 0v.5a1 1 0 01-1 1H6a1 1 0 01-1-1v-3a1 1 0 00-1-1h-.5a1.5 1.5 0 010-3H4a1 1 0 001-1V6a1 1 0 011-1h3a1 1 0 001-1v-.5z" />
-      </svg>
-    ),
-  },
-  {
-    name: "Database Design",
-    description: "Designing and optimizing database schemas for performance.",
-    level: 3,
-    icon: (
-      <svg
-        className="w-10 h-10"
-        fill="currentColor"
-        viewBox="0 0 20 20"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path d="M3 12v3c0 1.657 3.134 3 7 3s7-1.343 7-3v-3c0 1.657-3.134 3-7 3s-7-1.343-7-3z" />
-        <path d="M3 7v3c0 1.657 3.134 3 7 3s7-1.343 7-3V7c0 1.657-3.134 3-7 3S3 8.657 3 7z" />
-        <path d="M17 5c0 1.657-3.134 3-7 3S3 6.657 3 5s3.134-3 7-3 7 1.343 7 3z" />
-      </svg>
-    ),
-  },
-  {
-    name: "AI Integration",
-    description: "Implementing AI solutions to enhance user experiences.",
-    level: 3,
-    icon: (
-      <svg
-        className="w-10 h-10"
-        fill="currentColor"
-        viewBox="0 0 20 20"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          fillRule="evenodd"
-          d="M10.496 2.132a1 1 0 00-.992 0l-7 4A1 1 0 003 8v7a1 1 0 100 2h14a1 1 0 100-2V8a1 1 0 00.496-1.868l-7-4zM6 9a1 1 0 00-1 1v3a1 1 0 102 0v-3a1 1 0 00-1-1zm3 1a1 1 0 012 0v3a1 1 0 11-2 0v-3zm5-1a1 1 0 00-1 1v3a1 1 0 102 0v-3a1 1 0 00-1-1z"
-          clipRule="evenodd"
-        />
-      </svg>
-    ),
-  },
-  {
-    name: "Performance Optimization",
-    description: "Optimizing applications for speed and efficiency.",
-    level: 4,
-    icon: (
-      <svg
-        className="w-10 h-10"
-        fill="currentColor"
-        viewBox="0 0 20 20"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          fillRule="evenodd"
-          d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"
-          clipRule="evenodd"
-        />
-      </svg>
-    ),
-  },
-  {
-    name: "Responsive Design",
-    description: "Creating websites that work on all devices and screen sizes.",
-    level: 5,
-    icon: (
-      <svg
-        className="w-10 h-10"
-        fill="currentColor"
-        viewBox="0 0 20 20"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path d="M2 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1H3a1 1 0 01-1-1V4zM8 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1H9a1 1 0 01-1-1V4zM15 3a1 1 0 00-1 1v12a1 1 0 001 1h2a1 1 0 001-1V4a1 1 0 00-1-1h-2z" />
-      </svg>
-    ),
-  },
-  {
-    name: "Accessibility",
-    description: "Ensuring websites are usable by people of all abilities.",
-    level: 4,
-    icon: (
-      <svg
-        className="w-10 h-10"
-        fill="currentColor"
-        viewBox="0 0 20 20"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          fillRule="evenodd"
-          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-          clipRule="evenodd"
-        />
-      </svg>
-    ),
-  },
-];
 
 export default HomePage;
