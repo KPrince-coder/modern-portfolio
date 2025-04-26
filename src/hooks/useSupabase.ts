@@ -1,20 +1,42 @@
-import { useQuery, useMutation, QueryClient } from '@tanstack/react-query';
-import { api, Project, BlogPost, ContactMessage, SocialLink, PersonalData, Skill, WorkExperience, Education, Interest } from '../lib/supabase';
+import { useQuery, useMutation, QueryClient } from "@tanstack/react-query";
+import {
+  api,
+  Project,
+  BlogPost,
+  ContactMessage,
+  SocialLink,
+  PersonalData,
+  Skill,
+  WorkExperience,
+  Education,
+  Interest,
+} from "../lib/supabase";
 
 // Create a client
 export const queryClient = new QueryClient();
 
 // Projects hooks
-export const useProjects = () => {
+export const useProjects = (options?: {
+  featured?: boolean;
+  limit?: number;
+  category?: string;
+}) => {
   return useQuery({
-    queryKey: ['projects'],
-    queryFn: api.getProjects,
+    queryKey: ["projects", options],
+    queryFn: () => api.getProjects(options),
+  });
+};
+
+export const useProjectCategories = () => {
+  return useQuery({
+    queryKey: ["projectCategories"],
+    queryFn: api.getProjectCategories,
   });
 };
 
 export const useProjectBySlug = (slug: string) => {
   return useQuery({
-    queryKey: ['project', slug],
+    queryKey: ["project", slug],
     queryFn: () => api.getProjectBySlug(slug),
     enabled: !!slug,
   });
@@ -28,18 +50,18 @@ export const useBlogPosts = (options?: {
   tag?: string;
   search?: string;
   orderBy?: string;
-  orderDirection?: 'asc' | 'desc';
+  orderDirection?: "asc" | "desc";
   featured?: boolean;
 }) => {
   return useQuery({
-    queryKey: ['blogPosts', options],
+    queryKey: ["blogPosts", options],
     queryFn: () => api.getBlogPosts(options),
   });
 };
 
 export const useBlogPostBySlug = (slug: string) => {
   return useQuery({
-    queryKey: ['blogPost', slug],
+    queryKey: ["blogPost", slug],
     queryFn: () => api.getBlogPostBySlug(slug),
     enabled: !!slug,
   });
@@ -47,21 +69,21 @@ export const useBlogPostBySlug = (slug: string) => {
 
 export const useBlogCategories = () => {
   return useQuery({
-    queryKey: ['blogCategories'],
+    queryKey: ["blogCategories"],
     queryFn: api.getBlogCategories,
   });
 };
 
 export const useBlogTags = () => {
   return useQuery({
-    queryKey: ['blogTags'],
+    queryKey: ["blogTags"],
     queryFn: api.getBlogTags,
   });
 };
 
 export const useBlogComments = (postId: string) => {
   return useQuery({
-    queryKey: ['blogComments', postId],
+    queryKey: ["blogComments", postId],
     queryFn: () => api.getBlogComments(postId),
     enabled: !!postId,
   });
@@ -79,14 +101,16 @@ export const useSubmitBlogComment = () => {
     }) => api.submitBlogComment(comment),
     onSuccess: (_, variables) => {
       // Invalidate the comments query to refetch comments
-      queryClient.invalidateQueries({ queryKey: ['blogComments', variables.post_id] });
+      queryClient.invalidateQueries({
+        queryKey: ["blogComments", variables.post_id],
+      });
     },
   });
 };
 
 export const useRelatedBlogPosts = (postId: string, limit: number = 3) => {
   return useQuery({
-    queryKey: ['relatedBlogPosts', postId, limit],
+    queryKey: ["relatedBlogPosts", postId, limit],
     queryFn: () => api.getRelatedBlogPosts(postId, limit),
     enabled: !!postId,
   });
@@ -105,28 +129,41 @@ export const useLikePost = () => {
       api.likePost(postId, unlike),
     onSuccess: (_, variables) => {
       // Invalidate the blog post query to refetch with updated likes count
-      queryClient.invalidateQueries({ queryKey: ['blogPost', variables.postId] });
+      queryClient.invalidateQueries({
+        queryKey: ["blogPost", variables.postId],
+      });
       // Also invalidate comments query since it might contain post_likes_count
-      queryClient.invalidateQueries({ queryKey: ['blogComments', variables.postId] });
+      queryClient.invalidateQueries({
+        queryKey: ["blogComments", variables.postId],
+      });
     },
   });
 };
 
 export const useLikeComment = () => {
   return useMutation({
-    mutationFn: ({ commentId, unlike }: { commentId: string; unlike?: boolean }) =>
-      api.likeComment(commentId, unlike),
+    mutationFn: ({
+      commentId,
+      unlike,
+    }: {
+      commentId: string;
+      unlike?: boolean;
+    }) => api.likeComment(commentId, unlike),
     onSuccess: (_, variables) => {
       // Get the post ID from the comment ID by querying the cache
-      const allCommentsQueries = queryClient.getQueriesData<any[]>({ queryKey: ['blogComments'] });
+      const allCommentsQueries = queryClient.getQueriesData<any[]>({
+        queryKey: ["blogComments"],
+      });
 
       // Iterate through all blogComments queries
       for (const [queryKey, comments] of allCommentsQueries) {
         if (Array.isArray(comments)) {
-          const comment = comments.find(c => c.id === variables.commentId);
+          const comment = comments.find((c) => c.id === variables.commentId);
           if (comment?.post_id) {
             // Invalidate the specific comments query to refetch with updated likes count
-            queryClient.invalidateQueries({ queryKey: ['blogComments', comment.post_id] });
+            queryClient.invalidateQueries({
+              queryKey: ["blogComments", comment.post_id],
+            });
             break; // Found the comment, no need to continue
           }
         }
@@ -137,16 +174,21 @@ export const useLikeComment = () => {
 
 export const useTrackBlogTimeSpent = () => {
   return useMutation({
-    mutationFn: ({ postId, timeSpentSeconds }: { postId: string; timeSpentSeconds: number }) =>
-      api.trackBlogTimeSpent(postId, timeSpentSeconds),
+    mutationFn: ({
+      postId,
+      timeSpentSeconds,
+    }: {
+      postId: string;
+      timeSpentSeconds: number;
+    }) => api.trackBlogTimeSpent(postId, timeSpentSeconds),
   });
 };
 
 // Personal data hook
 export const usePersonalData = () => {
-// @ts-ignore
+  // @ts-ignore
   return useQuery({
-    queryKey: ['personalData'],
+    queryKey: ["personalData"],
     queryFn: api.getPersonalData,
   });
 };
@@ -154,8 +196,12 @@ export const usePersonalData = () => {
 // Contact message hook
 export const useSubmitContactMessage = () => {
   return useMutation({
-    mutationFn: (message: Omit<ContactMessage, 'id' | 'created_at' | 'is_read' | 'is_replied'>) =>
-      api.submitContactMessage(message),
+    mutationFn: (
+      message: Omit<
+        ContactMessage,
+        "id" | "created_at" | "is_read" | "is_replied"
+      >
+    ) => api.submitContactMessage(message),
     onSuccess: () => {
       // Optionally invalidate queries or perform other actions on success
     },
@@ -165,22 +211,25 @@ export const useSubmitContactMessage = () => {
 // Social links hook
 export const useSocialLinks = () => {
   return useQuery({
-    queryKey: ['socialLinks'],
+    queryKey: ["socialLinks"],
     queryFn: api.getSocialLinks,
   });
 };
 
 // Blog analytics hooks
-export const useBlogAnalyticsSummary = (timeRange?: { startDate: string; endDate: string }) => {
+export const useBlogAnalyticsSummary = (timeRange?: {
+  startDate: string;
+  endDate: string;
+}) => {
   return useQuery({
-    queryKey: ['blogAnalyticsSummary', timeRange],
+    queryKey: ["blogAnalyticsSummary", timeRange],
     queryFn: () => api.getBlogAnalyticsSummary(timeRange),
   });
 };
 
 export const useBlogPostAnalytics = (postId: string) => {
   return useQuery({
-    queryKey: ['blogPostAnalytics', postId],
+    queryKey: ["blogPostAnalytics", postId],
     queryFn: () => api.getBlogPostAnalytics(postId),
     enabled: !!postId,
   });
@@ -189,14 +238,14 @@ export const useBlogPostAnalytics = (postId: string) => {
 // Skills hooks
 export const useSkills = () => {
   return useQuery({
-    queryKey: ['skills'],
+    queryKey: ["skills"],
     queryFn: api.getSkills,
   });
 };
 
 export const useSoftSkills = () => {
   return useQuery({
-    queryKey: ['softSkills'],
+    queryKey: ["softSkills"],
     queryFn: api.getSoftSkills,
   });
 };
@@ -204,7 +253,7 @@ export const useSoftSkills = () => {
 // Work experience hook
 export const useWorkExperience = () => {
   return useQuery({
-    queryKey: ['workExperience'],
+    queryKey: ["workExperience"],
     queryFn: api.getWorkExperience,
   });
 };
@@ -212,7 +261,7 @@ export const useWorkExperience = () => {
 // Education hook
 export const useEducation = () => {
   return useQuery({
-    queryKey: ['education'],
+    queryKey: ["education"],
     queryFn: api.getEducation,
   });
 };
@@ -220,7 +269,7 @@ export const useEducation = () => {
 // Interests hook
 export const useInterests = () => {
   return useQuery({
-    queryKey: ['interests'],
+    queryKey: ["interests"],
     queryFn: api.getInterests,
   });
 };

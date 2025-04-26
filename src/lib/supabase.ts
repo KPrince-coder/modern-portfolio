@@ -1,29 +1,32 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from "@supabase/supabase-js";
 
 // Helper function to get a unique session ID for the current user
 export const getSessionId = (): string => {
   // Check if we already have a session ID in localStorage
-  let sessionId = localStorage.getItem('portfolio_session_id');
+  let sessionId = localStorage.getItem("portfolio_session_id");
 
   // If not, create a new one
   if (!sessionId) {
     // Generate a random ID
-    sessionId = Math.random().toString(36).substring(2, 15) +
-                Math.random().toString(36).substring(2, 15);
+    sessionId =
+      Math.random().toString(36).substring(2, 15) +
+      Math.random().toString(36).substring(2, 15);
 
     // Store it in localStorage
-    localStorage.setItem('portfolio_session_id', sessionId);
+    localStorage.setItem("portfolio_session_id", sessionId);
   }
 
   return sessionId;
 };
 
 // Initialize the Supabase client
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Missing Supabase URL or Anon Key. Make sure to set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file.');
+  console.error(
+    "Missing Supabase URL or Anon Key. Make sure to set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file."
+  );
 }
 
 // Create a function to check if Supabase is reachable
@@ -32,33 +35,38 @@ const checkSupabaseConnection = async () => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
 
-    const response = await fetch(`${supabaseUrl}/rest/v1/?apikey=${supabaseAnonKey}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      signal: controller.signal
-    });
+    const response = await fetch(
+      `${supabaseUrl}/rest/v1/?apikey=${supabaseAnonKey}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        signal: controller.signal,
+      }
+    );
 
     clearTimeout(timeoutId);
     return response.ok;
   } catch (error) {
-    console.error('Error checking Supabase connection:', error);
+    console.error("Error checking Supabase connection:", error);
     return false;
   }
 };
 
 // Log connection status
-checkSupabaseConnection().then(isConnected => {
+checkSupabaseConnection().then((isConnected) => {
   if (!isConnected) {
-    console.error('Unable to connect to Supabase. Please check your network connection and Supabase service status.');
+    console.error(
+      "Unable to connect to Supabase. Please check your network connection and Supabase service status."
+    );
   } else {
-    console.log('Successfully connected to Supabase.');
+    console.log("Successfully connected to Supabase.");
   }
 });
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  db: {schema: 'portfolio'},
+  db: { schema: "portfolio" },
   global: {
     fetch: (...args) => {
       // Add the user identifier to the headers for RLS policies
@@ -67,20 +75,20 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 
       // Create a new headers object with the user identifier
       const headers = new Headers(options?.headers || {});
-      headers.set('x-user-identifier', userIdentifier);
+      headers.set("x-user-identifier", userIdentifier);
 
       // Return the fetch with updated headers
       return fetch(url, { ...options, headers });
-    }
-  }
+    },
+  },
 });
 
 // Helper function to handle Supabase errors
 export const handleSupabaseError = (error: any) => {
-  console.error('Supabase error:', error);
+  console.error("Supabase error:", error);
   return {
     error: {
-      message: error.message || 'An unexpected error occurred',
+      message: error.message || "An unexpected error occurred",
       status: error.status || 500,
     },
   };
@@ -98,42 +106,46 @@ export const formatSupabaseData = <T>(data: T) => {
 export const checkUserRole = async (userId: string, role: string) => {
   try {
     const { data, error } = await supabase
-      .from('user_roles')
-      .select(`
+      .from("user_roles")
+      .select(
+        `
         role_id,
         roles:role_id(name)
-      `)
-      .eq('user_id', userId);
+      `
+      )
+      .eq("user_id", userId);
 
     if (error) {
-      console.error('Error checking user role:', error);
+      console.error("Error checking user role:", error);
       return false;
     }
 
     return data.some((item: any) => item.roles.name === role);
   } catch (error) {
-    console.error('Error in checkUserRole:', error);
+    console.error("Error in checkUserRole:", error);
     return false;
   }
 };
 
 // Helper function to check if user has a specific permission
-export const checkUserPermission = async (userId: string, permission: string) => {
+export const checkUserPermission = async (
+  userId: string,
+  permission: string
+) => {
   try {
-    const { data, error } = await supabase
-      .rpc('has_permission', {
-        user_id: userId,
-        permission: permission
-      });
+    const { data, error } = await supabase.rpc("has_permission", {
+      user_id: userId,
+      permission: permission,
+    });
 
     if (error) {
-      console.error('Error checking user permission:', error);
+      console.error("Error checking user permission:", error);
       return false;
     }
 
     return data;
   } catch (error) {
-    console.error('Error in checkUserPermission:', error);
+    console.error("Error in checkUserPermission:", error);
     return false;
   }
 };
@@ -141,17 +153,16 @@ export const checkUserPermission = async (userId: string, permission: string) =>
 // Helper function to check if current user is an admin
 export const isCurrentUserAdmin = async () => {
   try {
-    const { data, error } = await supabase
-      .rpc('is_admin_current');
+    const { data, error } = await supabase.rpc("is_admin_current");
 
     if (error) {
-      console.error('Error checking if user is admin:', error);
+      console.error("Error checking if user is admin:", error);
       return false;
     }
 
     return data;
   } catch (error) {
-    console.error('Error in isCurrentUserAdmin:', error);
+    console.error("Error in isCurrentUserAdmin:", error);
     return false;
   }
 };
@@ -159,16 +170,19 @@ export const isCurrentUserAdmin = async () => {
 // Helper function to get current user
 export const getCurrentUser = async () => {
   try {
-    const { data: { user }, error } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
 
     if (error) {
-      console.error('Error getting current user:', error);
+      console.error("Error getting current user:", error);
       return null;
     }
 
     return user;
   } catch (error) {
-    console.error('Error in getCurrentUser:', error);
+    console.error("Error in getCurrentUser:", error);
     return null;
   }
 };
@@ -184,38 +198,45 @@ export const logAuditEvent = async (
   try {
     const user = await getCurrentUser();
 
-    const { error } = await supabase
-      .from('audit_logs')
-      .insert({
-        user_id: user?.id,
-        action,
-        entity_type: entityType,
-        entity_id: entityId,
-        old_values: oldValues,
-        new_values: newValues,
-      });
+    const { error } = await supabase.from("audit_logs").insert({
+      user_id: user?.id,
+      action,
+      entity_type: entityType,
+      entity_id: entityId,
+      old_values: oldValues,
+      new_values: newValues,
+    });
 
     if (error) {
-      console.error('Error logging audit event:', error);
+      console.error("Error logging audit event:", error);
     }
   } catch (error) {
-    console.error('Error in logAuditEvent:', error);
+    console.error("Error in logAuditEvent:", error);
   }
 };
 
 // Types for our database tables
 export interface Project {
-  id: number;
+  id: string;
   title: string;
   slug: string;
   description: string;
   content: string;
-  image_url?: string;
-  category: string;
+  summary?: string;
+  thumbnail_url?: string;
+  category_id?: string;
+  category?: { id: string; name: string; slug: string } | null;
   technologies: string[];
   demo_url?: string;
   code_url?: string;
   case_study_url?: string;
+  is_featured: boolean;
+  display_order: number;
+  status: "draft" | "published" | "archived";
+  published_at?: string;
+  meta_title?: string;
+  meta_description?: string;
+  meta_keywords?: string;
   created_at: string;
   updated_at: string;
 }
@@ -232,7 +253,7 @@ export interface BlogPost {
   tags?: { id: string; name: string; slug: string }[];
   reading_time_minutes?: number;
   is_featured: boolean;
-  status: 'draft' | 'published' | 'archived';
+  status: "draft" | "published" | "archived";
   published_at?: string;
   meta_title?: string;
   meta_description?: string;
@@ -283,7 +304,7 @@ export interface Skill {
   category?: string;
   display_order: number;
   level?: number;
-  type?: 'technical' | 'soft';
+  type?: "technical" | "soft";
 }
 
 export interface WorkExperience {
@@ -347,11 +368,38 @@ export interface EngagementDataItem {
 // API functions
 export const api = {
   // Projects
-  getProjects: async () => {
-    const { data, error } = await supabase
-      .from('projects')
-      .select('*')
-      .order('created_at', { ascending: false });
+  getProjects: async (options?: {
+    featured?: boolean;
+    limit?: number;
+    category?: string;
+    status?: "draft" | "published" | "archived";
+  }) => {
+    const { featured, limit, category, status = "published" } = options || {};
+
+    let query = supabase
+      .from("projects")
+      .select(
+        `
+        *,
+        category:category_id(id, name, slug)
+      `
+      )
+      .eq("status", status)
+      .order("display_order", { ascending: true });
+
+    if (featured !== undefined) {
+      query = query.eq("is_featured", featured);
+    }
+
+    if (category) {
+      query = query.eq("category_id", category);
+    }
+
+    if (limit) {
+      query = query.limit(limit);
+    }
+
+    const { data, error } = await query;
 
     if (error) throw error;
     return data as Project[];
@@ -359,13 +407,37 @@ export const api = {
 
   getProjectBySlug: async (slug: string) => {
     const { data, error } = await supabase
-      .from('projects')
-      .select('*')
-      .eq('slug', slug)
+      .from("projects")
+      .select(
+        `
+        *,
+        category:category_id(id, name, slug),
+        images:project_images(*)
+      `
+      )
+      .eq("slug", slug)
       .single();
 
     if (error) throw error;
-    return data as Project;
+    return data as Project & {
+      images: {
+        id: string;
+        image_url: string;
+        alt_text: string;
+        caption?: string;
+        display_order: number;
+      }[];
+    };
+  },
+
+  getProjectCategories: async () => {
+    const { data, error } = await supabase
+      .from("project_categories")
+      .select("*")
+      .order("display_order", { ascending: true });
+
+    if (error) throw error;
+    return data;
   },
 
   // Blog posts
@@ -376,7 +448,7 @@ export const api = {
     tag?: string;
     search?: string;
     orderBy?: string;
-    orderDirection?: 'asc' | 'desc';
+    orderDirection?: "asc" | "desc";
     featured?: boolean;
   }) => {
     const {
@@ -385,9 +457,9 @@ export const api = {
       category,
       tag,
       search,
-      orderBy = 'published_at',
-      orderDirection = 'desc',
-      featured
+      orderBy = "published_at",
+      orderDirection = "desc",
+      featured,
     } = options || {};
 
     // Calculate offset based on page and limit
@@ -395,38 +467,46 @@ export const api = {
 
     // Start building the query
     let query = supabase
-      .from('blog_posts')
-      .select(`
+      .from("blog_posts")
+      .select(
+        `
         *,
         category:category_id(id, name, slug),
         tags:blog_post_tags(tag_id(id, name, slug))
-      `)
-      .eq('status', 'published')
-      .order(orderBy, { ascending: orderDirection === 'asc' });
+      `
+      )
+      .eq("status", "published")
+      .order(orderBy, { ascending: orderDirection === "asc" });
 
     // Apply filters if provided
     if (category) {
       // First try to filter by category ID
-      if (category.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
-        query = query.eq('category_id', category);
+      if (
+        category.match(
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+        )
+      ) {
+        query = query.eq("category_id", category);
       } else {
         // Otherwise filter by category slug through the join
-        query = query.eq('category.slug', category);
+        query = query.eq("category.slug", category);
       }
     }
 
     if (tag) {
       // Filter by tag through the join
-      query = query.eq('tags.tag_id.slug', tag);
+      query = query.eq("tags.tag_id.slug", tag);
     }
 
     if (search) {
       // Full-text search on title and content
-      query = query.or(`title.ilike.%${search}%,summary.ilike.%${search}%,content.ilike.%${search}%`);
+      query = query.or(
+        `title.ilike.%${search}%,summary.ilike.%${search}%,content.ilike.%${search}%`
+      );
     }
 
     if (featured !== undefined) {
-      query = query.eq('is_featured', featured);
+      query = query.eq("is_featured", featured);
     }
 
     // Apply pagination
@@ -438,16 +518,17 @@ export const api = {
     if (error) throw error;
 
     // Format the tags array for each post
-    const formattedPosts = data?.map(post => {
-      const formattedTags = post.tags?.map((tag: any) => ({
-        id: tag.tag_id.id,
-        name: tag.tag_id.name,
-        slug: tag.tag_id.slug
-      })) || [];
+    const formattedPosts = data?.map((post) => {
+      const formattedTags =
+        post.tags?.map((tag: any) => ({
+          id: tag.tag_id.id,
+          name: tag.tag_id.name,
+          slug: tag.tag_id.slug,
+        })) || [];
 
       return {
         ...post,
-        tags: formattedTags
+        tags: formattedTags,
       };
     });
 
@@ -456,40 +537,43 @@ export const api = {
       count,
       page,
       limit,
-      totalPages: count ? Math.ceil(count / limit) : 0
+      totalPages: count ? Math.ceil(count / limit) : 0,
     };
   },
 
   getBlogPostBySlug: async (slug: string) => {
     // Fetch the blog post
     const { data, error } = await supabase
-      .from('blog_posts')
-      .select(`
+      .from("blog_posts")
+      .select(
+        `
         *,
         category:category_id(id, name, slug),
         tags:blog_post_tags(tag_id(id, name, slug))
-      `)
-      .eq('slug', slug)
-      .eq('status', 'published')
+      `
+      )
+      .eq("slug", slug)
+      .eq("status", "published")
       .single();
 
     if (error) throw error;
 
     // Format the tags array
-    const formattedTags = data.tags?.map((tag: any) => ({
-      id: tag.tag_id.id,
-      name: tag.tag_id.name,
-      slug: tag.tag_id.slug
-    })) || [];
+    const formattedTags =
+      data.tags?.map((tag: any) => ({
+        id: tag.tag_id.id,
+        name: tag.tag_id.name,
+        slug: tag.tag_id.slug,
+      })) || [];
 
     // Track the view using our utility function instead of missing RPC
     try {
       // Import the utility function
-      const { trackBlogPostView } = await import('../utils/analyticsTracker');
+      const { trackBlogPostView } = await import("../utils/analyticsTracker");
       // Track the view with the post ID and AI generated flag
       await trackBlogPostView(data.id, data.ai_generated || false);
     } catch (trackError) {
-      console.error('Error tracking blog post view:', trackError);
+      console.error("Error tracking blog post view:", trackError);
     }
 
     return { ...data, tags: formattedTags } as BlogPost;
@@ -498,9 +582,9 @@ export const api = {
   // Blog categories
   getBlogCategories: async () => {
     const { data, error } = await supabase
-      .from('blog_categories')
-      .select('*')
-      .order('display_order', { ascending: true });
+      .from("blog_categories")
+      .select("*")
+      .order("display_order", { ascending: true });
 
     if (error) throw error;
     return data;
@@ -509,9 +593,9 @@ export const api = {
   // Blog tags
   getBlogTags: async () => {
     const { data, error } = await supabase
-      .from('blog_tags')
-      .select('*')
-      .order('name', { ascending: true });
+      .from("blog_tags")
+      .select("*")
+      .order("name", { ascending: true });
 
     if (error) throw error;
     return data;
@@ -521,38 +605,40 @@ export const api = {
   getBlogComments: async (postId: string) => {
     // First get the post likes count - use a direct count query for accuracy
     const { count: postLikesCount, error: likesCountError } = await supabase
-      .from('blog_post_likes')
-      .select('*', { count: 'exact', head: true })
-      .eq('post_id', postId);
+      .from("blog_post_likes")
+      .select("*", { count: "exact", head: true })
+      .eq("post_id", postId);
 
-    if (likesCountError) console.error('Error counting post likes:', likesCountError);
+    if (likesCountError)
+      console.error("Error counting post likes:", likesCountError);
 
     // Also get the post data to double-check
     const { data: postData, error: postError } = await supabase
-      .from('blog_posts')
-      .select('likes_count')
-      .eq('id', postId)
+      .from("blog_posts")
+      .select("likes_count")
+      .eq("id", postId)
       .single();
 
-    if (postError) console.error('Error fetching post likes count:', postError);
+    if (postError) console.error("Error fetching post likes count:", postError);
 
     // Use the direct count if available, otherwise fall back to the post data
-    const finalLikesCount = postLikesCount !== null ? postLikesCount : (postData?.likes_count || 0);
+    const finalLikesCount =
+      postLikesCount !== null ? postLikesCount : postData?.likes_count || 0;
 
     // Then get the comments with their likes count
     const { data, error } = await supabase
-      .from('blog_comments')
-      .select('*, likes_count')
-      .eq('post_id', postId)
-      .eq('is_approved', true)
-      .order('created_at', { ascending: true });
+      .from("blog_comments")
+      .select("*, likes_count")
+      .eq("post_id", postId)
+      .eq("is_approved", true)
+      .order("created_at", { ascending: true });
 
     if (error) throw error;
 
     // Add post_likes_count to each comment for easy access
-    return data.map(comment => ({
+    return data.map((comment) => ({
       ...comment,
-      post_likes_count: finalLikesCount
+      post_likes_count: finalLikesCount,
     }));
   },
 
@@ -565,11 +651,13 @@ export const api = {
     content: string;
   }) => {
     const { data, error } = await supabase
-      .from('blog_comments')
-      .insert([{
-        ...comment,
-        is_approved: false // Comments require approval by default
-      }])
+      .from("blog_comments")
+      .insert([
+        {
+          ...comment,
+          is_approved: false, // Comments require approval by default
+        },
+      ])
       .select();
 
     if (error) throw error;
@@ -578,12 +666,12 @@ export const api = {
 
   // Blog analytics
   trackBlogShare: async (postId: string, platform: string) => {
-    const { data, error } = await supabase
-      .from('blog_post_shares')
-      .insert([{
+    const { data, error } = await supabase.from("blog_post_shares").insert([
+      {
         post_id: postId,
-        platform
-      }]);
+        platform,
+      },
+    ]);
 
     if (error) throw error;
     return data;
@@ -594,44 +682,46 @@ export const api = {
       // Use the direct table update approach instead of RPC
       // First check if analytics record exists
       const { data: existingData, error: checkError } = await supabase
-        .from('blog_post_analytics')
-        .select('total_time_spent, view_count_for_time')
-        .eq('post_id', postId)
+        .from("blog_post_analytics")
+        .select("total_time_spent, view_count_for_time")
+        .eq("post_id", postId)
         .single();
 
-      if (checkError && checkError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
-        console.error('Error checking blog post analytics:', checkError);
+      if (checkError && checkError.code !== "PGRST116") {
+        // PGRST116 is "no rows returned"
+        console.error("Error checking blog post analytics:", checkError);
         throw checkError;
       }
 
       if (existingData) {
         // Update existing record
-        const totalTimeSpent = (existingData.total_time_spent || 0) + timeSpentSeconds;
+        const totalTimeSpent =
+          (existingData.total_time_spent || 0) + timeSpentSeconds;
         const viewCountForTime = (existingData.view_count_for_time || 0) + 1;
         const avgTimeSpent = totalTimeSpent / viewCountForTime;
 
         const { error: updateError } = await supabase
-          .from('blog_post_analytics')
+          .from("blog_post_analytics")
           .update({
             total_time_spent: totalTimeSpent,
             view_count_for_time: viewCountForTime,
             avg_time_spent: avgTimeSpent,
-            last_viewed_at: new Date().toISOString()
+            last_viewed_at: new Date().toISOString(),
           })
-          .eq('post_id', postId);
+          .eq("post_id", postId);
 
         if (updateError) throw updateError;
       } else {
         // Create new record
         const { error: insertError } = await supabase
-          .from('blog_post_analytics')
+          .from("blog_post_analytics")
           .insert({
             post_id: postId,
             avg_time_spent: timeSpentSeconds,
             total_time_spent: timeSpentSeconds,
             view_count_for_time: 1,
             views: 1,
-            last_viewed_at: new Date().toISOString()
+            last_viewed_at: new Date().toISOString(),
           });
 
         if (insertError) throw insertError;
@@ -639,7 +729,7 @@ export const api = {
 
       return { success: true };
     } catch (error) {
-      console.error('Error tracking blog time spent:', error);
+      console.error("Error tracking blog time spent:", error);
       // Return success anyway to prevent UI errors
       return { success: false, error };
     }
@@ -653,53 +743,55 @@ export const api = {
       if (unlike) {
         // Unlike the post
         const { error } = await supabase
-          .from('blog_post_likes')
+          .from("blog_post_likes")
           .delete()
           .match({ post_id: postId, user_identifier: userIdentifier });
 
         if (error) {
-          console.error('Error unliking post:', error);
+          console.error("Error unliking post:", error);
           throw error;
         }
-        return { success: true, action: 'unliked' };
+        return { success: true, action: "unliked" };
       } else {
         // First check if the user already liked this post
         const { count, error: countError } = await supabase
-          .from('blog_post_likes')
-          .select('*', { count: 'exact', head: true })
+          .from("blog_post_likes")
+          .select("*", { count: "exact", head: true })
           .match({ post_id: postId, user_identifier: userIdentifier });
 
         if (countError) {
-          console.error('Error checking existing like:', countError);
+          console.error("Error checking existing like:", countError);
         }
 
         // If the user already liked the post, return success
         if (count && count > 0) {
-          return { success: true, action: 'already_liked' };
+          return { success: true, action: "already_liked" };
         }
 
         // Like the post
         const { data, error } = await supabase
-          .from('blog_post_likes')
-          .insert([{
-            post_id: postId,
-            user_identifier: userIdentifier
-          }])
+          .from("blog_post_likes")
+          .insert([
+            {
+              post_id: postId,
+              user_identifier: userIdentifier,
+            },
+          ])
           .select();
 
         if (error) {
           // If the error is a unique violation, the user already liked the post
-          if (error.code === '23505') {
-            return { success: true, action: 'already_liked' };
+          if (error.code === "23505") {
+            return { success: true, action: "already_liked" };
           }
-          console.error('Error liking post:', error);
+          console.error("Error liking post:", error);
           throw error;
         }
 
-        return { success: true, action: 'liked', data };
+        return { success: true, action: "liked", data };
       }
     } catch (error) {
-      console.error('Error in likePost:', error);
+      console.error("Error in likePost:", error);
       throw error;
     }
   },
@@ -712,53 +804,55 @@ export const api = {
       if (unlike) {
         // Unlike the comment
         const { error } = await supabase
-          .from('blog_comment_likes')
+          .from("blog_comment_likes")
           .delete()
           .match({ comment_id: commentId, user_identifier: userIdentifier });
 
         if (error) {
-          console.error('Error unliking comment:', error);
+          console.error("Error unliking comment:", error);
           throw error;
         }
-        return { success: true, action: 'unliked' };
+        return { success: true, action: "unliked" };
       } else {
         // First check if the user already liked this comment
         const { count, error: countError } = await supabase
-          .from('blog_comment_likes')
-          .select('*', { count: 'exact', head: true })
+          .from("blog_comment_likes")
+          .select("*", { count: "exact", head: true })
           .match({ comment_id: commentId, user_identifier: userIdentifier });
 
         if (countError) {
-          console.error('Error checking existing like:', countError);
+          console.error("Error checking existing like:", countError);
         }
 
         // If the user already liked the comment, return success
         if (count && count > 0) {
-          return { success: true, action: 'already_liked' };
+          return { success: true, action: "already_liked" };
         }
 
         // Like the comment
         const { data, error } = await supabase
-          .from('blog_comment_likes')
-          .insert([{
-            comment_id: commentId,
-            user_identifier: userIdentifier
-          }])
+          .from("blog_comment_likes")
+          .insert([
+            {
+              comment_id: commentId,
+              user_identifier: userIdentifier,
+            },
+          ])
           .select();
 
         if (error) {
           // If the error is a unique violation, the user already liked the comment
-          if (error.code === '23505') {
-            return { success: true, action: 'already_liked' };
+          if (error.code === "23505") {
+            return { success: true, action: "already_liked" };
           }
-          console.error('Error liking comment:', error);
+          console.error("Error liking comment:", error);
           throw error;
         }
 
-        return { success: true, action: 'liked', data };
+        return { success: true, action: "liked", data };
       }
     } catch (error) {
-      console.error('Error in likeComment:', error);
+      console.error("Error in likeComment:", error);
       throw error;
     }
   },
@@ -766,9 +860,9 @@ export const api = {
   getRelatedBlogPosts: async (postId: string, limit: number = 3) => {
     try {
       const { data: post, error: postError } = await supabase
-        .from('blog_posts')
-        .select('category_id, tags:blog_post_tags(tag_id)')
-        .eq('id', postId)
+        .from("blog_posts")
+        .select("category_id, tags:blog_post_tags(tag_id)")
+        .eq("id", postId)
         .single();
 
       if (postError) throw postError;
@@ -782,16 +876,18 @@ export const api = {
       if (post.category_id) {
         // First try to get posts from the same category
         const { data: categoryPosts, error: categoryError } = await supabase
-          .from('blog_posts')
-          .select(`
+          .from("blog_posts")
+          .select(
+            `
             *,
             category:category_id(id, name, slug),
             tags:blog_post_tags(tag_id(id, name, slug))
-          `)
-          .eq('status', 'published')
-          .eq('category_id', post.category_id)
-          .neq('id', postId)
-          .order('published_at', { ascending: false })
+          `
+          )
+          .eq("status", "published")
+          .eq("category_id", post.category_id)
+          .neq("id", postId)
+          .order("published_at", { ascending: false })
           .limit(limit);
 
         if (!categoryError && categoryPosts) {
@@ -805,23 +901,25 @@ export const api = {
         const remainingLimit = limit - relatedPosts.length;
 
         // Get posts with matching tags, excluding ones we already have
-        const excludeIds = [postId, ...relatedPosts.map(p => p.id)];
+        const excludeIds = [postId, ...relatedPosts.map((p) => p.id)];
 
         const { data: tagPosts, error: tagError } = await supabase
-          .from('blog_posts')
-          .select(`
+          .from("blog_posts")
+          .select(
+            `
             *,
             category:category_id(id, name, slug),
             tags:blog_post_tags(tag_id(id, name, slug))
-          `)
-          .eq('status', 'published')
-          .not('id', 'in', `(${excludeIds.join(',')})`) // Exclude posts we already have
-          .order('published_at', { ascending: false })
+          `
+          )
+          .eq("status", "published")
+          .not("id", "in", `(${excludeIds.join(",")})`) // Exclude posts we already have
+          .order("published_at", { ascending: false })
           .limit(remainingLimit);
 
         if (!tagError && tagPosts) {
           // Filter posts that have at least one matching tag
-          const postsWithMatchingTags = tagPosts.filter(post => {
+          const postsWithMatchingTags = tagPosts.filter((post) => {
             const postTagIds = post.tags.map((tag: any) => tag.tag_id.id);
             return postTagIds.some((tagId: string) => tagIds.includes(tagId));
           });
@@ -833,18 +931,20 @@ export const api = {
       // If we still don't have enough posts, get the most recent ones
       if (relatedPosts.length < limit) {
         const remainingLimit = limit - relatedPosts.length;
-        const excludeIds = [postId, ...relatedPosts.map(p => p.id)];
+        const excludeIds = [postId, ...relatedPosts.map((p) => p.id)];
 
         const { data: recentPosts, error: recentError } = await supabase
-          .from('blog_posts')
-          .select(`
+          .from("blog_posts")
+          .select(
+            `
             *,
             category:category_id(id, name, slug),
             tags:blog_post_tags(tag_id(id, name, slug))
-          `)
-          .eq('status', 'published')
-          .not('id', 'in', `(${excludeIds.join(',')})`) // Exclude posts we already have
-          .order('published_at', { ascending: false })
+          `
+          )
+          .eq("status", "published")
+          .not("id", "in", `(${excludeIds.join(",")})`) // Exclude posts we already have
+          .order("published_at", { ascending: false })
           .limit(remainingLimit);
 
         if (!recentError && recentPosts) {
@@ -853,36 +953,44 @@ export const api = {
       }
 
       // Format the tags array for each post
-      const formattedPosts = relatedPosts.map(post => {
-        const formattedTags = post.tags?.map((tag: { tag_id: { id: string; name: string; slug: string } }) => ({
-          id: tag.tag_id.id,
-          name: tag.tag_id.name,
-          slug: tag.tag_id.slug
-        })) || [];
+      const formattedPosts = relatedPosts.map((post) => {
+        const formattedTags =
+          post.tags?.map(
+            (tag: { tag_id: { id: string; name: string; slug: string } }) => ({
+              id: tag.tag_id.id,
+              name: tag.tag_id.name,
+              slug: tag.tag_id.slug,
+            })
+          ) || [];
 
         return {
           ...post,
-          tags: formattedTags
+          tags: formattedTags,
         };
       });
 
       return formattedPosts as BlogPost[];
     } catch (error) {
-      console.error('Error fetching related blog posts:', error);
+      console.error("Error fetching related blog posts:", error);
       return [];
     }
   },
 
   // Contact messages
-  submitContactMessage: async (message: Omit<ContactMessage, 'id' | 'created_at' | 'is_read' | 'is_replied'>) => {
+  submitContactMessage: async (
+    message: Omit<
+      ContactMessage,
+      "id" | "created_at" | "is_read" | "is_replied"
+    >
+  ) => {
     const { data, error } = await supabase
-      .from('contact_messages')
+      .from("contact_messages")
       .insert([
         {
           ...message,
           is_read: false,
-          is_replied: false
-        }
+          is_replied: false,
+        },
       ])
       .select();
 
@@ -893,8 +1001,8 @@ export const api = {
   // Personal data
   getPersonalData: async () => {
     const { data, error } = await supabase
-      .from('personal_data')
-      .select('*')
+      .from("personal_data")
+      .select("*")
       .single();
 
     if (error) throw error;
@@ -904,9 +1012,9 @@ export const api = {
   // Social links
   getSocialLinks: async () => {
     const { data, error } = await supabase
-      .from('social_links')
-      .select('*')
-      .order('display_order', { ascending: true });
+      .from("social_links")
+      .select("*")
+      .order("display_order", { ascending: true });
 
     if (error) throw error;
     return data as SocialLink[];
@@ -915,10 +1023,10 @@ export const api = {
   // Skills
   getSkills: async () => {
     const { data, error } = await supabase
-      .from('skills')
-      .select('*')
-      .eq('type', 'technical')
-      .order('display_order', { ascending: true });
+      .from("skills")
+      .select("*")
+      .eq("type", "technical")
+      .order("display_order", { ascending: true });
 
     if (error) throw error;
     return data as Skill[];
@@ -927,10 +1035,10 @@ export const api = {
   // Soft Skills
   getSoftSkills: async () => {
     const { data, error } = await supabase
-      .from('skills')
-      .select('*')
-      .eq('type', 'soft')
-      .order('display_order', { ascending: true });
+      .from("skills")
+      .select("*")
+      .eq("type", "soft")
+      .order("display_order", { ascending: true });
 
     if (error) throw error;
     return data as Skill[];
@@ -939,9 +1047,9 @@ export const api = {
   // Work Experience
   getWorkExperience: async () => {
     const { data, error } = await supabase
-      .from('work_experience')
-      .select('*')
-      .order('display_order', { ascending: true });
+      .from("work_experience")
+      .select("*")
+      .order("display_order", { ascending: true });
 
     if (error) throw error;
     return data as WorkExperience[];
@@ -950,9 +1058,9 @@ export const api = {
   // Education
   getEducation: async () => {
     const { data, error } = await supabase
-      .from('education')
-      .select('*')
-      .order('display_order', { ascending: true });
+      .from("education")
+      .select("*")
+      .order("display_order", { ascending: true });
 
     if (error) throw error;
     return data as Education[];
@@ -961,20 +1069,21 @@ export const api = {
   // Interests
   getInterests: async () => {
     const { data, error } = await supabase
-      .from('interests')
-      .select('*')
-      .order('display_order', { ascending: true });
+      .from("interests")
+      .select("*")
+      .order("display_order", { ascending: true });
 
     if (error) throw error;
     return data as Interest[];
   },
 
   // Blog Analytics
-  getBlogAnalyticsSummary: async (timeRange?: { startDate: string; endDate: string }) => {
+  getBlogAnalyticsSummary: async (timeRange?: {
+    startDate: string;
+    endDate: string;
+  }) => {
     // Build query with time range filter if provided
-    let query = supabase
-      .from('blog_post_analytics')
-      .select(`
+    let query = supabase.from("blog_post_analytics").select(`
         id,
         post_id,
         views,
@@ -992,8 +1101,9 @@ export const api = {
 
     // Apply time range filter if provided
     if (timeRange && timeRange.startDate && timeRange.endDate) {
-      query = query.gte('created_at', timeRange.startDate)
-                   .lte('created_at', timeRange.endDate);
+      query = query
+        .gte("created_at", timeRange.startDate)
+        .lte("created_at", timeRange.endDate);
     }
 
     // Execute query
@@ -1004,15 +1114,13 @@ export const api = {
     // Get AI content performance comparison
     // Note: The RPC function doesn't accept time range parameters directly
     // In a production environment, you would modify the RPC function to accept these parameters
-    const { data: aiPerformanceData, error: aiPerformanceError } = await supabase
-      .rpc('get_ai_content_performance');
+    const { data: aiPerformanceData, error: aiPerformanceError } =
+      await supabase.rpc("get_ai_content_performance");
 
     if (aiPerformanceError) throw aiPerformanceError;
 
     // Get share analytics with time range filter
-    let shareQuery = supabase
-      .from('blog_post_shares')
-      .select(`
+    let shareQuery = supabase.from("blog_post_shares").select(`
         id,
         post_id,
         platform,
@@ -1022,8 +1130,9 @@ export const api = {
 
     // Apply time range filter if provided
     if (timeRange && timeRange.startDate && timeRange.endDate) {
-      shareQuery = shareQuery.gte('shared_at', timeRange.startDate)
-                            .lte('shared_at', timeRange.endDate);
+      shareQuery = shareQuery
+        .gte("shared_at", timeRange.startDate)
+        .lte("shared_at", timeRange.endDate);
     }
 
     const { data: shareData, error: shareError } = await shareQuery;
@@ -1031,9 +1140,7 @@ export const api = {
     if (shareError) throw shareError;
 
     // Get AI feedback with time range filter
-    let feedbackQuery = supabase
-      .from('ai_content_feedback')
-      .select(`
+    let feedbackQuery = supabase.from("ai_content_feedback").select(`
         id,
         post_id,
         rating,
@@ -1044,8 +1151,9 @@ export const api = {
 
     // Apply time range filter if provided
     if (timeRange && timeRange.startDate && timeRange.endDate) {
-      feedbackQuery = feedbackQuery.gte('created_at', timeRange.startDate)
-                                 .lte('created_at', timeRange.endDate);
+      feedbackQuery = feedbackQuery
+        .gte("created_at", timeRange.startDate)
+        .lte("created_at", timeRange.endDate);
     }
 
     const { data: feedbackData, error: feedbackError } = await feedbackQuery;
@@ -1054,9 +1162,7 @@ export const api = {
 
     // Get audience data (device, browser, location) with time range filter
     // Use a simpler select to avoid relationship ambiguity
-    let audienceQuery = supabase
-      .from('blog_audience_data')
-      .select(`
+    let audienceQuery = supabase.from("blog_audience_data").select(`
         id,
         post_id,
         session_id,
@@ -1071,8 +1177,9 @@ export const api = {
 
     // Apply time range filter if provided
     if (timeRange && timeRange.startDate && timeRange.endDate) {
-      audienceQuery = audienceQuery.gte('created_at', timeRange.startDate)
-                                  .lte('created_at', timeRange.endDate);
+      audienceQuery = audienceQuery
+        .gte("created_at", timeRange.startDate)
+        .lte("created_at", timeRange.endDate);
     }
 
     const { data: audienceData, error: audienceError } = await audienceQuery;
@@ -1081,9 +1188,7 @@ export const api = {
 
     // Get content engagement data (scroll depth, element interactions) with time range filter
     // Use a simpler select to avoid relationship ambiguity
-    let engagementQuery = supabase
-      .from('blog_content_engagement')
-      .select(`
+    let engagementQuery = supabase.from("blog_content_engagement").select(`
         id,
         post_id,
         session_id,
@@ -1097,64 +1202,72 @@ export const api = {
 
     // Apply time range filter if provided
     if (timeRange && timeRange.startDate && timeRange.endDate) {
-      engagementQuery = engagementQuery.gte('created_at', timeRange.startDate)
-                                      .lte('created_at', timeRange.endDate);
+      engagementQuery = engagementQuery
+        .gte("created_at", timeRange.startDate)
+        .lte("created_at", timeRange.endDate);
     }
 
-    const { data: engagementData, error: engagementError } = await engagementQuery;
+    const { data: engagementData, error: engagementError } =
+      await engagementQuery;
 
     if (engagementError) throw engagementError;
 
     // Calculate summary metrics
     const totalViews = overallData.reduce((sum, item) => sum + item.views, 0);
     const totalShares = shareData.length;
-    const avgTimeSpent = overallData.reduce((sum, item) => sum + (item.avg_time_spent || 0), 0) /
-      overallData.filter(item => item.avg_time_spent).length || 0;
+    const avgTimeSpent =
+      overallData.reduce((sum, item) => sum + (item.avg_time_spent || 0), 0) /
+        overallData.filter((item) => item.avg_time_spent).length || 0;
 
     // Get top posts by views
     const topPostsByViews = [...overallData]
       .sort((a, b) => b.views - a.views)
       .slice(0, 10)
-      .map(item => ({
+      .map((item) => ({
         id: item.post_id,
-// @ts-ignore
-        title: item.blog_posts?.title || 'Unknown',
-// @ts-ignore
-        slug: item.blog_posts?.slug || '',
+        // @ts-ignore
+        title: item.blog_posts?.title || "Unknown",
+        // @ts-ignore
+        slug: item.blog_posts?.slug || "",
         views: item.views,
         shares: item.shares,
         avgTimeSpent: item.avg_time_spent,
-        aiGenerated: item.ai_generated
+        aiGenerated: item.ai_generated,
       }));
 
     // Get top posts by time spent
     const topPostsByTimeSpent = [...overallData]
       .sort((a, b) => (b.avg_time_spent || 0) - (a.avg_time_spent || 0))
       .slice(0, 10)
-      .map(item => ({
+      .map((item) => ({
         id: item.post_id,
-// @ts-ignore
-        title: item.blog_posts?.title || 'Unknown',
-// @ts-ignore
-        slug: item.blog_posts?.slug || '',
+        // @ts-ignore
+        title: item.blog_posts?.title || "Unknown",
+        // @ts-ignore
+        slug: item.blog_posts?.slug || "",
         views: item.views,
         avgTimeSpent: item.avg_time_spent,
-        aiGenerated: item.ai_generated
+        aiGenerated: item.ai_generated,
       }));
 
     // Get share distribution by platform
-    const sharesByPlatform = shareData.reduce((acc: Record<string, number>, item) => {
-      const platform = item.platform || 'unknown';
-      acc[platform] = (acc[platform] || 0) + 1;
-      return acc;
-    }, {});
+    const sharesByPlatform = shareData.reduce(
+      (acc: Record<string, number>, item) => {
+        const platform = item.platform || "unknown";
+        acc[platform] = (acc[platform] || 0) + 1;
+        return acc;
+      },
+      {}
+    );
 
     // Format share distribution for chart
-    const shareDistribution = Object.entries(sharesByPlatform).map(([platform, count]) => ({
-      platform,
-      count,
-      percentage: Math.round((count / (shareData.length || 1)) * 100)
-    }));
+    const shareDistribution = Object.entries(sharesByPlatform).map(
+      ([platform, count]) => ({
+        platform,
+        count,
+        percentage: Math.round((count / (shareData.length || 1)) * 100),
+      })
+    );
 
     // Define types for audience and engagement data
     interface AudienceDataItem {
@@ -1183,36 +1296,61 @@ export const api = {
     }
 
     // Process audience data
-    const deviceDistribution = audienceData ? audienceData.reduce((acc: Record<string, number>, item: AudienceDataItem) => {
-      const device = item.device_type || 'unknown';
-      acc[device] = (acc[device] || 0) + 1;
-      return acc;
-    }, {}) : {};
+    const deviceDistribution = audienceData
+      ? audienceData.reduce(
+          (acc: Record<string, number>, item: AudienceDataItem) => {
+            const device = item.device_type || "unknown";
+            acc[device] = (acc[device] || 0) + 1;
+            return acc;
+          },
+          {}
+        )
+      : {};
 
-    const browserDistribution = audienceData ? audienceData.reduce((acc: Record<string, number>, item: AudienceDataItem) => {
-      const browser = item.browser || 'unknown';
-      acc[browser] = (acc[browser] || 0) + 1;
-      return acc;
-    }, {}) : {};
+    const browserDistribution = audienceData
+      ? audienceData.reduce(
+          (acc: Record<string, number>, item: AudienceDataItem) => {
+            const browser = item.browser || "unknown";
+            acc[browser] = (acc[browser] || 0) + 1;
+            return acc;
+          },
+          {}
+        )
+      : {};
 
-    const locationDistribution = audienceData ? audienceData.reduce((acc: Record<string, number>, item: AudienceDataItem) => {
-      const country = item.country || 'unknown';
-      acc[country] = (acc[country] || 0) + 1;
-      return acc;
-    }, {}) : {};
+    const locationDistribution = audienceData
+      ? audienceData.reduce(
+          (acc: Record<string, number>, item: AudienceDataItem) => {
+            const country = item.country || "unknown";
+            acc[country] = (acc[country] || 0) + 1;
+            return acc;
+          },
+          {}
+        )
+      : {};
 
     // Process engagement data
-    const scrollDepthData = engagementData ? engagementData.reduce((acc: Record<string, number>, item: EngagementDataItem) => {
-      const depth = item.scroll_depth || 'unknown';
-      acc[depth] = (acc[depth] || 0) + 1;
-      return acc;
-    }, {}) : {};
+    const scrollDepthData = engagementData
+      ? engagementData.reduce(
+          (acc: Record<string, number>, item: EngagementDataItem) => {
+            const depth = item.scroll_depth || "unknown";
+            acc[depth] = (acc[depth] || 0) + 1;
+            return acc;
+          },
+          {}
+        )
+      : {};
 
-    const elementInteractionData = engagementData ? engagementData.reduce((acc: Record<string, number>, item: EngagementDataItem) => {
-      const element = item.element_type || 'unknown';
-      acc[element] = (acc[element] || 0) + 1;
-      return acc;
-    }, {}) : {};
+    const elementInteractionData = engagementData
+      ? engagementData.reduce(
+          (acc: Record<string, number>, item: EngagementDataItem) => {
+            const element = item.element_type || "unknown";
+            acc[element] = (acc[element] || 0) + 1;
+            return acc;
+          },
+          {}
+        )
+      : {};
 
     return {
       summary: {
@@ -1220,9 +1358,15 @@ export const api = {
         totalShares,
         avgTimeSpent,
         totalPosts: overallData.length,
-        aiGeneratedPosts: overallData.filter(item => item.ai_generated).length,
-        avgAiFeedbackRating: overallData.reduce((sum, item) => sum + (item.ai_feedback_rating || 0), 0) /
-          (overallData.filter(item => item.ai_feedback_count > 0).length || 1)
+        aiGeneratedPosts: overallData.filter((item) => item.ai_generated)
+          .length,
+        avgAiFeedbackRating:
+          overallData.reduce(
+            (sum, item) => sum + (item.ai_feedback_rating || 0),
+            0
+          ) /
+          (overallData.filter((item) => item.ai_feedback_count > 0).length ||
+            1),
       },
       aiPerformance: aiPerformanceData || [],
       topPostsByViews,
@@ -1234,42 +1378,100 @@ export const api = {
         locationDistribution,
         newVsReturning: {
           new: audienceData.filter((item: any) => item.is_new_visitor).length,
-          returning: audienceData.filter((item: any) => !item.is_new_visitor).length
-        }
+          returning: audienceData.filter((item: any) => !item.is_new_visitor)
+            .length,
+        },
       },
       contentEngagement: {
         scrollDepthData,
         elementInteractionData,
         scrollDepthDistribution: {
-          '0-25': engagementData.filter((item: any) => item.scroll_depth && item.scroll_depth <= 25).length,
-          '26-50': engagementData.filter((item: any) => item.scroll_depth && item.scroll_depth > 25 && item.scroll_depth <= 50).length,
-          '51-75': engagementData.filter((item: any) => item.scroll_depth && item.scroll_depth > 50 && item.scroll_depth <= 75).length,
-          '76-100': engagementData.filter((item: any) => item.scroll_depth && item.scroll_depth > 75).length
+          "0-25": engagementData.filter(
+            (item: any) => item.scroll_depth && item.scroll_depth <= 25
+          ).length,
+          "26-50": engagementData.filter(
+            (item: any) =>
+              item.scroll_depth &&
+              item.scroll_depth > 25 &&
+              item.scroll_depth <= 50
+          ).length,
+          "51-75": engagementData.filter(
+            (item: any) =>
+              item.scroll_depth &&
+              item.scroll_depth > 50 &&
+              item.scroll_depth <= 75
+          ).length,
+          "76-100": engagementData.filter(
+            (item: any) => item.scroll_depth && item.scroll_depth > 75
+          ).length,
         },
         readingTimeDistribution: {
-          'less_than_1_min': engagementData.filter((item: any) => (item.time_spent_seconds || 0) < 60).length,
-          '1_to_3_min': engagementData.filter((item: any) => (item.time_spent_seconds || 0) >= 60 && (item.time_spent_seconds || 0) < 180).length,
-          '3_to_5_min': engagementData.filter((item: any) => (item.time_spent_seconds || 0) >= 180 && (item.time_spent_seconds || 0) < 300).length,
-          '5_to_10_min': engagementData.filter((item: any) => (item.time_spent_seconds || 0) >= 300 && (item.time_spent_seconds || 0) < 600).length,
-          'more_than_10_min': engagementData.filter((item: any) => (item.time_spent_seconds || 0) >= 600).length
+          less_than_1_min: engagementData.filter(
+            (item: any) => (item.time_spent_seconds || 0) < 60
+          ).length,
+          "1_to_3_min": engagementData.filter(
+            (item: any) =>
+              (item.time_spent_seconds || 0) >= 60 &&
+              (item.time_spent_seconds || 0) < 180
+          ).length,
+          "3_to_5_min": engagementData.filter(
+            (item: any) =>
+              (item.time_spent_seconds || 0) >= 180 &&
+              (item.time_spent_seconds || 0) < 300
+          ).length,
+          "5_to_10_min": engagementData.filter(
+            (item: any) =>
+              (item.time_spent_seconds || 0) >= 300 &&
+              (item.time_spent_seconds || 0) < 600
+          ).length,
+          more_than_10_min: engagementData.filter(
+            (item: any) => (item.time_spent_seconds || 0) >= 600
+          ).length,
         },
-        avgScrollDepth: engagementData.length > 0 ?
-          engagementData.reduce((sum: number, item: any) => sum + (item.scroll_depth || 0), 0) /
-          engagementData.filter((item: any) => item.scroll_depth !== null && item.scroll_depth !== undefined).length : 0,
-        completionRate: engagementData.length > 0 ?
-          (engagementData.filter((item: any) => item.scroll_depth && item.scroll_depth >= 90).length /
-           engagementData.filter((item: any) => item.scroll_depth !== null && item.scroll_depth !== undefined).length) * 100 : 0,
-        avgTimeSpentPerInteraction: engagementData.length > 0 ?
-          engagementData.reduce((sum: number, item: any) => sum + (item.time_spent_seconds || 0), 0) /
-          engagementData.filter((item: any) => item.time_spent_seconds !== null && item.time_spent_seconds !== undefined).length : 0
+        avgScrollDepth:
+          engagementData.length > 0
+            ? engagementData.reduce(
+                (sum: number, item: any) => sum + (item.scroll_depth || 0),
+                0
+              ) /
+              engagementData.filter(
+                (item: any) =>
+                  item.scroll_depth !== null && item.scroll_depth !== undefined
+              ).length
+            : 0,
+        completionRate:
+          engagementData.length > 0
+            ? (engagementData.filter(
+                (item: any) => item.scroll_depth && item.scroll_depth >= 90
+              ).length /
+                engagementData.filter(
+                  (item: any) =>
+                    item.scroll_depth !== null &&
+                    item.scroll_depth !== undefined
+                ).length) *
+              100
+            : 0,
+        avgTimeSpentPerInteraction:
+          engagementData.length > 0
+            ? engagementData.reduce(
+                (sum: number, item: any) =>
+                  sum + (item.time_spent_seconds || 0),
+                0
+              ) /
+              engagementData.filter(
+                (item: any) =>
+                  item.time_spent_seconds !== null &&
+                  item.time_spent_seconds !== undefined
+              ).length
+            : 0,
       },
       rawData: {
         overallData,
         shareData,
         feedbackData,
         audienceData: audienceData || [],
-        engagementData: engagementData || []
-      }
+        engagementData: engagementData || [],
+      },
     };
   },
 
@@ -1277,34 +1479,34 @@ export const api = {
   getBlogPostAnalytics: async (postId: string) => {
     // Get post analytics
     const { data: postAnalytics, error: postError } = await supabase
-      .from('blog_post_analytics')
-      .select('*')
-      .eq('post_id', postId)
+      .from("blog_post_analytics")
+      .select("*")
+      .eq("post_id", postId)
       .single();
 
     if (postError) throw postError;
 
     // Get post shares
     const { data: shareData, error: shareError } = await supabase
-      .from('blog_post_shares')
-      .select('*')
-      .eq('post_id', postId);
+      .from("blog_post_shares")
+      .select("*")
+      .eq("post_id", postId);
 
     if (shareError) throw shareError;
 
     // Get AI feedback if applicable
     const { data: feedbackData, error: feedbackError } = await supabase
-      .from('ai_content_feedback')
-      .select('*')
-      .eq('post_id', postId);
+      .from("ai_content_feedback")
+      .select("*")
+      .eq("post_id", postId);
 
     if (feedbackError) throw feedbackError;
 
     // Get the blog post details
     const { data: postData, error: postDetailsError } = await supabase
-      .from('blog_posts')
-      .select('*')
-      .eq('id', postId)
+      .from("blog_posts")
+      .select("*")
+      .eq("id", postId)
       .single();
 
     if (postDetailsError) throw postDetailsError;
@@ -1312,8 +1514,9 @@ export const api = {
     // Get audience data for this post
     // Use a more explicit select to avoid relationship ambiguity
     const { data: audienceData, error: audienceError } = await supabase
-      .from('blog_audience_data')
-      .select(`
+      .from("blog_audience_data")
+      .select(
+        `
         id,
         post_id,
         session_id,
@@ -1324,16 +1527,18 @@ export const api = {
         city,
         is_new_visitor,
         created_at
-      `)
-      .eq('post_id', postId);
+      `
+      )
+      .eq("post_id", postId);
 
     if (audienceError) throw audienceError;
 
     // Get content engagement data for this post
     // Use a more explicit select to avoid relationship ambiguity
     const { data: engagementData, error: engagementError } = await supabase
-      .from('blog_content_engagement')
-      .select(`
+      .from("blog_content_engagement")
+      .select(
+        `
         id,
         post_id,
         session_id,
@@ -1343,91 +1548,161 @@ export const api = {
         interaction_type,
         time_spent_seconds,
         created_at
-      `)
-      .eq('post_id', postId);
+      `
+      )
+      .eq("post_id", postId);
 
     if (engagementError) throw engagementError;
 
     // Calculate share distribution by platform
-    const sharesByPlatform = shareData.reduce((acc: Record<string, number>, item) => {
-      const platform = item.platform || 'unknown';
-      acc[platform] = (acc[platform] || 0) + 1;
-      return acc;
-    }, {});
+    const sharesByPlatform = shareData.reduce(
+      (acc: Record<string, number>, item) => {
+        const platform = item.platform || "unknown";
+        acc[platform] = (acc[platform] || 0) + 1;
+        return acc;
+      },
+      {}
+    );
 
     // Using the AudienceDataItem and EngagementDataItem interfaces defined at the top of the file
 
     // Process audience data
-    const deviceDistribution = audienceData ? audienceData.reduce((acc: Record<string, number>, item: AudienceDataItem) => {
-      const device = item.device_type || 'unknown';
-      acc[device] = (acc[device] || 0) + 1;
-      return acc;
-    }, {}) : {};
+    const deviceDistribution = audienceData
+      ? audienceData.reduce(
+          (acc: Record<string, number>, item: AudienceDataItem) => {
+            const device = item.device_type || "unknown";
+            acc[device] = (acc[device] || 0) + 1;
+            return acc;
+          },
+          {}
+        )
+      : {};
 
-    const browserDistribution = audienceData ? audienceData.reduce((acc: Record<string, number>, item: AudienceDataItem) => {
-      const browser = item.browser || 'unknown';
-      acc[browser] = (acc[browser] || 0) + 1;
-      return acc;
-    }, {}) : {};
+    const browserDistribution = audienceData
+      ? audienceData.reduce(
+          (acc: Record<string, number>, item: AudienceDataItem) => {
+            const browser = item.browser || "unknown";
+            acc[browser] = (acc[browser] || 0) + 1;
+            return acc;
+          },
+          {}
+        )
+      : {};
 
-    const locationDistribution = audienceData ? audienceData.reduce((acc: Record<string, number>, item: AudienceDataItem) => {
-      const country = item.country || 'unknown';
-      acc[country] = (acc[country] || 0) + 1;
-      return acc;
-    }, {}) : {};
+    const locationDistribution = audienceData
+      ? audienceData.reduce(
+          (acc: Record<string, number>, item: AudienceDataItem) => {
+            const country = item.country || "unknown";
+            acc[country] = (acc[country] || 0) + 1;
+            return acc;
+          },
+          {}
+        )
+      : {};
 
     const newVsReturningVisitors = {
-      new: audienceData ? audienceData.filter(item => item.is_new_visitor).length : 0,
-      returning: audienceData ? audienceData.filter(item => !item.is_new_visitor).length : 0
+      new: audienceData
+        ? audienceData.filter((item) => item.is_new_visitor).length
+        : 0,
+      returning: audienceData
+        ? audienceData.filter((item) => !item.is_new_visitor).length
+        : 0,
     };
 
     // Process engagement data
-    const scrollDepthDistribution = engagementData ? {
-      labels: ['0-25%', '25-50%', '50-75%', '75-100%'],
-      values: [
-        engagementData.filter(item => item.scroll_depth <= 25).length,
-        engagementData.filter(item => item.scroll_depth > 25 && item.scroll_depth <= 50).length,
-        engagementData.filter(item => item.scroll_depth > 50 && item.scroll_depth <= 75).length,
-        engagementData.filter(item => item.scroll_depth > 75).length
-      ]
-    } : { labels: [], values: [] };
+    const scrollDepthDistribution = engagementData
+      ? {
+          labels: ["0-25%", "25-50%", "50-75%", "75-100%"],
+          values: [
+            engagementData.filter((item) => item.scroll_depth <= 25).length,
+            engagementData.filter(
+              (item) => item.scroll_depth > 25 && item.scroll_depth <= 50
+            ).length,
+            engagementData.filter(
+              (item) => item.scroll_depth > 50 && item.scroll_depth <= 75
+            ).length,
+            engagementData.filter((item) => item.scroll_depth > 75).length,
+          ],
+        }
+      : { labels: [], values: [] };
 
     // Process element interactions
-    const elementInteractions = engagementData ? engagementData.reduce((acc: Record<string, number>, item: EngagementDataItem) => {
-      const element = item.element_type || 'unknown';
-      acc[element] = (acc[element] || 0) + 1;
-      return acc;
-    }, {}) : {};
+    const elementInteractions = engagementData
+      ? engagementData.reduce(
+          (acc: Record<string, number>, item: EngagementDataItem) => {
+            const element = item.element_type || "unknown";
+            acc[element] = (acc[element] || 0) + 1;
+            return acc;
+          },
+          {}
+        )
+      : {};
 
     const elementInteractionData = {
       elements: Object.keys(elementInteractions),
-      interactions: Object.values(elementInteractions) as number[]
+      interactions: Object.values(elementInteractions) as number[],
     };
 
     // Process reading time distribution
     const readingTimeDistribution = {
-      labels: ['< 1 min', '1-3 min', '3-5 min', '5-10 min', '> 10 min'],
+      labels: ["< 1 min", "1-3 min", "3-5 min", "5-10 min", "> 10 min"],
       values: [
-        engagementData ? engagementData.filter(item => (item.time_spent_seconds || 0) < 60).length : 0,
-        engagementData ? engagementData.filter(item => (item.time_spent_seconds || 0) >= 60 && (item.time_spent_seconds || 0) < 180).length : 0,
-        engagementData ? engagementData.filter(item => (item.time_spent_seconds || 0) >= 180 && (item.time_spent_seconds || 0) < 300).length : 0,
-        engagementData ? engagementData.filter(item => (item.time_spent_seconds || 0) >= 300 && (item.time_spent_seconds || 0) < 600).length : 0,
-        engagementData ? engagementData.filter(item => (item.time_spent_seconds || 0) >= 600).length : 0
-      ]
+        engagementData
+          ? engagementData.filter((item) => (item.time_spent_seconds || 0) < 60)
+              .length
+          : 0,
+        engagementData
+          ? engagementData.filter(
+              (item) =>
+                (item.time_spent_seconds || 0) >= 60 &&
+                (item.time_spent_seconds || 0) < 180
+            ).length
+          : 0,
+        engagementData
+          ? engagementData.filter(
+              (item) =>
+                (item.time_spent_seconds || 0) >= 180 &&
+                (item.time_spent_seconds || 0) < 300
+            ).length
+          : 0,
+        engagementData
+          ? engagementData.filter(
+              (item) =>
+                (item.time_spent_seconds || 0) >= 300 &&
+                (item.time_spent_seconds || 0) < 600
+            ).length
+          : 0,
+        engagementData
+          ? engagementData.filter(
+              (item) => (item.time_spent_seconds || 0) >= 600
+            ).length
+          : 0,
+      ],
     };
 
     // Calculate engagement metrics
-    const avgScrollDepth = engagementData && engagementData.length > 0
-      ? engagementData.reduce((sum, item) => sum + (item.scroll_depth || 0), 0) / engagementData.length
-      : 0;
+    const avgScrollDepth =
+      engagementData && engagementData.length > 0
+        ? engagementData.reduce(
+            (sum, item) => sum + (item.scroll_depth || 0),
+            0
+          ) / engagementData.length
+        : 0;
 
-    const completionRate = engagementData && engagementData.length > 0
-      ? (engagementData.filter(item => (item.scroll_depth || 0) >= 90).length / engagementData.length) * 100
-      : 0;
+    const completionRate =
+      engagementData && engagementData.length > 0
+        ? (engagementData.filter((item) => (item.scroll_depth || 0) >= 90)
+            .length /
+            engagementData.length) *
+          100
+        : 0;
 
-    const interactionRate = engagementData && engagementData.length > 0
-      ? (engagementData.filter(item => item.element_type).length / engagementData.length) * 100
-      : 0;
+    const interactionRate =
+      engagementData && engagementData.length > 0
+        ? (engagementData.filter((item) => item.element_type).length /
+            engagementData.length) *
+          100
+        : 0;
 
     // Generate content optimization tips based on analytics
     const optimizationTips = [];
@@ -1435,46 +1710,54 @@ export const api = {
     // Tip for scroll depth
     if (avgScrollDepth < 50) {
       optimizationTips.push({
-        title: 'Improve Content Engagement',
-        description: 'Average scroll depth is below 50%. Consider making your content more engaging with better hooks, visuals, or breaking up text into smaller paragraphs.',
-        type: 'warning'
+        title: "Improve Content Engagement",
+        description:
+          "Average scroll depth is below 50%. Consider making your content more engaging with better hooks, visuals, or breaking up text into smaller paragraphs.",
+        type: "warning",
       });
     } else if (avgScrollDepth >= 75) {
       optimizationTips.push({
-        title: 'Strong Content Engagement',
-        description: 'Your content has excellent scroll depth (75%+). Keep using this style and structure in future posts.',
-        type: 'success'
+        title: "Strong Content Engagement",
+        description:
+          "Your content has excellent scroll depth (75%+). Keep using this style and structure in future posts.",
+        type: "success",
       });
     }
 
     // Tip for completion rate
     if (completionRate < 40) {
       optimizationTips.push({
-        title: 'Low Completion Rate',
-        description: 'Less than 40% of readers are completing your post. Consider shortening the content or adding more engaging elements throughout.',
-        type: 'warning'
+        title: "Low Completion Rate",
+        description:
+          "Less than 40% of readers are completing your post. Consider shortening the content or adding more engaging elements throughout.",
+        type: "warning",
       });
     }
 
     // Tip for mobile optimization if high mobile usage
-    const mobilePercentage = deviceDistribution['mobile']
-      ? (deviceDistribution['mobile'] / Object.values(deviceDistribution).reduce((a, b) => a + b, 0)) * 100
+    const mobilePercentage = deviceDistribution["mobile"]
+      ? (deviceDistribution["mobile"] /
+          Object.values(deviceDistribution).reduce((a, b) => a + b, 0)) *
+        100
       : 0;
 
     if (mobilePercentage > 40) {
       optimizationTips.push({
-        title: 'Optimize for Mobile',
-        description: `${Math.round(mobilePercentage)}% of your readers are on mobile devices. Ensure your content is mobile-friendly with appropriate font sizes and image scaling.`,
-        type: 'info'
+        title: "Optimize for Mobile",
+        description: `${Math.round(
+          mobilePercentage
+        )}% of your readers are on mobile devices. Ensure your content is mobile-friendly with appropriate font sizes and image scaling.`,
+        type: "info",
       });
     }
 
     // Tip for element interactions
     if (interactionRate < 10) {
       optimizationTips.push({
-        title: 'Increase Interactive Elements',
-        description: 'Your content has low interaction rates. Consider adding more clickable elements like links to related content, interactive examples, or media.',
-        type: 'info'
+        title: "Increase Interactive Elements",
+        description:
+          "Your content has low interaction rates. Consider adding more clickable elements like links to related content, interactive examples, or media.",
+        type: "info",
       });
     }
 
@@ -1484,39 +1767,39 @@ export const api = {
       shares: {
         total: shareData.length,
         byPlatform: sharesByPlatform,
-        history: shareData
+        history: shareData,
       },
       feedback: feedbackData,
       audience: {
         deviceDistribution: {
           labels: Object.keys(deviceDistribution),
-          values: Object.values(deviceDistribution)
+          values: Object.values(deviceDistribution),
         },
         locationDistribution: {
           labels: Object.keys(locationDistribution),
-          values: Object.values(locationDistribution)
+          values: Object.values(locationDistribution),
         },
         newVsReturning: newVsReturningVisitors,
-        browserDistribution
+        browserDistribution,
       },
       engagement: {
         metrics: {
           avgScrollDepth,
           completionRate,
           interactionRate,
-          avgTimeSpent: postAnalytics?.avg_time_spent || 0
+          avgTimeSpent: postAnalytics?.avg_time_spent || 0,
         },
         scrollDepthDistribution,
         elementInteractionData,
-        readingTimeDistribution
+        readingTimeDistribution,
       },
       optimization: {
-        tips: optimizationTips
+        tips: optimizationTips,
       },
       rawData: {
         audienceData: audienceData || [],
-        engagementData: engagementData || []
-      }
+        engagementData: engagementData || [],
+      },
     };
   },
 };
